@@ -95,8 +95,8 @@ public class AttributeMetaDataResponse
 			}
 			else
 			{
-				this.refEntity = refEntity != null ? new Href(Href.concatMetaEntityHref(RestController.BASE_URI,
-						refEntity.getName())) : null;
+				this.refEntity = refEntity != null ? Href.concatMetaEntityHref(RestController.BASE_URI,
+						refEntity.getName()) : null;
 			}
 		}
 		else this.refEntity = null;
