@@ -11,6 +11,7 @@ import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Range;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -95,8 +96,8 @@ public class AttributeMetaDataResponse
 			}
 			else
 			{
-				this.refEntity = refEntity != null ? new Href(Href.concatMetaEntityHref(RestController.BASE_URI,
-						refEntity.getName())) : null;
+				this.refEntity = refEntity != null ? ImmutableMap.<String, String> of("href",
+						Href.concatMetaEntityHref(RestController.BASE_URI, refEntity.getName())) : null;
 			}
 		}
 		else this.refEntity = null;
