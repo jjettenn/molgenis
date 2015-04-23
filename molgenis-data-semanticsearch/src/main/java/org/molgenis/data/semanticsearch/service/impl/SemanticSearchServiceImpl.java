@@ -60,8 +60,8 @@ public class SemanticSearchServiceImpl implements SemanticSearchService
 		Iterable<Entity> attributeMetaDataEntities = dataService.findAll(AttributeMetaDataMetaData.ENTITY_NAME,
 				new QueryImpl(disMaxQueryRules));
 
-		return Iterables.size(attributeMetaDataEntities) > 0 ? MetaUtils.toExistingAttributeMetaData(sourceEntityMetaData,
-				attributeMetaDataEntities) : sourceEntityMetaData.getAttributes();
+		return Iterables.size(attributeMetaDataEntities) > 0 ? MetaUtils.toExistingAttributeMetaData(
+				sourceEntityMetaData, attributeMetaDataEntities) : sourceEntityMetaData.getAttributes();
 	}
 
 	@Override
