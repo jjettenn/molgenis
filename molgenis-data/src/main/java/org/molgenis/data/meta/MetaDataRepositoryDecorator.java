@@ -1,5 +1,10 @@
 package org.molgenis.data.meta;
 
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toSet;
+import static org.molgenis.data.RepositoryCapability.MANAGABLE;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
@@ -23,200 +28,210 @@ import org.molgenis.data.RepositoryCapability;
  */
 public class MetaDataRepositoryDecorator implements Repository
 {
-	private final Repository decorated;
+	private final Repository decoratedRepo;
+	private final MetaDataService metaDataService;
 
-	public MetaDataRepositoryDecorator(Repository decorated)
+	public MetaDataRepositoryDecorator(Repository decoratedRepo, MetaDataService metaDataService)
 	{
-		this.decorated = decorated;
+		this.decoratedRepo = requireNonNull(decoratedRepo);
+		this.metaDataService = requireNonNull(metaDataService);
 	}
 
 	@Override
 	public Iterator<Entity> iterator()
 	{
-		return decorated.iterator();
+		return decoratedRepo.iterator();
 	}
 
 	@Override
 	public void close() throws IOException
 	{
-		decorated.close();
+		decoratedRepo.close();
 	}
 
 	@Override
 	public Set<RepositoryCapability> getCapabilities()
 	{
-		Set<RepositoryCapability> capabilities = decorated.getCapabilities();
-		capabilities.remove(RepositoryCapability.WRITABLE);
-		capabilities.remove(RepositoryCapability.MANAGABLE);
-		return capabilities;
+		Stream<RepositoryCapability> capabilities = decoratedRepo.getCapabilities().stream();
+		return capabilities.filter(capability -> !capability.equals(MANAGABLE)).collect(toSet());
 	}
 
 	@Override
 	public String getName()
 	{
-		return decorated.getName();
+		return decoratedRepo.getName();
 	}
 
 	@Override
 	public EntityMetaData getEntityMetaData()
 	{
-		return decorated.getEntityMetaData();
+		return decoratedRepo.getEntityMetaData();
 	}
 
 	@Override
 	public long count()
 	{
-		return decorated.count();
+		return decoratedRepo.count();
 	}
 
 	@Override
 	public Query query()
 	{
-		return decorated.query();
+		return decoratedRepo.query();
 	}
 
 	@Override
 	public long count(Query q)
 	{
-		return decorated.count(q);
+		return decoratedRepo.count(q);
 	}
 
 	@Override
 	public Stream<Entity> findAll(Query q)
 	{
-		return decorated.findAll(q);
+		return decoratedRepo.findAll(q);
 	}
 
 	@Override
 	public Entity findOne(Query q)
 	{
-		return decorated.findOne(q);
+		return decoratedRepo.findOne(q);
 	}
 
 	@Override
 	public Entity findOne(Object id)
 	{
-		return decorated.findOne(id);
+		return decoratedRepo.findOne(id);
 	}
 
 	@Override
 	public Entity findOne(Object id, Fetch fetch)
 	{
-		return decorated.findOne(id, fetch);
+		return decoratedRepo.findOne(id, fetch);
 	}
 
 	@Override
 	public Stream<Entity> findAll(Stream<Object> ids)
 	{
-		return decorated.findAll(ids);
+		return decoratedRepo.findAll(ids);
 	}
 
 	@Override
 	public Stream<Entity> findAll(Stream<Object> ids, Fetch fetch)
 	{
-		return decorated.findAll(ids, fetch);
+		return decoratedRepo.findAll(ids, fetch);
 	}
 
 	@Override
 	public AggregateResult aggregate(AggregateQuery aggregateQuery)
 	{
-		return decorated.aggregate(aggregateQuery);
+		return decoratedRepo.aggregate(aggregateQuery);
 	}
 
 	@Override
 	public void update(Entity entity)
 	{
-		decorated.update(entity);
+		decoratedRepo.update(entity);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void update(Stream<? extends Entity> entities)
 	{
-		decorated.update(entities);
+		decoratedRepo.update(entities);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void delete(Entity entity)
 	{
-		decorated.delete(entity);
+		decoratedRepo.delete(entity);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void delete(Stream<? extends Entity> entities)
 	{
-		decorated.delete(entities);
+		decoratedRepo.delete(entities);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void deleteById(Object id)
 	{
-		decorated.deleteById(id);
+		decoratedRepo.deleteById(id);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void deleteById(Stream<Object> ids)
 	{
-		decorated.deleteById(ids);
+		decoratedRepo.deleteById(ids);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void deleteAll()
 	{
-		decorated.deleteAll();
+		decoratedRepo.deleteAll();
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public void add(Entity entity)
 	{
-		decorated.add(entity);
+		decoratedRepo.add(entity);
+		metaDataService.refreshCaches();
 	}
 
 	@Override
 	public Integer add(Stream<? extends Entity> entities)
 	{
-		return decorated.add(entities);
+		Integer count = decoratedRepo.add(entities);
+		metaDataService.refreshCaches();
+		return count;
 	}
 
 	@Override
 	public void flush()
 	{
-		decorated.flush();
+		decoratedRepo.flush();
 	}
 
 	@Override
 	public void clearCache()
 	{
-		decorated.clearCache();
+		decoratedRepo.clearCache();
 	}
 
 	@Override
 	public void create()
 	{
-		decorated.create();
+		throw new UnsupportedOperationException(format("Repository [%s] is not %s", getName(), MANAGABLE.toString()));
 	}
 
 	@Override
 	public void drop()
 	{
-		decorated.drop();
+		throw new UnsupportedOperationException(format("Repository [%s] is not %s", getName(), MANAGABLE.toString()));
 	}
 
 	@Override
 	public void rebuildIndex()
 	{
-		decorated.rebuildIndex();
+		decoratedRepo.rebuildIndex();
 	}
 
 	@Override
 	public void addEntityListener(EntityListener entityListener)
 	{
-		decorated.addEntityListener(entityListener);
+		decoratedRepo.addEntityListener(entityListener);
 	}
 
 	@Override
 	public void removeEntityListener(EntityListener entityListener)
 	{
-		decorated.removeEntityListener(entityListener);
+		decoratedRepo.removeEntityListener(entityListener);
 	}
 
 }
