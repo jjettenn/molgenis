@@ -33,17 +33,19 @@ public class EntityMetaDataMetaData extends DefaultEntityMetaData
 	{
 		super(ENTITY_NAME);
 		addAttribute(FULL_NAME, ROLE_ID).setUnique(true);
-		addAttribute(SIMPLE_NAME, ROLE_LABEL).setNillable(false);
-		addAttribute(BACKEND);
-		addAttribute(PACKAGE).setDataType(XREF).setRefEntity(PackageRepository.META_DATA);
-		addAttribute(ID_ATTRIBUTE).setDataType(XREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE);
-		addAttribute(LABEL_ATTRIBUTE).setDataType(XREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE);
-		addAttribute(LOOKUP_ATTRIBUTES).setDataType(MREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE);
-		addAttribute(ABSTRACT).setDataType(BOOL);
+		addAttribute(SIMPLE_NAME, ROLE_LABEL).setNillable(false).setReadOnly(true);
+		addAttribute(BACKEND).setReadOnly(true);
+		addAttribute(PACKAGE).setDataType(XREF).setRefEntity(PackageRepository.META_DATA).setReadOnly(true);
+		addAttribute(ID_ATTRIBUTE).setDataType(XREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
+		addAttribute(LABEL_ATTRIBUTE).setDataType(XREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE)
+				.setReadOnly(true);
+		addAttribute(LOOKUP_ATTRIBUTES).setDataType(MREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE)
+				.setReadOnly(true);
+		addAttribute(ABSTRACT).setDataType(BOOL).setReadOnly(true);
 		addAttribute(LABEL, ROLE_LOOKUP);
-		addAttribute(EXTENDS).setDataType(XREF).setRefEntity(this);
+		addAttribute(EXTENDS).setDataType(XREF).setRefEntity(this).setReadOnly(true);
 		addAttribute(DESCRIPTION, ROLE_LOOKUP).setDataType(TEXT);
-		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE);
-		addAttribute(ATTRIBUTES).setDataType(MREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE);
+		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE).setReadOnly(true);
+		addAttribute(ATTRIBUTES).setDataType(MREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
 	}
 }
