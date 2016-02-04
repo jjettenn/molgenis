@@ -80,9 +80,13 @@ class EntityMetaDataRepository
 		// Fill the cache with EntityMetaData objects
 		for (Entity entity : repository)
 		{
+			DefaultEntityMetaData entityMetaData = entityMetaDataCache.get(entity.getString(FULL_NAME));
+			if (entityMetaData == null)
+			{
+				String name = entity.getString(SIMPLE_NAME);
+				entityMetaData = new DefaultEntityMetaData(name);
+			}
 			entities.add(entity);
-			String name = entity.getString(SIMPLE_NAME);
-			DefaultEntityMetaData entityMetaData = new DefaultEntityMetaData(name);
 			entityMetaData.setAbstract(entity.getBoolean(ABSTRACT));
 			entityMetaData.setLabel(entity.getString(LABEL));
 			entityMetaData.setDescription(entity.getString(DESCRIPTION));

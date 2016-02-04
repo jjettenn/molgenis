@@ -1,15 +1,20 @@
 package org.molgenis.data.meta;
 
+import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.molgenis.MolgenisFieldTypes.STRING;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
@@ -178,5 +183,43 @@ public class EntityMetaDataRepositoryTest
 		assertEquals(entityMeta.getIdAttribute(), idAttr);
 		assertEquals(entityMeta.getLabelAttribute(), labelAttr);
 		assertEquals(Lists.newArrayList(entityMeta.getLookupAttributes()), Arrays.asList(attrLookup0, attrLookup1));
+	}
+
+	@Test
+	public void fillEntityMetaDataCacheUpdateExistingEntity()
+	{
+		String packageName = "package";
+		// must mock PackageImpl instead of Package due to case in EntityMetaDataRepository
+		PackageImpl package_ = mock(PackageImpl.class);
+		when(package_.getName()).thenReturn(packageName);
+		Entity packageEntity = mock(Entity.class);
+		when(packageEntity.getString(PackageMetaData.FULL_NAME)).thenReturn(packageName);
+		when(packageRepository.getPackage(packageName)).thenReturn(package_);
+
+		Entity entity0 = mock(Entity.class);
+		String simpleEntityName = "entity";
+		String entityName = "package_entity";
+		when(entity0.getString(EntityMetaDataMetaData.SIMPLE_NAME)).thenReturn(simpleEntityName);
+		when(entity0.getString(EntityMetaDataMetaData.FULL_NAME)).thenReturn(entityName);
+		when(entity0.getEntities(EntityMetaDataMetaData.ATTRIBUTES)).thenReturn(emptyList());
+		when(entity0.getEntities(EntityMetaDataMetaData.LOOKUP_ATTRIBUTES)).thenReturn(emptyList());
+		when(entity0.getEntity(EntityMetaDataMetaData.PACKAGE)).thenReturn(packageEntity);
+		when(entityMetaRepo.iterator()).thenAnswer(new Answer<Iterator<Entity>>()
+		{
+			@Override
+			public Iterator<Entity> answer(InvocationOnMock invocation) throws Throwable
+			{
+				return Arrays.asList(entity0).iterator();
+			}
+		});
+		entityMetaDataRepository.fillEntityMetaDataCache();
+
+		DefaultEntityMetaData entityMetaData = entityMetaDataRepository.get(entityName);
+
+		entityMetaDataRepository.fillEntityMetaDataCache();
+
+		DefaultEntityMetaData refreshedEntityMetaData = entityMetaDataRepository.get(entityName);
+		// assert that both references point to the same entity meta data instance
+		assertSame(entityMetaData, refreshedEntityMetaData);
 	}
 }
