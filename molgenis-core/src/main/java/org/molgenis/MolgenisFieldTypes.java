@@ -50,6 +50,19 @@ public class MolgenisFieldTypes
 	{
 		BOOL, CATEGORICAL, CATEGORICAL_MREF, COMPOUND, DATE, DATE_TIME, DECIMAL, EMAIL, ENUM, FILE, HTML, HYPERLINK, IMAGE, INT, LONG, MREF, SCRIPT, STRING, TEXT, XREF;
 
+		public static FieldTypeEnum get(String fieldTypeEnumStr)
+		{
+			fieldTypeEnumStr = fieldTypeEnumStr.replaceAll("_", "");
+			for (FieldTypeEnum value : values())
+			{
+				if (value.toString().replaceAll("_", "").equalsIgnoreCase(fieldTypeEnumStr))
+				{
+					return value;
+				}
+			}
+			return null;
+		}
+
 		public static List<String> getOptionsLowercase()
 		{
 			return Arrays.stream(values()).map(value -> {
