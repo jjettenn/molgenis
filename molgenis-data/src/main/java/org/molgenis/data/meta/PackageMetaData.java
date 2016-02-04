@@ -24,10 +24,10 @@ public class PackageMetaData extends DefaultEntityMetaData
 		super(ENTITY_NAME);
 
 		addAttribute(FULL_NAME, ROLE_ID, ROLE_LABEL).setNillable(false);
-		addAttribute(SIMPLE_NAME);
+		addAttribute(SIMPLE_NAME).setReadOnly(true);
 		addAttribute(DESCRIPTION).setDataType(TEXT);
-		addAttribute(PARENT).setDataType(XREF).setRefEntity(this);
-		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE);
+		addAttribute(PARENT).setDataType(XREF).setRefEntity(this).setReadOnly(true);
+		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE).setReadOnly(true);
 	}
 
 }
