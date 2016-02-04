@@ -45,26 +45,26 @@ public class AttributeMetaDataMetaData extends DefaultEntityMetaData
 		super(ENTITY_NAME);
 
 		addAttribute(IDENTIFIER, ROLE_ID).setVisible(false);
-		addAttribute(NAME, ROLE_LABEL, ROLE_LOOKUP).setNillable(false);
+		addAttribute(NAME, ROLE_LABEL, ROLE_LOOKUP).setNillable(false).setReadOnly(true);
 		addAttribute(DATA_TYPE).setDataType(new EnumField()).setEnumOptions(FieldTypeEnum.getOptionsLowercase())
 				.setNillable(false);
-		addAttribute(PARTS).setDataType(MREF).setRefEntity(this);
-		addAttribute(REF_ENTITY);
+		addAttribute(PARTS).setDataType(MREF).setRefEntity(this).setReadOnly(true);
+		addAttribute(REF_ENTITY).setReadOnly(true).setReadOnly(true);
 		addAttribute(EXPRESSION).setNillable(true);
-		addAttribute(NILLABLE).setDataType(BOOL).setNillable(false);
+		addAttribute(NILLABLE).setDataType(BOOL).setNillable(false).setReadOnly(true);
 		addAttribute(AUTO).setDataType(BOOL).setNillable(false);
 		addAttribute(VISIBLE).setDataType(BOOL).setNillable(false);
 		addAttribute(LABEL, ROLE_LOOKUP);
 		addAttribute(DESCRIPTION).setDataType(TEXT);
 		addAttribute(AGGREGATEABLE).setDataType(BOOL).setNillable(false);
-		addAttribute(ENUM_OPTIONS).setDataType(TEXT);
-		addAttribute(RANGE_MIN).setDataType(new LongField());
-		addAttribute(RANGE_MAX).setDataType(new LongField());
+		addAttribute(ENUM_OPTIONS).setDataType(TEXT).setReadOnly(true);
+		addAttribute(RANGE_MIN).setDataType(new LongField()).setReadOnly(true);
+		addAttribute(RANGE_MAX).setDataType(new LongField()).setReadOnly(true);
 		addAttribute(READ_ONLY).setDataType(BOOL).setNillable(false);
-		addAttribute(UNIQUE).setDataType(BOOL).setNillable(false);
-		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE);
+		addAttribute(UNIQUE).setDataType(BOOL).setNillable(false).setReadOnly(true);
+		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE).setReadOnly(true);
 		addAttribute(VISIBLE_EXPRESSION).setDataType(SCRIPT).setNillable(true);
 		addAttribute(VALIDATION_EXPRESSION).setDataType(SCRIPT).setNillable(true);
-		addAttribute(DEFAULT_VALUE).setDataType(TEXT).setNillable(true);
+		addAttribute(DEFAULT_VALUE).setDataType(TEXT).setNillable(true).setReadOnly(true);
 	}
 }
