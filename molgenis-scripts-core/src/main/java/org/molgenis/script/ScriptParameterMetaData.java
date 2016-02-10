@@ -2,11 +2,11 @@ package org.molgenis.script;
 
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ScriptParameterMetaData extends DefaultEntityMetaData
+public class ScriptParameterMetaData extends SystemEntityMetaData
 {
 	public ScriptParameterMetaData()
 	{

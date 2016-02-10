@@ -5,10 +5,10 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.support.DefaultAttributeMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.ontology.core.model.OntologyPackage;
 
-public class OntologyTermNodePathMetaData extends DefaultEntityMetaData
+public class OntologyTermNodePathMetaData extends SystemEntityMetaData
 {
 	public final static String ID = "id";
 	public final static String ONTOLOGY_TERM_NODE_PATH = "nodePath";

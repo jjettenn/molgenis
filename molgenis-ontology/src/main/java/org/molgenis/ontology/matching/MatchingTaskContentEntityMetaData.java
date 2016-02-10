@@ -4,9 +4,9 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.support.DefaultAttributeMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 
-public class MatchingTaskContentEntityMetaData extends DefaultEntityMetaData
+public class MatchingTaskContentEntityMetaData extends SystemEntityMetaData
 {
 	public final static String ENTITY_NAME = "MatchingTaskContent";
 	public final static String IDENTIFIER = "Identifier";

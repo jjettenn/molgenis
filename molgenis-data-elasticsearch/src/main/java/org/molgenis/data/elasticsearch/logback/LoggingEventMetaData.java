@@ -4,11 +4,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.elasticsearch.ElasticsearchRepositoryCollection;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LoggingEventMetaData extends DefaultEntityMetaData
+public class LoggingEventMetaData extends SystemEntityMetaData
 {
 	public static final LoggingEventMetaData INSTANCE = new LoggingEventMetaData();
 	private static final String ENTITY_NAME = "LoggingEvent";

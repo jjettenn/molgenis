@@ -3,11 +3,11 @@ package org.molgenis.ui.settings;
 import static org.molgenis.MolgenisFieldTypes.TEXT;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class StaticContentMeta extends DefaultEntityMetaData
+public class StaticContentMeta extends SystemEntityMetaData
 {
 	public StaticContentMeta()
 	{

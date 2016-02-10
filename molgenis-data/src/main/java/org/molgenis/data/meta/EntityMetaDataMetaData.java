@@ -8,9 +8,9 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 
-public class EntityMetaDataMetaData extends DefaultEntityMetaData
+public class EntityMetaDataMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "entities";
 	public static final String SIMPLE_NAME = "simpleName";
@@ -26,6 +26,7 @@ public class EntityMetaDataMetaData extends DefaultEntityMetaData
 	public static final String PACKAGE = "package";
 	public static final String TAGS = "tags";
 	public static final String ATTRIBUTES = "attributes";
+	public static final String SYSTEM = "system";
 
 	public static final EntityMetaDataMetaData INSTANCE = new EntityMetaDataMetaData();
 
@@ -46,6 +47,7 @@ public class EntityMetaDataMetaData extends DefaultEntityMetaData
 		addAttribute(EXTENDS).setDataType(XREF).setRefEntity(this).setReadOnly(true);
 		addAttribute(DESCRIPTION, ROLE_LOOKUP).setDataType(TEXT);
 		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE).setReadOnly(true);
-		addAttribute(ATTRIBUTES).setDataType(MREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
+		addAttribute(ATTRIBUTES).setDataType(MREF).setRefEntity(AttributeMetaDataMetaData.INSTANCE);
+		addAttribute(SYSTEM).setDataType(BOOL).setNillable(false).setReadOnly(true);
 	}
 }

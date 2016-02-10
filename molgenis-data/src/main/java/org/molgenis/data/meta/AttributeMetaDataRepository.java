@@ -211,6 +211,7 @@ class AttributeMetaDataRepository
 	public DefaultAttributeMetaData toAttributeMetaData(Entity entity)
 	{
 		DefaultAttributeMetaData attributeMetaData = new DefaultAttributeMetaData(entity.getString(NAME));
+		attributeMetaData.setIdentifier(entity.getString(IDENTIFIER));
 		attributeMetaData.setDataType(MolgenisFieldTypes.getType(entity.getString(DATA_TYPE)));
 		attributeMetaData.setNillable(entity.getBoolean(NILLABLE));
 		attributeMetaData.setAuto(entity.getBoolean(AUTO));

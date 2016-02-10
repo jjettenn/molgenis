@@ -9,6 +9,7 @@ import static org.molgenis.data.meta.AttributeMetaDataMetaData.DEFAULT_VALUE;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.DESCRIPTION;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.ENUM_OPTIONS;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.EXPRESSION;
+import static org.molgenis.data.meta.AttributeMetaDataMetaData.IDENTIFIER;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.LABEL;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.NILLABLE;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.PARTS;
@@ -47,6 +48,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 {
 	private Map<String, AttributeChangeListener> changeListeners;
 
+	private String identifier;
 	private final String name;
 	private FieldType fieldType;
 	private String description;
@@ -96,6 +98,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 
 	public DefaultAttributeMetaData(String newName, AttributeMetaData attributeMetaData)
 	{
+		this.identifier = attributeMetaData.getIdentifier();
 		this.name = attributeMetaData.getName();
 		this.fieldType = attributeMetaData.getDataType();
 		this.description = attributeMetaData.getDescription();
@@ -126,6 +129,19 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 			}
 			this.attributePartsMap = attributePartsMap;
 		}
+	}
+
+	@Override
+	public String getIdentifier()
+	{
+		return identifier;
+	}
+
+	public DefaultAttributeMetaData setIdentifier(String identifier)
+	{
+		this.identifier = identifier;
+		fireChangeEvent(IDENTIFIER);
+		return this;
 	}
 
 	@Override

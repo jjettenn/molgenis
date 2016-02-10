@@ -123,4 +123,11 @@ public interface EditableEntityMetaData extends EntityMetaData
 	 * @return
 	 */
 	DefaultAttributeMetaData addAttribute(String string, AttributeRole... attributeTypes);
+
+	/**
+	 * System meta data is meta data defined in the Java code which can not be edited at runtime
+	 * 
+	 * @param system
+	 */
+	public void setSystem(boolean system);
 }

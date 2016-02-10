@@ -9,12 +9,12 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IdCardIndexingEventMetaData extends DefaultEntityMetaData
+public class IdCardIndexingEventMetaData extends SystemEntityMetaData
 {
 	public IdCardIndexingEventMetaData()
 	{

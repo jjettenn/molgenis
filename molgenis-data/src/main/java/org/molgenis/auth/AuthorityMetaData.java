@@ -1,10 +1,10 @@
 package org.molgenis.auth;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuthorityMetaData extends DefaultEntityMetaData
+public class AuthorityMetaData extends SystemEntityMetaData
 {
 
 	public AuthorityMetaData()

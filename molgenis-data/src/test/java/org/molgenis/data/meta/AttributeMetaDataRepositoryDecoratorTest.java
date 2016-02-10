@@ -12,29 +12,36 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.mockito.ArgumentCaptor;
+import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class AttributeMetaDataRepositoryDecoratorTest
 {
 	private Repository decoratedRepo;
+	private DataService dataService;
+	private SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
 	private AttributeMetaDataRepositoryDecorator attributeMetaDataRepositoryDecorator;
 
 	@BeforeMethod
 	public void setUpBeforeMethod()
 	{
 		decoratedRepo = mock(Repository.class);
-		attributeMetaDataRepositoryDecorator = new AttributeMetaDataRepositoryDecorator(decoratedRepo);
+		dataService = mock(DataService.class);
+		systemEntityMetaDataRegistry = mock(SystemEntityMetaDataRegistry.class);
+		attributeMetaDataRepositoryDecorator = new AttributeMetaDataRepositoryDecorator(decoratedRepo,
+				systemEntityMetaDataRegistry);
 	}
 
 	@SuppressWarnings("resource")
 	@Test(expectedExceptions = NullPointerException.class)
 	public void AttributeMetaDataRepositoryDecorator()
 	{
-		new AttributeMetaDataRepositoryDecorator(null);
+		new AttributeMetaDataRepositoryDecorator(null, null);
 	}
 
 	@Test

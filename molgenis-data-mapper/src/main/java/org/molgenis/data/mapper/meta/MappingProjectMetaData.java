@@ -6,11 +6,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.mapper.repository.impl.MappingTargetRepositoryImpl;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MappingProjectMetaData extends DefaultEntityMetaData
+public class MappingProjectMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "MappingProject";
 	public static final String IDENTIFIER = "identifier";

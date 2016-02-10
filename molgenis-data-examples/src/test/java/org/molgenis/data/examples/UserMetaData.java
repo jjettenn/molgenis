@@ -3,9 +3,9 @@ package org.molgenis.data.examples;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.MolgenisFieldTypes;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 
-public class UserMetaData extends DefaultEntityMetaData
+public class UserMetaData extends SystemEntityMetaData
 {
 	public static final UserMetaData INSTANCE = new UserMetaData();
 

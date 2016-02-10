@@ -11,11 +11,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
 import org.molgenis.data.idcard.IdCardRepositoryCollection;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IdCardBiobankMetaData extends DefaultEntityMetaData
+public class IdCardBiobankMetaData extends SystemEntityMetaData
 {
 	public IdCardBiobankMetaData()
 	{

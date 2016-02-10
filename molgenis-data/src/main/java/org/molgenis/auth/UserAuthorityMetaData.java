@@ -3,11 +3,11 @@ package org.molgenis.auth;
 import static org.molgenis.MolgenisFieldTypes.XREF;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserAuthorityMetaData extends DefaultEntityMetaData
+public class UserAuthorityMetaData extends SystemEntityMetaData
 {
 
 	public static final String ENTITY_NAME = "UserAuthority";

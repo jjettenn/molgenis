@@ -6,9 +6,9 @@ import static org.molgenis.MolgenisFieldTypes.XREF;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 
-public class PackageMetaData extends DefaultEntityMetaData
+public class PackageMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "packages";
 	public static final String FULL_NAME = "fullName";

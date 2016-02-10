@@ -4,11 +4,11 @@ import static org.molgenis.MolgenisFieldTypes.MREF;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.data.mapper.repository.impl.AttributeMappingRepositoryImpl;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EntityMappingMetaData extends DefaultEntityMetaData
+public class EntityMappingMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "EntityMapping";
 	public static final String IDENTIFIER = "identifier";

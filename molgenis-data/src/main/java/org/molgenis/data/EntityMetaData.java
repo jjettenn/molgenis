@@ -175,4 +175,12 @@ public interface EntityMetaData
 	public EntityMetaData getExtends();
 
 	Class<? extends Entity> getEntityClass();
+
+	/**
+	 * Returns whether this entity is a system entity: meta data defined in the Java code which can not be edited at
+	 * runtime
+	 * 
+	 * @return
+	 */
+	public boolean isSystem();
 }

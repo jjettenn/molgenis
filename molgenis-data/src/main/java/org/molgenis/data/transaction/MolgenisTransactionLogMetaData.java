@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.molgenis.MolgenisFieldTypes;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
 
-public class MolgenisTransactionLogMetaData extends DefaultEntityMetaData
+public class MolgenisTransactionLogMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "MolgenisTransactionLog";
 

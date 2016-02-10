@@ -16,6 +16,7 @@ import static org.molgenis.data.meta.EntityMetaDataMetaData.LABEL_ATTRIBUTE;
 import static org.molgenis.data.meta.EntityMetaDataMetaData.LOOKUP_ATTRIBUTES;
 import static org.molgenis.data.meta.EntityMetaDataMetaData.PACKAGE;
 import static org.molgenis.data.meta.EntityMetaDataMetaData.SIMPLE_NAME;
+import static org.molgenis.data.meta.EntityMetaDataMetaData.SYSTEM;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -177,6 +178,7 @@ class EntityMetaDataRepository
 	public void add(EntityMetaData entityMetaData)
 	{
 		DefaultEntityMetaData emd = new DefaultEntityMetaData(entityMetaData.getSimpleName());
+		emd.setSystem(entityMetaData.isSystem());
 		emd.setLabel(entityMetaData.getLabel());
 		emd.setAbstract(entityMetaData.isAbstract());
 		emd.setDescription(entityMetaData.getDescription());
@@ -266,6 +268,7 @@ class EntityMetaDataRepository
 			entityMetaDataEntity.set(PACKAGE, packageRepository.getEntity(emd.getPackage().getName()));
 		}
 		entityMetaDataEntity.set(DESCRIPTION, emd.getDescription());
+		entityMetaDataEntity.set(SYSTEM, emd.isSystem());
 		entityMetaDataEntity.set(ABSTRACT, emd.isAbstract());
 		entityMetaDataEntity.set(LABEL, emd.getLabel());
 		entityMetaDataEntity.set(BACKEND, emd.getBackend());

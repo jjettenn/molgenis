@@ -2,13 +2,19 @@ package org.molgenis.data.meta;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.reverse;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.StreamSupport.stream;
 import static org.molgenis.util.SecurityDecoratorUtils.validatePermission;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,6 +30,7 @@ import org.molgenis.data.Package;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.RepositoryDecoratorFactory;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.UnknownEntityException;
 import org.molgenis.data.i18n.I18nStringMetaData;
 import org.molgenis.data.i18n.LanguageMetaData;
@@ -33,6 +40,7 @@ import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.NonDecoratingRepositoryDecoratorFactory;
+import org.molgenis.data.support.UuidGenerator;
 import org.molgenis.security.core.Permission;
 import org.molgenis.security.core.runas.RunAsSystem;
 import org.molgenis.security.core.runas.RunAsSystemProxy;
@@ -118,7 +126,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	private void bootstrapMetaRepos()
 	{
 		MetaDataRepositoryDecoratorFactory metaRepoDecoratorFactory = new MetaDataRepositoryDecoratorFactory(
-				dataService, this);
+				dataService, this, new SystemEntityMetaDataRegistry(dataService), languageService);
 
 		Repository languageRepo = defaultBackend.addEntityMeta(LanguageMetaData.INSTANCE);
 		dataService.addRepository(metaRepoDecoratorFactory.createDecoratedRepository(languageRepo));
@@ -412,7 +420,112 @@ public class MetaDataServiceImpl implements MetaDataService
 	@Override
 	public List<AttributeMetaData> updateEntityMeta(EntityMetaData entityMeta)
 	{
-		return MetaUtils.updateEntityMeta(this, entityMeta, false);
+		// TODO where to delete entities for which java class was deleted?
+
+		Entity entityMetaEntity = dataService.findOne(EntityMetaDataMetaData.ENTITY_NAME, entityMeta.getName());
+		if (entityMetaEntity == null)
+		{
+			throw new UnknownEntityException(format("Unknown entity [%s]", entityMeta.getName()));
+		}
+
+		Entity updatedEntityMetaEntity = MetaUtils.toEntity(entityMeta);
+
+		// workaround: if entity stored in repository has backend and entity meta has no backend
+		String backend = updatedEntityMetaEntity.getString(EntityMetaDataMetaData.BACKEND);
+		if (backend == null)
+		{
+			updatedEntityMetaEntity.set(EntityMetaDataMetaData.BACKEND, getDefaultBackend().getName());
+		}
+		// workaround: if entity stored in repository has package and entity meta has no package
+		Entity packageEntity = updatedEntityMetaEntity.getEntity(EntityMetaDataMetaData.PACKAGE);
+		if (packageEntity == null)
+		{
+			updatedEntityMetaEntity.set(EntityMetaDataMetaData.PACKAGE, MetaUtils.toEntity(PackageImpl.defaultPackage));
+		}
+
+		// workaround: entity attribute in repository has identifier and entity meta attribute has no identifier
+		Entity updatedIdAttr = updatedEntityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
+		if (updatedIdAttr != null)
+		{
+			Entity idAttr_ = entityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
+			if (idAttr_ != null)
+			{
+				updatedIdAttr.set(AttributeMetaDataMetaData.IDENTIFIER,
+						idAttr_.getString(AttributeMetaDataMetaData.IDENTIFIER));
+			}
+		}
+		Entity updatedLabelAttr = updatedEntityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
+		if (updatedLabelAttr != null)
+		{
+			Entity labelAttr_ = entityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
+			if (labelAttr_ != null)
+			{
+				updatedLabelAttr.set(AttributeMetaDataMetaData.IDENTIFIER,
+						labelAttr_.getString(AttributeMetaDataMetaData.IDENTIFIER));
+			}
+		}
+
+		// TODO recursive for compound attrs
+		Map<String, Entity> attrNameAttrMap = stream(
+				entityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES).spliterator(), false).collect(
+						toMap(entity -> entity.getString(AttributeMetaDataMetaData.NAME), Function.identity()));
+		Map<String, Entity> updatedAttrNameAttrMap = stream(
+				updatedEntityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES).spliterator(), false).collect(
+						toMap(entity -> entity.getString(AttributeMetaDataMetaData.NAME), Function.identity()));
+
+		// add new attributes
+		Set<String> addedAttrNames = Sets.difference(updatedAttrNameAttrMap.keySet(), attrNameAttrMap.keySet());
+		if (!addedAttrNames.isEmpty())
+		{
+			// FIXME who will generate id --> autoid
+			UuidGenerator uuidGenerator = new UuidGenerator();
+			Stream<Entity> attrEntitiesToAdd = addedAttrNames.stream()
+					.map(addedAttrName -> updatedAttrNameAttrMap.get(addedAttrName)).filter(attrEntity -> {
+						String attrIdentifier = uuidGenerator.generateId();
+						((DefaultAttributeMetaData) entityMeta
+								.getAttribute(attrEntity.getString(AttributeMetaDataMetaData.NAME)))
+										.setIdentifier(attrIdentifier); // FIXME find more elegant way
+						attrEntity.set(AttributeMetaDataMetaData.IDENTIFIER, attrIdentifier);
+						return true;
+					});
+			dataService.add(AttributeMetaDataMetaData.ENTITY_NAME, attrEntitiesToAdd);
+		}
+
+		// update existing attributes
+		Set<String> existingAttrNames = Sets.intersection(attrNameAttrMap.keySet(), updatedAttrNameAttrMap.keySet());
+		if (!existingAttrNames.isEmpty())
+		{
+			Stream<Entity> attrsToUpdate = existingAttrNames.stream().map(attrToUpdateName -> {
+				// copy identifiers of existing attributes to updated attributes
+				Entity attrEntity = attrNameAttrMap.get(attrToUpdateName);
+				Entity updatedAttrEntity = updatedAttrNameAttrMap.get(attrToUpdateName);
+				updatedAttrEntity.set(AttributeMetaDataMetaData.IDENTIFIER,
+						attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER));
+				return updatedAttrEntity;
+			}).filter(attrEntity -> {
+				// determine which attributes are updated
+				String attrName = attrEntity.getString(AttributeMetaDataMetaData.NAME);
+				return !MetaUtils.equals(attrEntity, entityMeta.getAttribute(attrName));
+			});
+			dataService.update(AttributeMetaDataMetaData.ENTITY_NAME, attrsToUpdate);
+		}
+
+		// update entity
+		if (!MetaUtils.equals(entityMetaEntity, entityMeta, this))
+		{
+			dataService.update(EntityMetaDataMetaData.ENTITY_NAME, updatedEntityMetaEntity);
+		}
+
+		// delete attributes
+		Set<String> deletedAttrNames = Sets.difference(attrNameAttrMap.keySet(), updatedAttrNameAttrMap.keySet());
+		if (!deletedAttrNames.isEmpty())
+		{
+			Stream<Entity> attrEntitiesToDelete = deletedAttrNames.stream()
+					.map(deletedAttrName -> attrNameAttrMap.get(deletedAttrName));
+			dataService.delete(AttributeMetaDataMetaData.ENTITY_NAME, attrEntitiesToDelete);
+		}
+
+		return Collections.emptyList();
 	}
 
 	@Override

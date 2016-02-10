@@ -4,11 +4,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.data.Package;
 import org.molgenis.data.meta.PackageImpl;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SettingsEntityMeta extends DefaultEntityMetaData
+public class SettingsEntityMeta extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "settings";
 	public static final String PACKAGE_NAME = "settings";

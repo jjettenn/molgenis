@@ -11,6 +11,13 @@ import org.molgenis.fieldtypes.FieldType;
 public interface AttributeMetaData
 {
 	/**
+	 * Unique attribute identifier
+	 * 
+	 * @return
+	 */
+	String getIdentifier();
+
+	/**
 	 * Name of the attribute
 	 */
 	String getName();

@@ -7,11 +7,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MolgenisUserMetaData extends DefaultEntityMetaData
+public class MolgenisUserMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "MolgenisUser";
 
@@ -21,7 +21,7 @@ public class MolgenisUserMetaData extends DefaultEntityMetaData
 		setDescription("Anyone who can login");
 
 		addAttribute(MolgenisUser.ID, ROLE_ID).setAuto(true).setVisible(false)
-				.setDescription("automatically generated internal id, only for internal use.");
+				.setDescription("automatically generated internal id, only for internal use.xx");
 		addAttribute(MolgenisUser.USERNAME, ROLE_LABEL, ROLE_LOOKUP).setLabel("Username").setUnique(true)
 				.setDescription("").setNillable(false);
 		addAttribute(MolgenisUser.PASSWORD_).setLabel("Password")

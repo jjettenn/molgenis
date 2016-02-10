@@ -4,9 +4,9 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.AttributeMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 
-public class I18nStringMetaData extends DefaultEntityMetaData
+public class I18nStringMetaData extends SystemEntityMetaData
 {
 	public static final I18nStringMetaData INSTANCE = new I18nStringMetaData();
 	public static final String ENTITY_NAME = "i18nstrings";

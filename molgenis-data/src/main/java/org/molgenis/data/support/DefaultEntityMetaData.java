@@ -50,6 +50,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	private AttributeMetaData ownIdAttr;
 	private AttributeMetaData ownLabelAttr;
 	private Map<String, AttributeMetaData> ownLookupAttrs;
+	private boolean system;
 
 	// bookkeeping to improve performance of getters
 	private final AttributeChangeListener attrChangeListener;
@@ -598,7 +599,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 				cachedLabelAttr = extends_.getLabelAttribute();
 			}
 
-			if (cachedLabelAttr == null)
+			if (cachedLabelAttr == null && !abstract_)
 			{
 				cachedLabelAttr = getCachedIdAttr();
 			}
@@ -720,5 +721,16 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	public Set<String> getLabelLanguageCodes()
 	{
 		return Collections.unmodifiableSet(labelByLanguageCode.keySet());
+	}
+
+	public boolean isSystem()
+	{
+		return system;
+	}
+
+	@Override
+	public void setSystem(boolean system)
+	{
+		this.system = system;
 	}
 }

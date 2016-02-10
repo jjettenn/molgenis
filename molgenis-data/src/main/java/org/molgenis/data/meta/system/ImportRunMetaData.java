@@ -8,11 +8,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import java.util.Arrays;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ImportRunMetaData extends DefaultEntityMetaData
+public class ImportRunMetaData extends SystemEntityMetaData
 {
 	public static final String ID = "id";
 	public static final String STARTDATE = "startDate";
@@ -30,7 +30,7 @@ public class ImportRunMetaData extends DefaultEntityMetaData
 		super("ImportRun");
 		addAttribute(ID, ROLE_ID).setAuto(true).setVisible(false)
 				.setDescription("automatically generated internal id, only for internal use.");
-		addAttribute(STARTDATE).setDataType(DATETIME).setNillable(false).setDescription("");
+		addAttribute(STARTDATE).setDataType(DATETIME).setNillable(false).setDescription("blaat3");
 		addAttribute(ENDDATE).setDataType(DATETIME).setNillable(true).setDescription("");
 		addAttribute(USERNAME).setNillable(false).setDescription("");
 		addAttribute(STATUS).setDataType(ENUM).setNillable(false)
@@ -38,5 +38,6 @@ public class ImportRunMetaData extends DefaultEntityMetaData
 		addAttribute(MESSAGE).setDataType(TEXT).setNillable(true).setDescription("");
 		addAttribute(PROGRESS).setDataType(INT).setNillable(false).setDescription("");
 		addAttribute(IMPORTEDENTITIES).setDataType(TEXT).setNillable(true).setDescription("");
+		setLabel("Import run label");
 	}
 }

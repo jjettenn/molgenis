@@ -6,11 +6,11 @@ import static org.molgenis.MolgenisFieldTypes.XREF;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MolgenisTokenMetaData extends DefaultEntityMetaData
+public class MolgenisTokenMetaData extends SystemEntityMetaData
 {
 
 	public static final String ENTITY_NAME = "MolgenisToken";

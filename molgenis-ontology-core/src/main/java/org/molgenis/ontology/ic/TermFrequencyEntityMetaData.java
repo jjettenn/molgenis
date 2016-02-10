@@ -4,9 +4,9 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.support.DefaultAttributeMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 
-public class TermFrequencyEntityMetaData extends DefaultEntityMetaData
+public class TermFrequencyEntityMetaData extends SystemEntityMetaData
 {
 	public final static String ENTITY_NAME = "TermFrequency";
 	public final static String ID = "id";

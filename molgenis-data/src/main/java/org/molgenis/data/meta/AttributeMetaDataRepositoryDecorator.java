@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.AggregateQuery;
 import org.molgenis.data.AggregateResult;
+import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
@@ -37,16 +38,18 @@ import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Query;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCapability;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 
 public class AttributeMetaDataRepositoryDecorator implements Repository
 {
 	private final Repository decoratedRepo;
-	// how to get access to expression validator here since it is located in molgenis-data-validation?
-	// private final ExpressionValidator expressionValidator;
+	private final SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
 
-	public AttributeMetaDataRepositoryDecorator(Repository decoratedRepo)
+	public AttributeMetaDataRepositoryDecorator(Repository decoratedRepo,
+			SystemEntityMetaDataRegistry systemEntityMetaDataRegistry)
 	{
 		this.decoratedRepo = requireNonNull(decoratedRepo);
+		this.systemEntityMetaDataRegistry = requireNonNull(systemEntityMetaDataRegistry);
 	}
 
 	@Override
@@ -142,6 +145,7 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 	@Override
 	public void update(Entity entity)
 	{
+		validateUpdateAllowed(entity);
 		validateUpdate(entity);
 		decoratedRepo.update(entity);
 	}
@@ -150,6 +154,7 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 	public void update(Stream<? extends Entity> entities)
 	{
 		decoratedRepo.update(entities.filter(entity -> {
+			validateUpdateAllowed(entity);
 			validateUpdate(entity);
 			return true;
 		}));
@@ -158,30 +163,39 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 	@Override
 	public void delete(Entity entity)
 	{
+		validateDeleteAllowed(entity);
 		decoratedRepo.delete(entity);
 	}
 
 	@Override
 	public void delete(Stream<? extends Entity> entities)
 	{
-		decoratedRepo.delete(entities);
+		decoratedRepo.delete(entities.filter(entity -> {
+			validateDeleteAllowed(entity);
+			return true;
+		}));
 	}
 
 	@Override
 	public void deleteById(Object id)
 	{
+		validateDeleteAllowed(findOne(id));
 		decoratedRepo.deleteById(id);
 	}
 
 	@Override
 	public void deleteById(Stream<Object> ids)
 	{
-		decoratedRepo.deleteById(ids);
+		decoratedRepo.deleteById(ids.filter(id -> {
+			validateDeleteAllowed(findOne(id));
+			return true;
+		}));
 	}
 
 	@Override
 	public void deleteAll()
 	{
+		iterator().forEachRemaining(this::validateDeleteAllowed);
 		decoratedRepo.deleteAll();
 	}
 
@@ -305,5 +319,40 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 	private void validateUpdateExpression(String currentExpression, String newExpression)
 	{
 		// TODO validate with script evaluator
+		// how to get access to expression validator here since it is located in molgenis-data-validation?
+	}
+
+	/**
+	 * Updating attribute meta data is allowed for non-system attributes. For system attributes updating attribute meta
+	 * data is only allowed if the meta data defined in Java differs from the meta data stored in the database (in other
+	 * words the Java code was updated).
+	 * 
+	 * @param attrEntity
+	 */
+	private void validateUpdateAllowed(Entity attrEntity)
+	{
+		String attrIdentifier = attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER);
+		AttributeMetaData systemAttr = systemEntityMetaDataRegistry.getSystemAttribute(attrIdentifier);
+		if (systemAttr != null && !MetaUtils.equals(attrEntity, systemAttr))
+		{
+			throw new MolgenisDataException(format("Updating system entity attribute [%s] is not allowed",
+					attrEntity.getString(AttributeMetaDataMetaData.NAME)));
+		}
+	}
+
+	/**
+	 * Deleting attribute meta data is allowed for non-system attributes.
+	 * 
+	 * @param attrEntity
+	 */
+	private void validateDeleteAllowed(Entity attrEntity)
+	{
+		String attrIdentifier = attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER);
+		AttributeMetaData systemAttr = systemEntityMetaDataRegistry.getSystemAttribute(attrIdentifier);
+		if (systemAttr != null)
+		{
+			throw new MolgenisDataException(format("Deleting system entity attribute [%s] is not allowed",
+					attrEntity.getString(AttributeMetaDataMetaData.NAME)));
+		}
 	}
 }

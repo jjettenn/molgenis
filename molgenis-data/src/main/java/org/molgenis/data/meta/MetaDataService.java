@@ -16,8 +16,8 @@ import org.springframework.core.Ordered;
 
 import com.google.common.collect.ImmutableMap;
 
-public interface MetaDataService extends Iterable<RepositoryCollection>, ApplicationListener<ContextRefreshedEvent>,
-		Ordered
+public interface MetaDataService
+		extends Iterable<RepositoryCollection>, ApplicationListener<ContextRefreshedEvent>, Ordered
 {
 	/**
 	 * Sets the backend, in wich the meta data and the user data is saved
@@ -179,7 +179,7 @@ public interface MetaDataService extends Iterable<RepositoryCollection>, Applica
 	 */
 	LinkedHashMap<String, Boolean> integrationTestMetaData(ImmutableMap<String, EntityMetaData> newEntitiesMetaDataMap,
 			List<String> skipEntities, String defaultPackage);
-	
+
 	/**
 	 * Has backend will check if the requested backend already exists and is registered.
 	 * 
