@@ -247,6 +247,7 @@ class EntityMetaDataRepository
 		else
 		{
 			entity.set(ATTRIBUTES, Collections.emptyList());
+			entity.set(LOOKUP_ATTRIBUTES, Collections.emptyList());
 		}
 
 		repository.add(entity);
