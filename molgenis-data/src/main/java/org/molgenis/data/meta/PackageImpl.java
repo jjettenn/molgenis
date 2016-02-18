@@ -45,7 +45,7 @@ public class PackageImpl implements Package
 		this(simpleName, description, null);
 	}
 
-	public PackageImpl(String simpleName, String description, PackageImpl parent)
+	public PackageImpl(String simpleName, String description, Package parent)
 	{
 		this.simpleName = requireNonNull(simpleName);
 		this.description = description;
