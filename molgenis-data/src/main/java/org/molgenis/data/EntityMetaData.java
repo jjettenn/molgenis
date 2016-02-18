@@ -2,6 +2,9 @@ package org.molgenis.data;
 
 import java.util.Set;
 
+import org.molgenis.data.semantic.LabeledResource;
+import org.molgenis.data.semantic.Tag;
+
 /**
  * EntityMetaData defines the structure and attributes of an Entity. Attributes are unique. Other software components
  * can use this to interact with Entity and/or to configure backends and frontends, including Repository instances.
@@ -172,7 +175,7 @@ public interface EntityMetaData
 	/**
 	 * Entity can extend another entity, adding its properties to their own
 	 */
-	public EntityMetaData getExtends();
+	EntityMetaData getExtends();
 
 	Class<? extends Entity> getEntityClass();
 
@@ -182,5 +185,19 @@ public interface EntityMetaData
 	 * 
 	 * @return
 	 */
-	public boolean isSystem();
+	boolean isSystem();
+
+	/**
+	 * Get all tags for this entity
+	 * 
+	 * @return
+	 */
+	Iterable<Tag<EntityMetaData, LabeledResource, LabeledResource>> getTags();
+
+	/**
+	 * Same as {@link #getTags()} but does not return tags from its parent class.
+	 * 
+	 * @return
+	 */
+	Iterable<Tag<EntityMetaData, LabeledResource, LabeledResource>> getOwnTags();
 }

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.StreamSupport.stream;
@@ -25,11 +26,14 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Package;
 import org.molgenis.data.PackageChangeListener;
+import org.molgenis.data.semantic.LabeledResource;
+import org.molgenis.data.semantic.Tag;
 import org.molgenis.util.CaseInsensitiveLinkedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class DefaultEntityMetaData implements EditableEntityMetaData
 {
@@ -51,6 +55,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	private AttributeMetaData ownLabelAttr;
 	private Map<String, AttributeMetaData> ownLookupAttrs;
 	private boolean system;
+	private List<Tag<EntityMetaData, LabeledResource, LabeledResource>> tags;
 
 	// bookkeeping to improve performance of getters
 	private final AttributeChangeListener attrChangeListener;
@@ -84,7 +89,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		this.entityClass = requireNonNull(entityClass);
 		setPackage(package_);
 		this.attributes = new CaseInsensitiveLinkedHashMap<>();
-
+		this.tags = new ArrayList<Tag<EntityMetaData, LabeledResource, LabeledResource>>();
 		this.attrChangeListener = new AttributeChangeListenerImpl(this);
 	}
 
@@ -130,6 +135,8 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 				.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 					throw new IllegalStateException(String.format("Duplicate key %s", u));
 				}, CaseInsensitiveLinkedHashMap::new));
+		this.system = entityMetaData.isSystem();
+		this.tags = Lists.newArrayList(entityMetaData.getOwnTags());
 	}
 
 	@Override
@@ -730,5 +737,27 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	public void setSystem(boolean system)
 	{
 		this.system = system;
+	}
+
+	public void addTag(Tag<EntityMetaData, LabeledResource, LabeledResource> tag)
+	{
+		tags.add(tag);
+	}
+
+	@Override
+	public Iterable<Tag<EntityMetaData, LabeledResource, LabeledResource>> getTags()
+	{
+		Iterable<Tag<EntityMetaData, LabeledResource, LabeledResource>> tags = getOwnTags();
+		if (extends_ != null)
+		{
+			tags = Iterables.concat(extends_.getTags(), tags);
+		}
+		return tags;
+	}
+
+	@Override
+	public Iterable<Tag<EntityMetaData, LabeledResource, LabeledResource>> getOwnTags()
+	{
+		return unmodifiableList(tags);
 	}
 }
