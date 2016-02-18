@@ -16,7 +16,6 @@ import static org.molgenis.data.meta.EntityMetaDataMetaData.LABEL_ATTRIBUTE;
 import static org.molgenis.data.meta.EntityMetaDataMetaData.LOOKUP_ATTRIBUTES;
 import static org.molgenis.data.meta.EntityMetaDataMetaData.PACKAGE;
 import static org.molgenis.data.meta.EntityMetaDataMetaData.SIMPLE_NAME;
-import static org.molgenis.data.meta.EntityMetaDataMetaData.SYSTEM;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,7 +34,6 @@ import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.support.DefaultEntityMetaData;
-import org.molgenis.data.support.MapEntity;
 import org.molgenis.util.DependencyResolver;
 
 import com.google.common.collect.Lists;
@@ -223,7 +221,7 @@ class EntityMetaDataRepository
 					.collect(toMap(attrEntity -> attrEntity.getString(AttributeMetaDataMetaData.NAME),
 							Function.<Entity> identity(), (u, v) -> {
 								throw new IllegalStateException(String.format("Duplicate key %s", u));
-							} , LinkedHashMap::new));
+							}, LinkedHashMap::new));
 			entity.set(ATTRIBUTES, attrs.values());
 			emd.addAllAttributeMetaData(attributes);
 
@@ -261,38 +259,7 @@ class EntityMetaDataRepository
 
 	private Entity toEntity(EntityMetaData emd)
 	{
-		Entity entityMetaDataEntity = new MapEntity(META_DATA);
-		entityMetaDataEntity.set(FULL_NAME, emd.getName());
-		entityMetaDataEntity.set(SIMPLE_NAME, emd.getSimpleName());
-		if (emd.getPackage() != null)
-		{
-			entityMetaDataEntity.set(PACKAGE, packageRepository.getEntity(emd.getPackage().getName()));
-		}
-		entityMetaDataEntity.set(DESCRIPTION, emd.getDescription());
-		entityMetaDataEntity.set(SYSTEM, emd.isSystem());
-		entityMetaDataEntity.set(ABSTRACT, emd.isAbstract());
-		entityMetaDataEntity.set(LABEL, emd.getLabel());
-		entityMetaDataEntity.set(BACKEND, emd.getBackend());
-		if (emd.getExtends() != null)
-		{
-			entityMetaDataEntity.set(EXTENDS, getEntity(emd.getExtends().getName()));
-		}
-
-		// Language attributes
-		for (String languageCode : emd.getDescriptionLanguageCodes())
-		{
-			String attributeName = DESCRIPTION + '-' + languageCode;
-			String description = emd.getDescription(languageCode);
-			if (description != null) entityMetaDataEntity.set(attributeName, description);
-		}
-
-		for (String languageCode : emd.getLabelLanguageCodes())
-		{
-			String attributeName = LABEL + '-' + languageCode;
-			String label = emd.getLabel(languageCode);
-			if (label != null) entityMetaDataEntity.set(attributeName, label);
-		}
-		return entityMetaDataEntity;
+		return MetaUtils.toEntity(emd);
 	}
 
 	public void delete(String entityName)
