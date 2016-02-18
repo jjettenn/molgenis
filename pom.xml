@@ -677,6 +677,7 @@
         <module>molgenis-data-system</module>
         <module>molgenis-data-merge</module>
         <module>molgenis-data-mysql</module>
+		<module>molgenis-data-postgresql</module>
         <module>molgenis-data-vcf</module>
         <module>molgenis-data-rest</module>
         <module>molgenis-data-elasticsearch</module>
