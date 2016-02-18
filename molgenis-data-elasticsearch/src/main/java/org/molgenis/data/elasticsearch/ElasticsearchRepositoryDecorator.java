@@ -199,6 +199,11 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 	@Override
 	public Stream<Entity> findAll(Query q)
 	{
+		List<QueryRule> queryRules = q.getRules();
+		if (queryRules != null && queryRules.isEmpty())
+		{
+			return decoratedRepo.findAll(q); // TODO replace with call to iterator(Fetch fetch) once method exists
+		}
 		return super.findAll(q);
 	}
 
