@@ -95,7 +95,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	 */
 	public DefaultEntityMetaData(EntityMetaData entityMetaData)
 	{
-		this(entityMetaData.getName(), entityMetaData);
+		this(entityMetaData.getSimpleName(), entityMetaData);
 	}
 
 	public DefaultEntityMetaData(String simpleName, EntityMetaData entityMetaData)
@@ -129,7 +129,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		this.ownLookupAttrs = stream(entityMetaData.getOwnLookupAttributes().spliterator(), false)
 				.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 					throw new IllegalStateException(String.format("Duplicate key %s", u));
-				} , CaseInsensitiveLinkedHashMap::new));
+				}, CaseInsensitiveLinkedHashMap::new));
 	}
 
 	@Override
@@ -447,7 +447,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		this.ownLookupAttrs = lookupAttrs
 				.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 					throw new IllegalStateException(String.format("Duplicate key %s", u));
-				} , CaseInsensitiveLinkedHashMap::new));
+				}, CaseInsensitiveLinkedHashMap::new));
 		clearCache();
 	}
 
@@ -617,7 +617,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 				cachedLookupAttrs = stream(extends_.getLookupAttributes().spliterator(), false)
 						.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 							throw new IllegalStateException(String.format("Duplicate key %s", u));
-						} , CaseInsensitiveLinkedHashMap::new));
+						}, CaseInsensitiveLinkedHashMap::new));
 			}
 		}
 		return cachedLookupAttrs != null ? cachedLookupAttrs : emptyMap();
@@ -720,6 +720,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		return Collections.unmodifiableSet(labelByLanguageCode.keySet());
 	}
 
+	@Override
 	public boolean isSystem()
 	{
 		return system;

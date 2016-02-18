@@ -3,24 +3,23 @@ package org.molgenis.data.meta;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.reverse;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.StreamSupport.stream;
+import static java.util.Collections.singleton;
 import static org.molgenis.util.SecurityDecoratorUtils.validatePermission;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.molgenis.MolgenisFieldTypes;
+import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
@@ -418,17 +417,18 @@ public class MetaDataServiceImpl implements MetaDataService
 
 	@Transactional
 	@Override
-	public List<AttributeMetaData> updateEntityMeta(EntityMetaData entityMeta)
+	public List<AttributeMetaData> updateEntityMeta(EntityMetaData updatedEntityMeta)
 	{
 		// TODO where to delete entities for which java class was deleted?
 
-		Entity entityMetaEntity = dataService.findOne(EntityMetaDataMetaData.ENTITY_NAME, entityMeta.getName());
-		if (entityMetaEntity == null)
+		Entity existingEntityMetaEntity = dataService.findOne(EntityMetaDataMetaData.ENTITY_NAME,
+				updatedEntityMeta.getName());
+		if (existingEntityMetaEntity == null)
 		{
-			throw new UnknownEntityException(format("Unknown entity [%s]", entityMeta.getName()));
+			throw new UnknownEntityException(format("Unknown entity [%s]", updatedEntityMeta.getName()));
 		}
 
-		Entity updatedEntityMetaEntity = MetaUtils.toEntity(entityMeta);
+		Entity updatedEntityMetaEntity = MetaUtils.toEntity(updatedEntityMeta);
 
 		// workaround: if entity stored in repository has backend and entity meta has no backend
 		String backend = updatedEntityMetaEntity.getString(EntityMetaDataMetaData.BACKEND);
@@ -447,34 +447,30 @@ public class MetaDataServiceImpl implements MetaDataService
 		Entity updatedIdAttr = updatedEntityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
 		if (updatedIdAttr != null)
 		{
-			Entity idAttr_ = entityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
-			if (idAttr_ != null)
+			Entity existingIdAttr_ = existingEntityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
+			if (existingIdAttr_ != null)
 			{
 				updatedIdAttr.set(AttributeMetaDataMetaData.IDENTIFIER,
-						idAttr_.getString(AttributeMetaDataMetaData.IDENTIFIER));
+						existingIdAttr_.getString(AttributeMetaDataMetaData.IDENTIFIER));
 			}
 		}
 		Entity updatedLabelAttr = updatedEntityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
 		if (updatedLabelAttr != null)
 		{
-			Entity labelAttr_ = entityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
-			if (labelAttr_ != null)
+			Entity existingLabelAttr_ = existingEntityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
+			if (existingLabelAttr_ != null)
 			{
 				updatedLabelAttr.set(AttributeMetaDataMetaData.IDENTIFIER,
-						labelAttr_.getString(AttributeMetaDataMetaData.IDENTIFIER));
+						existingLabelAttr_.getString(AttributeMetaDataMetaData.IDENTIFIER));
 			}
 		}
 
-		// TODO recursive for compound attrs
-		Map<String, Entity> attrNameAttrMap = stream(
-				entityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES).spliterator(), false).collect(
-						toMap(entity -> entity.getString(AttributeMetaDataMetaData.NAME), Function.identity()));
-		Map<String, Entity> updatedAttrNameAttrMap = stream(
-				updatedEntityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES).spliterator(), false).collect(
-						toMap(entity -> entity.getString(AttributeMetaDataMetaData.NAME), Function.identity()));
+		Map<String, Entity> existingAttrNameAttrMap = createAttrIdentifierMap(existingEntityMetaEntity);
+		injectAttrIdentifiers(updatedEntityMetaEntity, existingAttrNameAttrMap);
+		Map<String, Entity> updatedAttrNameAttrMap = createAttrIdentifierMap(updatedEntityMetaEntity);
 
 		// add new attributes
-		Set<String> addedAttrNames = Sets.difference(updatedAttrNameAttrMap.keySet(), attrNameAttrMap.keySet());
+		Set<String> addedAttrNames = Sets.difference(updatedAttrNameAttrMap.keySet(), existingAttrNameAttrMap.keySet());
 		if (!addedAttrNames.isEmpty())
 		{
 			// FIXME who will generate id --> autoid
@@ -482,7 +478,7 @@ public class MetaDataServiceImpl implements MetaDataService
 			Stream<Entity> attrEntitiesToAdd = addedAttrNames.stream()
 					.map(addedAttrName -> updatedAttrNameAttrMap.get(addedAttrName)).filter(attrEntity -> {
 						String attrIdentifier = uuidGenerator.generateId();
-						((DefaultAttributeMetaData) entityMeta
+						((DefaultAttributeMetaData) updatedEntityMeta
 								.getAttribute(attrEntity.getString(AttributeMetaDataMetaData.NAME)))
 										.setIdentifier(attrIdentifier); // FIXME find more elegant way
 						attrEntity.set(AttributeMetaDataMetaData.IDENTIFIER, attrIdentifier);
@@ -492,12 +488,13 @@ public class MetaDataServiceImpl implements MetaDataService
 		}
 
 		// update existing attributes
-		Set<String> existingAttrNames = Sets.intersection(attrNameAttrMap.keySet(), updatedAttrNameAttrMap.keySet());
+		Set<String> existingAttrNames = Sets.intersection(existingAttrNameAttrMap.keySet(),
+				updatedAttrNameAttrMap.keySet());
 		if (!existingAttrNames.isEmpty())
 		{
 			Stream<Entity> attrsToUpdate = existingAttrNames.stream().map(attrToUpdateName -> {
 				// copy identifiers of existing attributes to updated attributes
-				Entity attrEntity = attrNameAttrMap.get(attrToUpdateName);
+				Entity attrEntity = existingAttrNameAttrMap.get(attrToUpdateName);
 				Entity updatedAttrEntity = updatedAttrNameAttrMap.get(attrToUpdateName);
 				updatedAttrEntity.set(AttributeMetaDataMetaData.IDENTIFIER,
 						attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER));
@@ -505,27 +502,94 @@ public class MetaDataServiceImpl implements MetaDataService
 			}).filter(attrEntity -> {
 				// determine which attributes are updated
 				String attrName = attrEntity.getString(AttributeMetaDataMetaData.NAME);
-				return !MetaUtils.equals(attrEntity, entityMeta.getAttribute(attrName));
+				return !MetaUtils.equals(attrEntity, updatedEntityMeta.getAttribute(attrName));
 			});
 			dataService.update(AttributeMetaDataMetaData.ENTITY_NAME, attrsToUpdate);
 		}
 
 		// update entity
-		if (!MetaUtils.equals(entityMetaEntity, entityMeta, this))
+		if (!MetaUtils.equals(existingEntityMetaEntity, updatedEntityMeta, this))
 		{
 			dataService.update(EntityMetaDataMetaData.ENTITY_NAME, updatedEntityMetaEntity);
 		}
 
 		// delete attributes
-		Set<String> deletedAttrNames = Sets.difference(attrNameAttrMap.keySet(), updatedAttrNameAttrMap.keySet());
+		Set<String> deletedAttrNames = Sets.difference(existingAttrNameAttrMap.keySet(),
+				updatedAttrNameAttrMap.keySet());
 		if (!deletedAttrNames.isEmpty())
 		{
 			Stream<Entity> attrEntitiesToDelete = deletedAttrNames.stream()
-					.map(deletedAttrName -> attrNameAttrMap.get(deletedAttrName));
+					.map(deletedAttrName -> existingAttrNameAttrMap.get(deletedAttrName));
 			dataService.delete(AttributeMetaDataMetaData.ENTITY_NAME, attrEntitiesToDelete);
 		}
 
 		return Collections.emptyList();
+	}
+
+	private Map<String, Entity> createAttrIdentifierMap(Entity entityMetaEntity)
+	{
+		Map<String, Entity> nameAttrEntityMap = new HashMap<>();
+		Iterable<Entity> attrEntities = entityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES);
+		createAttrIdentifierMapRec(attrEntities, nameAttrEntityMap);
+		return nameAttrEntityMap;
+	}
+
+	private void createAttrIdentifierMapRec(Iterable<Entity> attrEntities, Map<String, Entity> nameAttrEntityMap)
+	{
+		attrEntities.forEach(attrEntity -> {
+			String attrName = attrEntity.getString(AttributeMetaDataMetaData.NAME);
+			nameAttrEntityMap.put(attrName, attrEntity);
+			if (attrEntity.getString(AttributeMetaDataMetaData.DATA_TYPE)
+					.equals(FieldTypeEnum.COMPOUND.toString().toLowerCase()))
+			{
+				Iterable<Entity> attrPartEntities = attrEntity.getEntities(AttributeMetaDataMetaData.PARTS);
+				createAttrIdentifierMapRec(attrPartEntities, nameAttrEntityMap);
+			}
+		});
+	}
+
+	private void injectAttrIdentifiers(Entity entityMetaEntity, Map<String, Entity> existingAttrs)
+	{
+		Iterable<Entity> attrEntities = entityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES);
+		injectAttrIdentifiersRec(attrEntities, existingAttrs);
+
+		Entity idAttrEntity = entityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
+		if (idAttrEntity != null)
+		{
+			injectAttrIdentifiersRec(singleton(idAttrEntity), existingAttrs);
+		}
+
+		Entity labelAttrEntity = entityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
+		if (labelAttrEntity != null)
+		{
+			injectAttrIdentifiersRec(singleton(labelAttrEntity), existingAttrs);
+		}
+
+		Iterable<Entity> lookupAttrEntities = entityMetaEntity.getEntities(EntityMetaDataMetaData.LOOKUP_ATTRIBUTES);
+		injectAttrIdentifiersRec(lookupAttrEntities, existingAttrs);
+	}
+
+	private void injectAttrIdentifiersRec(Iterable<Entity> attrEntities, Map<String, Entity> existingAttrs)
+	{
+		attrEntities.forEach(attrEntity -> {
+			String attrIdentifier = attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER);
+			if (attrIdentifier == null)
+			{
+				String attrName = attrEntity.getString(AttributeMetaDataMetaData.NAME);
+				Entity existingAttrEntity = existingAttrs.get(attrName);
+				if (existingAttrEntity != null)
+				{
+					String existingIdentifier = existingAttrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER);
+					attrEntity.set(AttributeMetaDataMetaData.IDENTIFIER, existingIdentifier);
+				}
+			}
+			if (attrEntity.getString(AttributeMetaDataMetaData.DATA_TYPE)
+					.equals(FieldTypeEnum.COMPOUND.toString().toLowerCase()))
+			{
+				Iterable<Entity> attrParts = attrEntity.getEntities(AttributeMetaDataMetaData.PARTS);
+				injectAttrIdentifiersRec(attrParts, existingAttrs);
+			}
+		});
 	}
 
 	@Override
@@ -634,31 +698,32 @@ public class MetaDataServiceImpl implements MetaDataService
 
 	public boolean canIntegrateEntityMetadataCheck(EntityMetaData newEntityMetaData)
 	{
-		String entityName = newEntityMetaData.getName();
-		if (dataService.hasRepository(entityName))
-		{
-			EntityMetaData newEntity = newEntityMetaData;
-			EntityMetaData oldEntity = dataService.getEntityMetaData(entityName);
-
-			List<AttributeMetaData> oldAtomicAttributes = StreamSupport
-					.stream(oldEntity.getAtomicAttributes().spliterator(), false)
-					.collect(Collectors.<AttributeMetaData> toList());
-
-			LinkedHashMap<String, AttributeMetaData> newAtomicAttributesMap = new LinkedHashMap<String, AttributeMetaData>();
-			StreamSupport.stream(newEntity.getAtomicAttributes().spliterator(), false)
-					.forEach(attribute -> newAtomicAttributesMap.put(attribute.getName(), attribute));
-
-			for (AttributeMetaData oldAttribute : oldAtomicAttributes)
-			{
-				if (!newAtomicAttributesMap.keySet().contains(oldAttribute.getName())) return false;
-
-				DefaultAttributeMetaData oldAttributDefault = new DefaultAttributeMetaData(oldAttribute);
-				DefaultAttributeMetaData newAttributDefault = new DefaultAttributeMetaData(
-						newAtomicAttributesMap.get(oldAttribute.getName()));
-
-				if (!oldAttributDefault.isSameAs(newAttributDefault)) return false;
-			}
-		}
+		// String entityName = newEntityMetaData.getName();
+		// if (dataService.hasRepository(entityName))
+		// {
+		// EntityMetaData newEntity = newEntityMetaData;
+		// EntityMetaData oldEntity = dataService.getEntityMetaData(entityName);
+		//
+		// List<AttributeMetaData> oldAtomicAttributes = StreamSupport
+		// .stream(oldEntity.getAtomicAttributes().spliterator(), false)
+		// .collect(Collectors.<AttributeMetaData> toList());
+		//
+		// LinkedHashMap<String, AttributeMetaData> newAtomicAttributesMap = new LinkedHashMap<String,
+		// AttributeMetaData>();
+		// StreamSupport.stream(newEntity.getAtomicAttributes().spliterator(), false)
+		// .forEach(attribute -> newAtomicAttributesMap.put(attribute.getName(), attribute));
+		//
+		// for (AttributeMetaData oldAttribute : oldAtomicAttributes)
+		// {
+		// if (!newAtomicAttributesMap.keySet().contains(oldAttribute.getName())) return false;
+		//
+		// DefaultAttributeMetaData oldAttributDefault = new DefaultAttributeMetaData(oldAttribute);
+		// DefaultAttributeMetaData newAttributDefault = new DefaultAttributeMetaData(
+		// newAtomicAttributesMap.get(oldAttribute.getName()));
+		//
+		// if (!oldAttributDefault.isSameAs(newAttributDefault)) return false;
+		// }
+		// }
 
 		return true;
 	}

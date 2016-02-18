@@ -7,12 +7,12 @@ import java.util.List;
 
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.auth.MolgenisUserMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JobMetaDataMetaData extends DefaultEntityMetaData
+public class JobMetaDataMetaData extends SystemEntityMetaData
 {
 	private List<String> jobStatusOptions = newArrayList("PENDING", "RUNNING", "SUCCESS", "FAILED", "CANCELED");
 
@@ -25,15 +25,16 @@ public class JobMetaDataMetaData extends DefaultEntityMetaData
 		addAttribute(JobMetaData.STATUS).setDataType(new EnumField()).setEnumOptions(jobStatusOptions)
 				.setLabel("Job status").setNillable(false);
 		addAttribute(JobMetaData.TYPE).setDataType(MolgenisFieldTypes.STRING).setLabel("Job type").setNillable(false);
-		addAttribute(JobMetaData.SUBMISSION_DATE).setDataType(MolgenisFieldTypes.DATETIME).setLabel("Job submission date")
-				.setNillable(false);
+		addAttribute(JobMetaData.SUBMISSION_DATE).setDataType(MolgenisFieldTypes.DATETIME)
+				.setLabel("Job submission date").setNillable(false);
 		addAttribute(JobMetaData.START_DATE).setDataType(MolgenisFieldTypes.DATETIME).setLabel("Job start date")
 				.setNillable(true);
-		addAttribute(JobMetaData.END_DATE).setDataType(MolgenisFieldTypes.DATETIME).setLabel("Job end date").setNillable(true);
+		addAttribute(JobMetaData.END_DATE).setDataType(MolgenisFieldTypes.DATETIME).setLabel("Job end date")
+				.setNillable(true);
 		addAttribute(JobMetaData.PROGRESS_INT).setDataType(MolgenisFieldTypes.INT).setLabel("Progress")
 				.setNillable(true);
-		addAttribute(JobMetaData.PROGRESS_MAX).setDataType(MolgenisFieldTypes.INT)
-				.setLabel("Maximum progress").setNillable(true);
+		addAttribute(JobMetaData.PROGRESS_MAX).setDataType(MolgenisFieldTypes.INT).setLabel("Maximum progress")
+				.setNillable(true);
 		addAttribute(JobMetaData.PROGRESS_MESSAGE).setDataType(MolgenisFieldTypes.TEXT).setLabel("Progress message")
 				.setNillable(true);
 	}

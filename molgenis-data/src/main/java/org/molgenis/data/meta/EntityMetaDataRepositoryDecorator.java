@@ -295,8 +295,8 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 
 	private void updateEntityAttributes(Entity entity, Entity existingEntity)
 	{
-		Entity currentEntity = findOne(entity.getIdValue(), new Fetch().field(EntityMetaDataMetaData.ATTRIBUTES,
-				new Fetch().field(AttributeMetaDataMetaData.NAME)));
+		Entity currentEntity = findOne(entity.getIdValue(), new Fetch().field(EntityMetaDataMetaData.FULL_NAME)
+				.field(EntityMetaDataMetaData.ATTRIBUTES, new Fetch().field(AttributeMetaDataMetaData.NAME)));
 		Map<String, Entity> currentAttrMap = StreamSupport
 				.stream(currentEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES).spliterator(), false).collect(
 						toMap(attrEntity -> attrEntity.getString(AttributeMetaDataMetaData.NAME), Function.identity()));
