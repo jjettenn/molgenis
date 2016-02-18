@@ -1,5 +1,6 @@
 package org.molgenis.data.support;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static org.molgenis.MolgenisFieldTypes.STRING;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.AGGREGATEABLE;
@@ -22,6 +23,7 @@ import static org.molgenis.data.meta.AttributeMetaDataMetaData.VALIDATION_EXPRES
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.VISIBLE;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.VISIBLE_EXPRESSION;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,9 +38,13 @@ import org.molgenis.data.AttributeChangeListener;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Range;
+import org.molgenis.data.semantic.LabeledResource;
+import org.molgenis.data.semantic.Tag;
 import org.molgenis.fieldtypes.EnumField;
 import org.molgenis.fieldtypes.FieldType;
 import org.molgenis.util.CaseInsensitiveLinkedHashMap;
+
+import com.google.common.collect.Lists;
 
 /**
  * Default implementation of the AttributeMetaData interface
@@ -68,6 +74,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 	private Range range;
 	private String visibleExpression;
 	private String validationExpression;
+	private List<Tag<AttributeMetaData, LabeledResource, LabeledResource>> tags;
 
 	public DefaultAttributeMetaData(String name)
 	{
@@ -84,6 +91,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 		this.name = requireNonNull(name);
 		this.label = name;
 		this.fieldType = requireNonNull(fieldType);
+		this.tags = new ArrayList<>();
 	}
 
 	/**
@@ -116,6 +124,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 		this.range = attributeMetaData.getRange();
 		this.visibleExpression = attributeMetaData.getVisibleExpression();
 		this.validationExpression = attributeMetaData.getValidationExpression();
+		this.tags = Lists.newArrayList(attributeMetaData.getTags());
 		addChangeListeners(attributeMetaData.getChangeListeners());
 
 		// deep copy
@@ -637,4 +646,14 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 		}
 	}
 
+	public void addTag(Tag<AttributeMetaData, LabeledResource, LabeledResource> tag)
+	{
+		tags.add(tag);
+	}
+
+	@Override
+	public Iterable<Tag<AttributeMetaData, LabeledResource, LabeledResource>> getTags()
+	{
+		return unmodifiableList(tags);
+	}
 }

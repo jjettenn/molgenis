@@ -3,6 +3,8 @@ package org.molgenis.data;
 import java.util.List;
 import java.util.Set;
 
+import org.molgenis.data.semantic.LabeledResource;
+import org.molgenis.data.semantic.Tag;
 import org.molgenis.fieldtypes.FieldType;
 
 /**
@@ -170,4 +172,11 @@ public interface AttributeMetaData
 	 * Remove all attribute listeners
 	 */
 	void removeChangeListeners();
+
+	/**
+	 * Get all tags for this attribute
+	 * 
+	 * @return
+	 */
+	Iterable<Tag<AttributeMetaData, LabeledResource, LabeledResource>> getTags();
 }
