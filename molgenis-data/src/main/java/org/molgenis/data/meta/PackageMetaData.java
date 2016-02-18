@@ -22,12 +22,12 @@ public class PackageMetaData extends SystemEntityMetaData
 	private PackageMetaData()
 	{
 		super(ENTITY_NAME);
-
-		addAttribute(FULL_NAME, ROLE_ID, ROLE_LABEL).setNillable(false);
-		addAttribute(SIMPLE_NAME).setReadOnly(true);
-		addAttribute(DESCRIPTION).setDataType(TEXT);
-		addAttribute(PARENT).setDataType(XREF).setRefEntity(this).setReadOnly(true);
-		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE).setReadOnly(true);
+		setLabel("Package");
+		addAttribute(FULL_NAME, ROLE_ID, ROLE_LABEL).setLabel("Fully qualified name");
+		addAttribute(SIMPLE_NAME).setLabel("Name").setNillable(false).setReadOnly(true);
+		addAttribute(DESCRIPTION).setLabel("Description").setDataType(TEXT);
+		addAttribute(PARENT).setLabel("Parent").setDataType(XREF).setRefEntity(this).setReadOnly(true);
+		addAttribute(TAGS).setLabel("Tags").setDataType(MREF).setRefEntity(TagMetaData.INSTANCE);
 	}
 
 }

@@ -22,11 +22,12 @@ public class TagMetaData extends SystemEntityMetaData
 	private TagMetaData()
 	{
 		super(ENTITY_NAME);
-		addAttribute(IDENTIFIER, ROLE_ID);
-		addAttribute(OBJECT_IRI, ROLE_LOOKUP).setDataType(MolgenisFieldTypes.TEXT);
-		addAttribute(LABEL, ROLE_LABEL, ROLE_LOOKUP).setNillable(false);
-		addAttribute(RELATION_IRI).setNillable(false);
-		addAttribute(RELATION_LABEL).setNillable(false);
-		addAttribute(CODE_SYSTEM);
+		setLabel("Tag");
+		addAttribute(IDENTIFIER, ROLE_ID).setLabel("Identifier");
+		addAttribute(OBJECT_IRI, ROLE_LOOKUP).setLabel("Object IRI").setDataType(MolgenisFieldTypes.TEXT);
+		addAttribute(LABEL, ROLE_LABEL, ROLE_LOOKUP).setLabel("Label").setNillable(false);
+		addAttribute(RELATION_IRI).setLabel("Relation IRI").setNillable(false);
+		addAttribute(RELATION_LABEL).setLabel("Relation label").setNillable(false);
+		addAttribute(CODE_SYSTEM).setLabel("Code system");
 	}
 }

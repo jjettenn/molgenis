@@ -43,28 +43,28 @@ public class AttributeMetaDataMetaData extends SystemEntityMetaData
 	private AttributeMetaDataMetaData()
 	{
 		super(ENTITY_NAME);
-
-		addAttribute(IDENTIFIER, ROLE_ID).setVisible(false);
-		addAttribute(NAME, ROLE_LABEL, ROLE_LOOKUP).setNillable(false).setReadOnly(true);
-		addAttribute(DATA_TYPE).setDataType(new EnumField()).setEnumOptions(FieldTypeEnum.getOptionsLowercase())
-				.setNillable(false);
-		addAttribute(PARTS).setDataType(MREF).setRefEntity(this).setReadOnly(true);
-		addAttribute(REF_ENTITY).setReadOnly(true);
-		addAttribute(EXPRESSION).setNillable(true);
-		addAttribute(NILLABLE).setDataType(BOOL).setNillable(false).setReadOnly(true);
-		addAttribute(AUTO).setDataType(BOOL).setNillable(false);
-		addAttribute(VISIBLE).setDataType(BOOL).setNillable(false);
-		addAttribute(LABEL, ROLE_LOOKUP);
-		addAttribute(DESCRIPTION).setDataType(TEXT);
-		addAttribute(AGGREGATEABLE).setDataType(BOOL).setNillable(false);
-		addAttribute(ENUM_OPTIONS).setDataType(TEXT).setReadOnly(true);
-		addAttribute(RANGE_MIN).setDataType(new LongField()).setReadOnly(true);
-		addAttribute(RANGE_MAX).setDataType(new LongField()).setReadOnly(true);
-		addAttribute(READ_ONLY).setDataType(BOOL).setNillable(false);
-		addAttribute(UNIQUE).setDataType(BOOL).setNillable(false).setReadOnly(true);
-		addAttribute(TAGS).setDataType(MREF).setRefEntity(TagMetaData.INSTANCE).setReadOnly(true);
-		addAttribute(VISIBLE_EXPRESSION).setDataType(SCRIPT).setNillable(true);
-		addAttribute(VALIDATION_EXPRESSION).setDataType(SCRIPT).setNillable(true);
-		addAttribute(DEFAULT_VALUE).setDataType(TEXT).setNillable(true).setReadOnly(true);
+		setLabel("Attribute");
+		addAttribute(IDENTIFIER, ROLE_ID).setLabel("Identifier").setVisible(false);
+		addAttribute(NAME, ROLE_LABEL, ROLE_LOOKUP).setLabel("Name").setNillable(false).setReadOnly(true);
+		addAttribute(DATA_TYPE).setLabel("Data type").setDataType(new EnumField())
+				.setEnumOptions(FieldTypeEnum.getOptionsLowercase()).setNillable(false);
+		addAttribute(PARTS).setLabel("Parts").setDataType(MREF).setRefEntity(this).setReadOnly(true);
+		addAttribute(REF_ENTITY).setLabel("Reference entity").setReadOnly(true);
+		addAttribute(EXPRESSION).setLabel("Expression").setNillable(true);
+		addAttribute(NILLABLE).setLabel("Nillable").setDataType(BOOL).setNillable(false).setReadOnly(true);
+		addAttribute(AUTO).setLabel("Auto").setDataType(BOOL).setNillable(false);
+		addAttribute(VISIBLE).setLabel("Visible").setDataType(BOOL).setNillable(false);
+		addAttribute(LABEL, ROLE_LOOKUP).setLabel("Label");
+		addAttribute(DESCRIPTION).setLabel("Description").setDataType(TEXT);
+		addAttribute(AGGREGATEABLE).setLabel("Aggregateable").setDataType(BOOL).setNillable(false);
+		addAttribute(ENUM_OPTIONS).setLabel("Enum values").setDataType(TEXT).setReadOnly(true);
+		addAttribute(RANGE_MIN).setLabel("Range (min)").setDataType(new LongField()).setReadOnly(true);
+		addAttribute(RANGE_MAX).setLabel("Range (max)").setDataType(new LongField()).setReadOnly(true);
+		addAttribute(READ_ONLY).setLabel("Read-only").setDataType(BOOL).setNillable(false);
+		addAttribute(UNIQUE).setLabel("Unique").setDataType(BOOL).setNillable(false).setReadOnly(true);
+		addAttribute(TAGS).setLabel("Tags").setDataType(MREF).setRefEntity(TagMetaData.INSTANCE);
+		addAttribute(VISIBLE_EXPRESSION).setLabel("Visible expression").setDataType(SCRIPT).setNillable(true);
+		addAttribute(VALIDATION_EXPRESSION).setLabel("Validation expression").setDataType(SCRIPT).setNillable(true);
+		addAttribute(DEFAULT_VALUE).setLabel("Default value").setDataType(TEXT).setNillable(true).setReadOnly(true);
 	}
 }
