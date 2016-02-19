@@ -13,6 +13,8 @@ import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryAlreadyExistsException;
+import org.molgenis.data.meta.MetaDataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -23,12 +25,16 @@ public class PostgreSqlRepositoryCollection implements ManageableRepositoryColle
 
 	private final JdbcTemplate jdbcTemplate;
 	private final DataSource dataSource;
+	private final MetaDataService metaDataService;
 	private final Map<String, PostgreSqlRepository> repositories;
 
-	public PostgreSqlRepositoryCollection(JdbcTemplate jdbcTemplate, DataSource dataSource)
+	@Autowired
+	public PostgreSqlRepositoryCollection(JdbcTemplate jdbcTemplate, DataSource dataSource,
+			MetaDataService metaDataService)
 	{
 		this.jdbcTemplate = requireNonNull(jdbcTemplate);
 		this.dataSource = requireNonNull(dataSource);
+		this.metaDataService = requireNonNull(metaDataService);
 		this.repositories = new HashMap<>();
 	}
 
@@ -101,7 +107,8 @@ public class PostgreSqlRepositoryCollection implements ManageableRepositoryColle
 
 	private PostgreSqlRepository createRepository(EntityMetaData entityMeta)
 	{
-		PostgreSqlRepository postgreSqlRepository = new PostgreSqlRepository(entityMeta, jdbcTemplate, dataSource);
+		PostgreSqlRepository postgreSqlRepository = new PostgreSqlRepository(entityMeta, jdbcTemplate, dataSource,
+				metaDataService);
 		return postgreSqlRepository;
 	}
 }
