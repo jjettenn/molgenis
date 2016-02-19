@@ -23,6 +23,7 @@ import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
+import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Package;
@@ -77,10 +78,17 @@ public class MetaDataServiceImpl implements MetaDataService
 	private final DataServiceImpl dataService;
 	private TransactionTemplate transactionTemplate;
 	private LanguageService languageService;
+	private IdGenerator idGenerator;
 
 	public MetaDataServiceImpl(DataServiceImpl dataService)
 	{
 		this.dataService = dataService;
+	}
+
+	@Autowired
+	public void setIdGenerator(IdGenerator idGenerator)
+	{
+		this.idGenerator = idGenerator;
 	}
 
 	@Autowired
@@ -163,7 +171,7 @@ public class MetaDataServiceImpl implements MetaDataService
 		dataService.addRepository(metaRepoDecoratorFactory.createDecoratedRepository(packages));
 		packageRepository = new PackageRepository(packages);
 
-		attributeMetaDataRepository = new AttributeMetaDataRepository(defaultBackend, languageService);
+		attributeMetaDataRepository = new AttributeMetaDataRepository(defaultBackend, languageService, idGenerator);
 		entityMetaDataRepository = new EntityMetaDataRepository(defaultBackend, packageRepository,
 				attributeMetaDataRepository, languageService);
 		attributeMetaDataRepository.setEntityMetaDataRepository(entityMetaDataRepository);
@@ -676,8 +684,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	{
 		LinkedHashMap<String, Boolean> entitiesImportable = new LinkedHashMap<String, Boolean>();
 		StreamSupport.stream(repositoryCollection.getEntityNames().spliterator(), false)
-				.forEach(entityName -> entitiesImportable.put(entityName, this.canIntegrateEntityMetadataCheck(
-						repositoryCollection.getRepository(entityName).getEntityMetaData())));
+				.forEach(entityName -> entitiesImportable.put(entityName, true));
 
 		return entitiesImportable;
 	}
@@ -690,42 +697,9 @@ public class MetaDataServiceImpl implements MetaDataService
 		LinkedHashMap<String, Boolean> entitiesImportable = new LinkedHashMap<String, Boolean>();
 
 		StreamSupport.stream(newEntitiesMetaDataMap.keySet().spliterator(), false)
-				.forEach(entityName -> entitiesImportable.put(entityName, skipEntities.contains(entityName)
-						|| this.canIntegrateEntityMetadataCheck(newEntitiesMetaDataMap.get(entityName))));
+				.forEach(entityName -> entitiesImportable.put(entityName, skipEntities.contains(entityName)));
 
 		return entitiesImportable;
-	}
-
-	public boolean canIntegrateEntityMetadataCheck(EntityMetaData newEntityMetaData)
-	{
-		// String entityName = newEntityMetaData.getName();
-		// if (dataService.hasRepository(entityName))
-		// {
-		// EntityMetaData newEntity = newEntityMetaData;
-		// EntityMetaData oldEntity = dataService.getEntityMetaData(entityName);
-		//
-		// List<AttributeMetaData> oldAtomicAttributes = StreamSupport
-		// .stream(oldEntity.getAtomicAttributes().spliterator(), false)
-		// .collect(Collectors.<AttributeMetaData> toList());
-		//
-		// LinkedHashMap<String, AttributeMetaData> newAtomicAttributesMap = new LinkedHashMap<String,
-		// AttributeMetaData>();
-		// StreamSupport.stream(newEntity.getAtomicAttributes().spliterator(), false)
-		// .forEach(attribute -> newAtomicAttributesMap.put(attribute.getName(), attribute));
-		//
-		// for (AttributeMetaData oldAttribute : oldAtomicAttributes)
-		// {
-		// if (!newAtomicAttributesMap.keySet().contains(oldAttribute.getName())) return false;
-		//
-		// DefaultAttributeMetaData oldAttributDefault = new DefaultAttributeMetaData(oldAttribute);
-		// DefaultAttributeMetaData newAttributDefault = new DefaultAttributeMetaData(
-		// newAtomicAttributesMap.get(oldAttribute.getName()));
-		//
-		// if (!oldAttributDefault.isSameAs(newAttributDefault)) return false;
-		// }
-		// }
-
-		return true;
 	}
 
 	@Override

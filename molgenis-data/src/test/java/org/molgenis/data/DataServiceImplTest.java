@@ -1,5 +1,6 @@
 package org.molgenis.data;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -33,7 +34,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.util.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -281,7 +281,7 @@ public class DataServiceImplTest
 	@Test
 	public void copyRepository()
 	{
-		//setup everything
+		// setup everything
 		Query query = new QueryImpl();
 		AttributeMetaData attr1 = new DefaultAttributeMetaData("attr1", MolgenisFieldTypes.FieldTypeEnum.STRING);
 		AttributeMetaData attr2 = new DefaultAttributeMetaData("attr2", MolgenisFieldTypes.FieldTypeEnum.STRING);
@@ -295,6 +295,7 @@ public class DataServiceImplTest
 		when(repo1.getEntityMetaData()).thenReturn(emd);
 		when(emd.getOwnAttributes()).thenReturn(Arrays.asList(attr1, attr2));
 		when(emd.getOwnLookupAttributes()).thenReturn(Arrays.asList(attr1, attr2));
+		when(emd.getOwnTags()).thenReturn(emptyList());
 
 		dataService.setMeta(metaDataService);
 
@@ -302,10 +303,10 @@ public class DataServiceImplTest
 		when(repo2.getEntityMetaData()).thenReturn(emd2);
 		when(metaDataService.addEntityMeta(emd2)).thenReturn(repo2);
 
-		//The actual method call
+		// The actual method call
 		Repository copy = dataService.copyRepository(repo1, "Entity2", "testCopyLabel");
 
-		//The test
+		// The test
 		verify(metaDataService).addEntityMeta(copy.getEntityMetaData());
 		ArgumentCaptor<Stream<Entity>> argument = ArgumentCaptor.forClass((Class) Stream.class);
 		verify(repo2, times(1)).add(argument.capture());

@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -467,74 +468,51 @@ public class ImportWriter
 		HugeSet<Object> ids = new HugeSet<Object>();
 		try
 		{
-			for (Entity entity : entities)
+			if (dbAction == DatabaseAction.ADD_IGNORE_EXISTING || dbAction == DatabaseAction.ADD_UPDATE_EXISTING)
 			{
-				Object id = entity.get(idAttributeName);
-				if (id != null)
+				for (Entity entity : entities)
 				{
-					ids.add(id);
-				}
-			}
-
-			if (!ids.isEmpty())
-			{
-				// Check if the ids already exist
-				if (repo.count() > 0)
-				{
-					int batchSize = 100;
-					Query q = new QueryImpl();
-					Iterator<Object> it = ids.iterator();
-					int batchCount = 0;
-					while (it.hasNext())
+					Object id = entity.get(idAttributeName);
+					if (id != null)
 					{
-						Object id = it.next();
-						q.eq(idAttributeName, id);
-						batchCount++;
-						if (batchCount == batchSize || !it.hasNext())
+						ids.add(id);
+					}
+				}
+
+				if (!ids.isEmpty())
+				{
+					// Check if the ids already exist
+					if (repo.count() > 0)
+					{
+						int batchSize = 100;
+						Query q = new QueryImpl();
+						Iterator<Object> it = ids.iterator();
+						int batchCount = 0;
+						while (it.hasNext())
 						{
-							repo.findAll(q).forEach(existing -> {
-								existingIds.add(existing.getIdValue());
-							});
-							q = new QueryImpl();
-							batchCount = 0;
-						}
-						else
-						{
-							q.or();
+							Object id = it.next();
+							q.eq(idAttributeName, id);
+							batchCount++;
+							if (batchCount == batchSize || !it.hasNext())
+							{
+								repo.findAll(q).forEach(existing -> {
+									existingIds.add(existing.getIdValue());
+								});
+								q = new QueryImpl();
+								batchCount = 0;
+							}
+							else
+							{
+								q.or();
+							}
 						}
 					}
 				}
 			}
-
 			int count = 0;
 			switch (dbAction)
 			{
 				case ADD:
-					if (!existingIds.isEmpty())
-					{
-						StringBuilder msg = new StringBuilder();
-						msg.append("Trying to add existing ").append(repo.getName())
-								.append(" entities as new insert: ");
-
-						int i = 0;
-						Iterator<?> it = existingIds.iterator();
-						while (it.hasNext() && i < 5)
-						{
-							if (i > 0)
-							{
-								msg.append(",");
-							}
-							msg.append(it.next());
-							i++;
-						}
-
-						if (it.hasNext())
-						{
-							msg.append(" and more.");
-						}
-						throw new MolgenisDataException(msg.toString());
-					}
-
 					count = repo.add(StreamSupport.stream(entities.spliterator(), false));
 					break;
 				case ADD_IGNORE_EXISTING:
@@ -608,46 +586,20 @@ public class ImportWriter
 					break;
 
 				case UPDATE:
-					int errorCount = 0;
-					StringBuilder msg = new StringBuilder();
-					msg.append("Trying to update non-existing ").append(repo.getName()).append(" entities:");
-
-					for (Entity entity : entities)
-					{
-						count++;
-						Object id = idDataType.convert(entity.get(idAttributeName));
-						if (!existingIds.contains(id))
-						{
-							if (++errorCount == 6)
-							{
-								break;
-							}
-
-							if (errorCount > 0)
-							{
-								msg.append(", ");
-							}
-							msg.append(id);
-						}
-					}
-
-					if (errorCount > 0)
-					{
-						if (errorCount == 6)
-						{
-							msg.append(" and more.");
-						}
-						throw new MolgenisDataException(msg.toString());
-					}
-					repo.update(StreamSupport.stream(entities.spliterator(), false));
+					AtomicInteger atomicCount = new AtomicInteger();
+					repo.update(stream(entities.spliterator(), false).filter(entity -> {
+						atomicCount.incrementAndGet();
+						return true;
+					}));
+					count = atomicCount.get();
 					break;
-
 				default:
 					break;
 
 			}
 
 			return count;
+
 		}
 		finally
 		{

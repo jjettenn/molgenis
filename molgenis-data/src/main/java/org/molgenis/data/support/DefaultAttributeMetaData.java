@@ -66,7 +66,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 	private String expression;
 	private String label;// The default label
 	private final Map<String, String> labelByLanguageCode = new HashMap<>();
-	private boolean visible = true; // remove?
+	private boolean visible = true;
 	private boolean unique = false;
 	private boolean auto = false;
 	private Map<String, AttributeMetaData> attributePartsMap;
@@ -382,7 +382,8 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 	@Override
 	public String toString()
 	{
-		String result = "AttributeMetaData(name='" + this.getName() + "'";
+		String result = "AttributeMetaData(identifier='" + this.getIdentifier() + "'";
+		result += " name='" + this.getName() + "'";
 		result += " dataType='" + getDataType() + "'";
 		if (getRefEntity() != null) result += " refEntity='" + getRefEntity().getName() + "'";
 		result += " description='" + getDescription() + "'";

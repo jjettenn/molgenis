@@ -129,12 +129,8 @@ public class MetaUtils
 		}
 		entity.set(AttributeMetaDataMetaData.READ_ONLY, attr.isReadonly());
 		entity.set(AttributeMetaDataMetaData.UNIQUE, attr.isUnique());
-		Iterable<AttributeMetaData> attrParts = attr.getAttributeParts();
-		if (attrParts != null)
-		{
-			entity.set(AttributeMetaDataMetaData.PARTS,
-					stream(attrParts.spliterator(), false).map(MetaUtils::toEntity).collect(toList()));
-		}
+		entity.set(AttributeMetaDataMetaData.PARTS,
+				stream(attr.getAttributeParts().spliterator(), false).map(MetaUtils::toEntity).collect(toList()));
 		entity.set(AttributeMetaDataMetaData.VISIBLE_EXPRESSION, attr.getVisibleExpression());
 		entity.set(AttributeMetaDataMetaData.VALIDATION_EXPRESSION, attr.getValidationExpression());
 		entity.set(AttributeMetaDataMetaData.DEFAULT_VALUE, attr.getDefaultValue());
@@ -298,13 +294,9 @@ public class MetaUtils
 					languageCodes);
 			attributeMetaData.setRefEntity(refEntity);
 		}
-		Iterable<Entity> parts = attrEntity.getEntities(PARTS);
-		if (parts != null)
-		{
-			stream(parts.spliterator(), false)
-					.map(attrPart -> MetaUtils.toAttribute(attrPart, entityMetaRepo, languageCodes))
-					.forEach(attributeMetaData::addAttributePart);
-		}
+		stream(attrEntity.getEntities(PARTS).spliterator(), false)
+				.map(attrPart -> MetaUtils.toAttribute(attrPart, entityMetaRepo, languageCodes))
+				.forEach(attributeMetaData::addAttributePart);
 		attributeMetaData.setVisibleExpression(attrEntity.getString(VISIBLE_EXPRESSION));
 		attributeMetaData.setValidationExpression(attrEntity.getString(VALIDATION_EXPRESSION));
 		attributeMetaData.setDefaultValue(attrEntity.getString(DEFAULT_VALUE));
@@ -367,9 +359,8 @@ public class MetaUtils
 
 		Iterable<Entity> attrEntities = entityEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES);
 		stream(attrEntities.spliterator(), false)
-				.map(lookupAttrEntity -> toAttribute(lookupAttrEntity, entityMetaRepo, languageCodes)).forEach(attr -> {
-					entityMeta.addAttributeMetaData(attr);
-				});
+				.map(attrEntity -> toAttribute(attrEntity, entityMetaRepo, languageCodes))
+				.forEach(attr -> entityMeta.addAttributeMetaData(attr));
 		entityMeta.setSystem(entityEntity.getBoolean(EntityMetaDataMetaData.SYSTEM));
 		return entityMeta;
 	}

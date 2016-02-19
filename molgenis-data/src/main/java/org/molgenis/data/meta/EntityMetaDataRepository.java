@@ -213,6 +213,8 @@ class EntityMetaDataRepository
 			packageRepository.add(emd.getPackage());
 		}
 		((PackageImpl) packageRepository.getPackage(emd.getPackage().getName())).addEntity(emd);
+		entityMetaData.getTags().forEach(tag -> emd.addTag(tag));
+
 		Entity entity = toEntity(emd);
 		Iterable<AttributeMetaData> attributes = entityMetaData.getOwnAttributes();
 		if (attributes != null)

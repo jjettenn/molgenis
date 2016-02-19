@@ -68,6 +68,7 @@ public class EntityMetaDataRepositoryTest
 		// must mock PackageImpl instead of Package due to case in EntityMetaDataRepository
 		PackageImpl package_ = mock(PackageImpl.class);
 		when(package_.getName()).thenReturn(packageName);
+		when(package_.getTags()).thenReturn(emptyList());
 
 		String entityName = "entity";
 		EntityMetaData entityMeta = mock(EntityMetaData.class);
@@ -83,6 +84,8 @@ public class EntityMetaDataRepositoryTest
 		when(entityMeta.getOwnLookupAttributes()).thenReturn(Arrays.asList(lookupAttr0, lookupAttr1));
 		when(entityMeta.getAttributes()).thenReturn(Arrays.asList(idAttr, labelAttr, lookupAttr0, lookupAttr1));
 		when(entityMeta.getOwnAttributes()).thenReturn(Arrays.asList(idAttr, labelAttr, lookupAttr0, lookupAttr1));
+		when(entityMeta.getTags()).thenReturn(emptyList());
+		when(entityMeta.getOwnTags()).thenReturn(emptyList());
 
 		Entity idAttrEntity = mock(Entity.class);
 		when(idAttrEntity.getString(AttributeMetaDataMetaData.NAME)).thenReturn(idAttrName);

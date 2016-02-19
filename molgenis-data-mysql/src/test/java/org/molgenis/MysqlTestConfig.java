@@ -6,16 +6,17 @@ import javax.sql.DataSource;
 import org.mockito.Mockito;
 import org.molgenis.data.EntityManager;
 import org.molgenis.data.EntityManagerImpl;
+import org.molgenis.data.IdGenerator;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.meta.MetaDataService;
 import org.molgenis.data.meta.MetaDataServiceImpl;
-import org.molgenis.data.meta.system.FreemarkerTemplateMetaData;
 import org.molgenis.data.mysql.AsyncJdbcTemplate;
 import org.molgenis.data.mysql.MySqlEntityFactory;
 import org.molgenis.data.mysql.MysqlRepository;
 import org.molgenis.data.mysql.MysqlRepositoryCollection;
 import org.molgenis.data.settings.AppSettings;
 import org.molgenis.data.support.DataServiceImpl;
+import org.molgenis.data.support.UuidGenerator;
 import org.molgenis.framework.ui.MolgenisPluginRegistry;
 import org.molgenis.framework.ui.MolgenisPluginRegistryImpl;
 import org.molgenis.mysql.embed.EmbeddedMysqlDatabaseBuilder;
@@ -56,8 +57,8 @@ public class MysqlTestConfig
 		metaDataService().setDefaultBackend(mysqlRepositoryCollection());
 
 		// Login
-		SecurityContextHolder.getContext().setAuthentication(
-				new TestingAuthenticationToken("admin", "admin", "ROLE_SYSTEM"));
+		SecurityContextHolder.getContext()
+				.setAuthentication(new TestingAuthenticationToken("admin", "admin", "ROLE_SYSTEM"));
 	}
 
 	@Bean
@@ -110,9 +111,17 @@ public class MysqlTestConfig
 	}
 
 	@Bean
+	public IdGenerator idGenerator()
+	{
+		return new UuidGenerator();
+	}
+
+	@Bean
 	public MetaDataService metaDataService()
 	{
-		return new MetaDataServiceImpl(dataService());
+		MetaDataServiceImpl metaDataServiceImpl = new MetaDataServiceImpl(dataService());
+		metaDataServiceImpl.setIdGenerator(idGenerator());
+		return metaDataServiceImpl;
 	}
 
 	@Bean

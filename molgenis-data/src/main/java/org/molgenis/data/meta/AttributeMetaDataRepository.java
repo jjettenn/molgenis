@@ -3,7 +3,6 @@ package org.molgenis.data.meta;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
-import static org.molgenis.data.meta.AttributeMetaDataMetaData.IDENTIFIER;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.PARTS;
 
 import java.util.Arrays;
@@ -11,12 +10,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.molgenis.data.AttributeMetaData;
+import org.molgenis.data.AutoValueRepositoryDecorator;
 import org.molgenis.data.Entity;
+import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.support.DefaultAttributeMetaData;
-import org.molgenis.data.support.UuidGenerator;
 
 import com.google.common.collect.Iterables;
 
@@ -30,15 +30,15 @@ class AttributeMetaDataRepository
 
 	public static final AttributeMetaDataMetaData META_DATA = AttributeMetaDataMetaData.INSTANCE;
 
-	private final UuidGenerator uuidGenerator;
 	private final Repository repository;
 	private EntityMetaDataRepository entityMetaDataRepository;
 	private final LanguageService languageService;
 
-	public AttributeMetaDataRepository(ManageableRepositoryCollection collection, LanguageService languageService)
+	public AttributeMetaDataRepository(ManageableRepositoryCollection collection, LanguageService languageService,
+			IdGenerator idGenerator)
 	{
-		this.repository = requireNonNull(collection).addEntityMeta(META_DATA);
-		uuidGenerator = new UuidGenerator();
+		this.repository = new AutoValueRepositoryDecorator(requireNonNull(collection).addEntityMeta(META_DATA),
+				idGenerator);
 		this.languageService = languageService;
 	}
 
@@ -82,14 +82,7 @@ class AttributeMetaDataRepository
 
 			private List<Entity> convertToAttrEntities(Iterable<AttributeMetaData> attrs)
 			{
-				return stream(attrs.spliterator(), false).map(this::convertToAttrEntity).collect(toList());
-			}
-
-			private Entity convertToAttrEntity(AttributeMetaData attr)
-			{
-				Entity attrEntity = MetaUtils.toEntity(attr);
-				attrEntity.set(IDENTIFIER, uuidGenerator.generateId());
-				return attrEntity;
+				return stream(attrs.spliterator(), false).map(MetaUtils::toEntity).collect(toList());
 			}
 		};
 	}
