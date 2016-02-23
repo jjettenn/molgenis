@@ -32,8 +32,6 @@ public class PackageImpl implements Package
 	private final List<PackageImpl> subPackages = new ArrayList<PackageImpl>();
 	private final List<EntityMetaData> entities = new ArrayList<EntityMetaData>();
 	private final List<Tag<Package, LabeledResource, LabeledResource>> tags = new ArrayList<Tag<Package, LabeledResource, LabeledResource>>();
-	public static final Package defaultPackage = new PackageImpl(Package.DEFAULT_PACKAGE_NAME, "The default package",
-			null);
 
 	public PackageImpl(String simpleName)
 	{

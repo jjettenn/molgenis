@@ -28,7 +28,7 @@ import org.molgenis.data.mapper.mapping.model.MappingTarget;
 import org.molgenis.data.mapper.repository.MappingProjectRepository;
 import org.molgenis.data.mapper.service.AlgorithmService;
 import org.molgenis.data.mapper.service.MappingService;
-import org.molgenis.data.meta.PackageImpl;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.MapEntity;
 import org.molgenis.data.support.QueryImpl;
@@ -170,7 +170,7 @@ public class MappingServiceImpl implements MappingService
 	public String applyMappings(MappingTarget mappingTarget, String entityName)
 	{
 		DefaultEntityMetaData targetMetaData = new DefaultEntityMetaData(entityName, mappingTarget.getTarget());
-		targetMetaData.setPackage(PackageImpl.defaultPackage);
+		targetMetaData.setPackage(DefaultPackage.INSTANCE);
 		targetMetaData.setLabel(entityName);
 		targetMetaData.addAttribute("source");
 

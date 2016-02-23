@@ -10,9 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.molgenis.data.AttributeMetaData;
-import org.molgenis.data.AutoValueRepositoryDecorator;
 import org.molgenis.data.Entity;
-import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
 import org.molgenis.data.i18n.LanguageService;
@@ -34,11 +32,9 @@ class AttributeMetaDataRepository
 	private EntityMetaDataRepository entityMetaDataRepository;
 	private final LanguageService languageService;
 
-	public AttributeMetaDataRepository(ManageableRepositoryCollection collection, LanguageService languageService,
-			IdGenerator idGenerator)
+	public AttributeMetaDataRepository(ManageableRepositoryCollection collection, LanguageService languageService)
 	{
-		this.repository = new AutoValueRepositoryDecorator(requireNonNull(collection).addEntityMeta(META_DATA),
-				idGenerator);
+		this.repository = requireNonNull(collection).addEntityMeta(META_DATA);
 		this.languageService = languageService;
 	}
 

@@ -296,6 +296,23 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	}
 
 	@Override
+	public Iterable<AttributeMetaData> getAllAttributes()
+	{
+		Iterable<AttributeMetaData> allAttrs = getCachedAllAttrs().values();
+		if (extends_ != null)
+		{
+			allAttrs = Iterables.concat(extends_.getAllAttributes(), allAttrs);
+		}
+		return allAttrs;
+	}
+
+	@Override
+	public Iterable<AttributeMetaData> getOwnAllAttributes()
+	{
+		return getCachedAllAttrs().values();
+	}
+
+	@Override
 	public String getDescription(String languageCode)
 	{
 		String description = descriptionByLanguageCode.get(languageCode);

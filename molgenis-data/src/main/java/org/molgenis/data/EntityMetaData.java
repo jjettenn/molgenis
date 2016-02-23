@@ -96,6 +96,12 @@ public interface EntityMetaData
 	 */
 	Iterable<AttributeMetaData> getOwnAttributes();
 
+	// TODO add docs
+	Iterable<AttributeMetaData> getAllAttributes();
+
+	// TODO add docs
+	Iterable<AttributeMetaData> getOwnAllAttributes();
+
 	/**
 	 * Returns all atomic attributes. In case of compound attributes (attributes consisting of atomic attributes) only
 	 * the descendant atomic attributes are returned. The compound attribute itself is not returned.

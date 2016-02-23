@@ -3,6 +3,7 @@ package org.molgenis.data.mysql;
 import org.molgenis.MysqlTestConfig;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.MetaDataServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +61,8 @@ public abstract class MysqlRepositoryAbstractDatatypeTest extends AbstractTestNG
 	public void test() throws Exception
 	{
 		// drop if needed
-		if (metaDataService.getEntityMetaData(getMetaData().getName()) != null) metaDataService
-				.deleteEntityMeta(getMetaData().getName());
+		if (metaDataService.getEntityMetaData(getMetaData().getName()) != null)
+			metaDataService.deleteEntityMeta(getMetaData().getName());
 
 		// test create table
 		MysqlRepository repo = (MysqlRepository) metaDataService.addEntityMeta(getMetaData());
@@ -89,5 +90,6 @@ public abstract class MysqlRepositoryAbstractDatatypeTest extends AbstractTestNG
 	public void afterClass()
 	{
 		metaDataService.recreateMetaDataRepositories();
+		metaDataService.addPackage(DefaultPackage.INSTANCE);
 	}
 }

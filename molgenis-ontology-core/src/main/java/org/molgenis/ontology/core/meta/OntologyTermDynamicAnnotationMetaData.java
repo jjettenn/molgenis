@@ -21,7 +21,7 @@ public class OntologyTermDynamicAnnotationMetaData extends SystemEntityMetaData
 
 	private OntologyTermDynamicAnnotationMetaData()
 	{
-		super(SIMPLE_NAME, OntologyPackage.getPackageInstance());
+		super(SIMPLE_NAME, OntologyPackage.INSTANCE);
 
 		addAttributeMetaData(new DefaultAttributeMetaData(ID).setVisible(false), ROLE_ID);
 		addAttributeMetaData(new DefaultAttributeMetaData(NAME, FieldTypeEnum.STRING).setNillable(false));

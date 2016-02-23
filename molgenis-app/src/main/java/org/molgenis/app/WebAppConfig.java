@@ -55,7 +55,7 @@ import freemarker.template.TemplateException;
 @EnableTransactionManagement
 @EnableWebMvc
 @EnableAsync
-@ComponentScan(basePackages = "org.molgenis", excludeFilters = @Filter(type = FilterType.ANNOTATION, value = CommandLineOnlyConfiguration.class) )
+@ComponentScan(basePackages = "org.molgenis", excludeFilters = @Filter(type = FilterType.ANNOTATION, value = CommandLineOnlyConfiguration.class))
 @Import(
 { WebAppSecurityConfig.class, DatabaseConfig.class, HttpClientConfig.class, EmbeddedElasticSearchConfig.class,
 		GsonConfig.class })

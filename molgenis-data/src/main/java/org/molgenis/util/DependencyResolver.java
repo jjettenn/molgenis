@@ -1,5 +1,6 @@
 package org.molgenis.util;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class DependencyResolver
 	 * @param coll
 	 * @return
 	 */
-	public static List<EntityMetaData> resolve(Set<EntityMetaData> coll)
+	public static List<EntityMetaData> resolve(Collection<EntityMetaData> coll)
 	{
 		// EntityMetaData by entityname
 		Map<String, EntityMetaData> metaDataByName = Maps.newHashMap();

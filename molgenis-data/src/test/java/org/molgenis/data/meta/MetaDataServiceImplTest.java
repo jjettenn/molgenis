@@ -6,7 +6,6 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -15,7 +14,6 @@ import org.molgenis.data.AutoValueRepositoryDecorator;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
-import org.molgenis.data.Package;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.RepositoryDecoratorFactory;
@@ -50,14 +48,11 @@ public class MetaDataServiceImplTest extends AbstractTestNGSpringContextTests
 	@Autowired
 	private ManageableRepositoryCollection manageableCrudRepositoryCollection;
 
-	private Package defaultPackage;
-
 	private PackageImpl molgenis;
 
 	@BeforeMethod
 	public void readPackageTree()
 	{
-		defaultPackage = PackageImpl.defaultPackage;
 		PackageImpl org = new PackageImpl("org", "the org package", null);
 		molgenis = new PackageImpl("molgenis", "the molgenis package", org);
 		org.addSubPackage(molgenis);
@@ -91,8 +86,6 @@ public class MetaDataServiceImplTest extends AbstractTestNGSpringContextTests
 		metaDataServiceImpl.setLanguageService(new LanguageService(dataService, appSettings));
 		metaDataServiceImpl.setIdGenerator(new UuidGenerator());
 		metaDataServiceImpl.setDefaultBackend(manageableCrudRepositoryCollection);
-
-		assertEquals(metaDataServiceImpl.getRootPackages(), Arrays.asList(defaultPackage));
 	}
 
 	@Test
@@ -100,7 +93,7 @@ public class MetaDataServiceImplTest extends AbstractTestNGSpringContextTests
 	{
 		readPackageTree();
 
-		PackageImpl defaultPackage = (PackageImpl) PackageImpl.defaultPackage;
+		PackageImpl defaultPackage = DefaultPackage.INSTANCE;
 		DefaultEntityMetaData coderMetaData = new DefaultEntityMetaData("Coder");
 		coderMetaData.setDescription("A coder");
 		coderMetaData.setExtends(metaDataServiceImpl.getEntityMetaData("org_molgenis_Person"));

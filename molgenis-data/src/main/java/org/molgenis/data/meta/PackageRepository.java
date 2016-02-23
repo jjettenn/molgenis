@@ -51,18 +51,6 @@ class PackageRepository
 	{
 		this.repository = repository;
 		updatePackageCache();
-		addDefaultPackage();
-	}
-
-	/**
-	 * Adds the default package to the repository if it does not yet exist.
-	 */
-	private void addDefaultPackage()
-	{
-		if (getPackage(Package.DEFAULT_PACKAGE_NAME) == null)
-		{
-			add(PackageImpl.defaultPackage);
-		}
 	}
 
 	/**
@@ -124,15 +112,14 @@ class PackageRepository
 	 */
 	public void deleteAll()
 	{
-		List<Entity> importOrderPackages = Lists.newLinkedList(new DependencyResolver().resolveSelfReferences(
-				repository, META_DATA));
+		List<Entity> importOrderPackages = Lists
+				.newLinkedList(new DependencyResolver().resolveSelfReferences(repository, META_DATA));
 		Collections.reverse(importOrderPackages);
 		for (Entity p : importOrderPackages)
 		{
 			repository.delete(p);
 		}
 		packageCache.clear();
-		addDefaultPackage();
 	}
 
 	/**
@@ -237,8 +224,8 @@ class PackageRepository
 			PackageImpl p = result.get(e.get(PackageMetaData.FULL_NAME));
 			if (e.get(PackageMetaData.PARENT) != null)
 			{
-				PackageImpl parent = result.get(e.getEntity(PackageMetaData.PARENT)
-						.getString(PackageMetaData.FULL_NAME));
+				PackageImpl parent = result
+						.get(e.getEntity(PackageMetaData.PARENT).getString(PackageMetaData.FULL_NAME));
 				if (parent == null)
 				{
 					LOG.error("unknown parent package" + e.get(PackageMetaData.PARENT));

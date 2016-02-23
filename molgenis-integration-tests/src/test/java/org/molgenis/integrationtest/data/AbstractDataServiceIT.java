@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.generate;
 import static java.util.stream.Stream.of;
+import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -35,7 +36,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 
 import com.google.common.collect.Iterators;
-import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 public abstract class AbstractDataServiceIT extends AbstractDataIntegrationIT
 {
@@ -48,6 +48,8 @@ public abstract class AbstractDataServiceIT extends AbstractDataIntegrationIT
 	public void setUp()
 	{
 		Package p = new PackageImpl("test");
+		metaDataService.addPackage(p);
+
 		entityMetaData = new DefaultEntityMetaData("TestEntity", p);
 		entityMetaData.addAttribute(ID, ROLE_ID).setNillable(false).setAuto(true);
 		entityMetaData.addAttribute(ATTR_STR).setNillable(true);
@@ -153,11 +155,12 @@ public abstract class AbstractDataServiceIT extends AbstractDataIntegrationIT
 		assertEquals(dataService.count(ENTITY_NAME, new QueryImpl()), 0);
 	}
 
-	public void testFindAllEmpty() {
+	public void testFindAllEmpty()
+	{
 		Stream<Entity> retrieved = dataService.findAll(ENTITY_NAME);
 		assertEquals(retrieved.count(), 0);
 	}
-	
+
 	public void testFindAll()
 	{
 		List<Entity> entities = create(5);

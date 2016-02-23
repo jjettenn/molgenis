@@ -3,7 +3,11 @@ package org.molgenis.data.meta;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.reverse;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.StreamSupport.stream;
 import static org.molgenis.util.SecurityDecoratorUtils.validatePermission;
 
 import java.util.Collection;
@@ -21,8 +25,10 @@ import java.util.stream.StreamSupport;
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.AttributeMetaData;
+import org.molgenis.data.EditableEntityMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
+import org.molgenis.data.Fetch;
 import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.MolgenisDataException;
@@ -39,13 +45,14 @@ import org.molgenis.data.meta.system.ImportRunMetaData;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
-import org.molgenis.data.support.NonDecoratingRepositoryDecoratorFactory;
-import org.molgenis.data.support.UuidGenerator;
+import org.molgenis.fieldtypes.CompoundField;
 import org.molgenis.security.core.Permission;
 import org.molgenis.security.core.runas.RunAsSystem;
 import org.molgenis.security.core.runas.RunAsSystemProxy;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.util.DependencyResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
@@ -57,6 +64,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeTraverser;
 
 /**
  * MetaData service. Administration of the {@link Package}, {@link EntityMetaData} and {@link AttributeMetaData} of the
@@ -70,6 +78,8 @@ import com.google.common.collect.Sets;
  */
 public class MetaDataServiceImpl implements MetaDataService
 {
+	private static final Logger LOG = LoggerFactory.getLogger(MetaDataServiceImpl.class);
+
 	private PackageRepository packageRepository;
 	private EntityMetaDataRepository entityMetaDataRepository;
 	private AttributeMetaDataRepository attributeMetaDataRepository;
@@ -171,7 +181,7 @@ public class MetaDataServiceImpl implements MetaDataService
 		dataService.addRepository(metaRepoDecoratorFactory.createDecoratedRepository(packages));
 		packageRepository = new PackageRepository(packages);
 
-		attributeMetaDataRepository = new AttributeMetaDataRepository(defaultBackend, languageService, idGenerator);
+		attributeMetaDataRepository = new AttributeMetaDataRepository(defaultBackend, languageService);
 		entityMetaDataRepository = new EntityMetaDataRepository(defaultBackend, packageRepository,
 				attributeMetaDataRepository, languageService);
 		attributeMetaDataRepository.setEntityMetaDataRepository(entityMetaDataRepository);
@@ -244,7 +254,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	{
 		entities.forEach(emd -> validatePermission(emd.getName(), Permission.WRITEMETA));
 
-		reverse(DependencyResolver.resolve(Sets.newHashSet(entities))).stream().map(EntityMetaData::getName)
+		reverse(DependencyResolver.resolve(entities)).stream().map(EntityMetaData::getName)
 				.forEach(this::deleteEntityMeta);
 	}
 
@@ -283,8 +293,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	}
 
 	@Transactional
-	@Override
-	public synchronized Repository add(EntityMetaData emd, RepositoryDecoratorFactory decoratorFactory)
+	private synchronized Repository add(EntityMetaData emd, RepositoryDecoratorFactory decoratorFactory)
 	{
 		MetaValidationUtils.validateEntityMetaData(emd);
 		RepositoryCollection backend = getBackend(emd);
@@ -328,32 +337,108 @@ public class MetaDataServiceImpl implements MetaDataService
 		return dataService.getRepository(emd.getName());
 	}
 
+	private boolean doAddEntityMeta(EntityMetaData entityMeta)
+	{
+		return dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME).findOne(entityMeta.getName(),
+				new Fetch().field(EntityMetaDataMetaData.FULL_NAME)) == null;
+	}
+
 	@Transactional
 	@Override
-	public Repository addEntityMeta(EntityMetaData emd)
+	public synchronized Repository addEntityMeta(EntityMetaData entityMeta)
 	{
-		return add(emd, new NonDecoratingRepositoryDecoratorFactory());
+		if (dataService.hasRepository(entityMeta.getName()))
+		{
+			throw new MolgenisDataException(format("Repository [%s] already exists.", entityMeta.getName()));
+		}
+
+		LOG.info(format("Registering entity [%s]", entityMeta.getName()));
+
+		// create attributes
+		Stream<Entity> attrEntities = stream(entityMeta.getOwnAttributes().spliterator(), false)
+				.flatMap(this::getAttributesPostOrder).map(this::generateAttrIdentifier).map(MetaUtils::toEntity);
+		dataService.getRepository(AttributeMetaDataMetaData.ENTITY_NAME).add(attrEntities);
+
+		// workaround: if entity stored in repository has backend and entity meta has no backend
+		if (entityMeta.getBackend() == null)
+		{
+			((EditableEntityMetaData) entityMeta).setBackend(getDefaultBackend().getName());
+		}
+		// workaround: if entity stored in repository has package and entity meta has no package
+		if (entityMeta.getPackage() == null)
+		{
+			((EditableEntityMetaData) entityMeta).setPackage(DefaultPackage.INSTANCE);
+		}
+		Entity entityEntity = MetaUtils.toEntity(entityMeta);
+
+		dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME).add(entityEntity);
+
+		// create entity repository
+		if (entityMeta.isAbstract())
+		{
+			return null;
+		}
+		else
+		{
+			Repository repo = getBackend(entityMeta).addEntityMeta(entityMeta);
+			dataService.addRepository(repo);
+			return dataService.getRepository(entityMeta.getName());
+		}
+	}
+
+	private boolean doUpdateEntityMeta(EntityMetaData entityMeta)
+	{
+
+		// Might work for more than just MySQL backend
+		return entityMeta.getBackend() == null || "MySql".equals(entityMeta.getBackend());
+	}
+
+	/**
+	 * Returns child attributes of the given attribute in post-order
+	 * 
+	 * @param attr
+	 * @return
+	 */
+	private Stream<AttributeMetaData> getAttributesPostOrder(AttributeMetaData attr)
+	{
+		return stream(new TreeTraverser<AttributeMetaData>()
+		{
+			@Override
+			public Iterable<AttributeMetaData> children(AttributeMetaData attr)
+			{
+				return attr.getDataType() instanceof CompoundField ? attr.getAttributeParts() : emptyList();
+			}
+		}.postOrderTraversal(attr).spliterator(), false);
+	}
+
+	/**
+	 * Generate and inject attribute identifier
+	 * 
+	 * @param attr
+	 * @return
+	 */
+	private AttributeMetaData generateAttrIdentifier(AttributeMetaData attr)
+	{
+		// generate attribute identifiers
+		((DefaultAttributeMetaData) attr).setIdentifier(idGenerator.generateId());
+		return attr;
 	}
 
 	@Transactional
 	@Override
 	public void addAttribute(String fullyQualifiedEntityName, AttributeMetaData attr)
 	{
-		validatePermission(fullyQualifiedEntityName, Permission.WRITEMETA);
-		MetaValidationUtils.validateName(attr.getName());
-
-		EntityMetaData emd = entityMetaDataRepository.addAttribute(fullyQualifiedEntityName, attr);
-		getManageableRepositoryCollection(emd).addAttribute(fullyQualifiedEntityName, attr);
+		DefaultEntityMetaData entityMetaData = getEntityMetaData(fullyQualifiedEntityName);
+		entityMetaData.addAttributeMetaData(attr);
+		updateEntityMeta(entityMetaData);
 	}
 
 	@Override
 	public void addAttributeSync(String fullyQualifiedEntityName, AttributeMetaData attr)
 	{
-		validatePermission(fullyQualifiedEntityName, Permission.WRITEMETA);
-		MetaValidationUtils.validateName(attr.getName());
-
-		EntityMetaData emd = entityMetaDataRepository.addAttribute(fullyQualifiedEntityName, attr);
-		getManageableRepositoryCollection(emd).addAttributeSync(fullyQualifiedEntityName, attr);
+		DefaultEntityMetaData entityMetaData = getEntityMetaData(fullyQualifiedEntityName);
+		entityMetaData.addAttributeMetaData(attr);
+		updateEntityMeta(entityMetaData);
 	}
 
 	@Override
@@ -367,11 +452,29 @@ public class MetaDataServiceImpl implements MetaDataService
 		return entityMetaDataRepository.get(fullyQualifiedEntityName);
 	}
 
+	private boolean doAddPackage(Package package_)
+	{
+		return dataService.findOne(PackageMetaData.ENTITY_NAME, package_.getName(),
+				new Fetch().field(PackageMetaData.FULL_NAME)) == null;
+	}
+
 	@Override
 	public void addPackage(Package p)
 	{
-		MetaValidationUtils.validateName(p.getName());
-		packageRepository.add(p);
+		LOG.info(format("Registering package [%s]", p.getName()));
+		dataService.getRepository(PackageMetaData.ENTITY_NAME).add(MetaUtils.toEntity(p));
+	}
+
+	private boolean doUpdatePackage(Package package_)
+	{
+		Entity existingPackageEntity = dataService.findOne(PackageMetaData.ENTITY_NAME, package_.getName());
+		return existingPackageEntity != null && !MetaUtils.equals(existingPackageEntity, package_);
+	}
+
+	public void updatePackage(Package p)
+	{
+		LOG.info(format("Updating package [%s]", p.getName()));
+		dataService.getRepository(PackageMetaData.ENTITY_NAME).update(MetaUtils.toEntity(p));
 	}
 
 	@Override
@@ -423,12 +526,11 @@ public class MetaDataServiceImpl implements MetaDataService
 		});
 	}
 
+	// TODO where to delete entities for which java class was deleted?
 	@Transactional
 	@Override
 	public List<AttributeMetaData> updateEntityMeta(EntityMetaData updatedEntityMeta)
 	{
-		// TODO where to delete entities for which java class was deleted?
-
 		Entity existingEntityMetaEntity = dataService.findOne(EntityMetaDataMetaData.ENTITY_NAME,
 				updatedEntityMeta.getName());
 		if (existingEntityMetaEntity == null)
@@ -448,7 +550,7 @@ public class MetaDataServiceImpl implements MetaDataService
 		Entity packageEntity = updatedEntityMetaEntity.getEntity(EntityMetaDataMetaData.PACKAGE);
 		if (packageEntity == null)
 		{
-			updatedEntityMetaEntity.set(EntityMetaDataMetaData.PACKAGE, MetaUtils.toEntity(PackageImpl.defaultPackage));
+			updatedEntityMetaEntity.set(EntityMetaDataMetaData.PACKAGE, MetaUtils.toEntity(DefaultPackage.INSTANCE));
 		}
 
 		// workaround: entity attribute in repository has identifier and entity meta attribute has no identifier
@@ -474,25 +576,31 @@ public class MetaDataServiceImpl implements MetaDataService
 		}
 
 		Map<String, Entity> existingAttrNameAttrMap = createAttrIdentifierMap(existingEntityMetaEntity);
-		injectAttrIdentifiers(updatedEntityMetaEntity, existingAttrNameAttrMap);
+		injectAttrEntityIdentifiers(updatedEntityMetaEntity,
+				existingAttrNameAttrMap.entrySet().stream().collect(toMap(entry -> entry.getKey(),
+						entry -> entry.getValue().getString(AttributeMetaDataMetaData.IDENTIFIER))));
 		Map<String, Entity> updatedAttrNameAttrMap = createAttrIdentifierMap(updatedEntityMetaEntity);
 
 		// add new attributes
 		Set<String> addedAttrNames = Sets.difference(updatedAttrNameAttrMap.keySet(), existingAttrNameAttrMap.keySet());
 		if (!addedAttrNames.isEmpty())
 		{
-			// FIXME who will generate id --> autoid
-			UuidGenerator uuidGenerator = new UuidGenerator();
-			Stream<Entity> attrEntitiesToAdd = addedAttrNames.stream()
-					.map(addedAttrName -> updatedAttrNameAttrMap.get(addedAttrName)).filter(attrEntity -> {
-						String attrIdentifier = uuidGenerator.generateId();
-						((DefaultAttributeMetaData) updatedEntityMeta
-								.getAttribute(attrEntity.getString(AttributeMetaDataMetaData.NAME)))
-										.setIdentifier(attrIdentifier); // FIXME find more elegant way
-						attrEntity.set(AttributeMetaDataMetaData.IDENTIFIER, attrIdentifier);
-						return true;
-					});
-			dataService.add(AttributeMetaDataMetaData.ENTITY_NAME, attrEntitiesToAdd);
+			// generate attribute identifiers
+			Map<String, String> attrIdentifiers = new HashMap<>();
+			addedAttrNames.stream().forEach(attrName -> attrIdentifiers.put(attrName, idGenerator.generateId()));
+
+			List<Entity> attrEntitiesToAdd = addedAttrNames.stream()
+					.map(addedAttrName -> updatedAttrNameAttrMap.get(addedAttrName)).collect(toList());
+			injectAttrEntityIdentifiersRec(attrEntitiesToAdd, attrIdentifiers);
+
+			dataService.add(AttributeMetaDataMetaData.ENTITY_NAME, attrEntitiesToAdd.stream());
+
+			// FIXME find more elegant way
+			attrEntitiesToAdd.forEach(attrEntity -> {
+				((DefaultAttributeMetaData) updatedEntityMeta
+						.getAttribute(attrEntity.getString(AttributeMetaDataMetaData.NAME)))
+								.setIdentifier(attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER));
+			});
 		}
 
 		// update existing attributes
@@ -556,46 +664,45 @@ public class MetaDataServiceImpl implements MetaDataService
 		});
 	}
 
-	private void injectAttrIdentifiers(Entity entityMetaEntity, Map<String, Entity> existingAttrs)
+	private void injectAttrEntityIdentifiers(Entity entityMetaEntity, Map<String, String> attrIdentifiers)
 	{
 		Iterable<Entity> attrEntities = entityMetaEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES);
-		injectAttrIdentifiersRec(attrEntities, existingAttrs);
+		injectAttrEntityIdentifiersRec(attrEntities, attrIdentifiers);
 
 		Entity idAttrEntity = entityMetaEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
 		if (idAttrEntity != null)
 		{
-			injectAttrIdentifiersRec(singleton(idAttrEntity), existingAttrs);
+			injectAttrEntityIdentifiersRec(singleton(idAttrEntity), attrIdentifiers);
 		}
 
 		Entity labelAttrEntity = entityMetaEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
 		if (labelAttrEntity != null)
 		{
-			injectAttrIdentifiersRec(singleton(labelAttrEntity), existingAttrs);
+			injectAttrEntityIdentifiersRec(singleton(labelAttrEntity), attrIdentifiers);
 		}
 
 		Iterable<Entity> lookupAttrEntities = entityMetaEntity.getEntities(EntityMetaDataMetaData.LOOKUP_ATTRIBUTES);
-		injectAttrIdentifiersRec(lookupAttrEntities, existingAttrs);
+		injectAttrEntityIdentifiersRec(lookupAttrEntities, attrIdentifiers);
 	}
 
-	private void injectAttrIdentifiersRec(Iterable<Entity> attrEntities, Map<String, Entity> existingAttrs)
+	private void injectAttrEntityIdentifiersRec(Iterable<Entity> attrEntities, Map<String, String> attrIdentifiers)
 	{
 		attrEntities.forEach(attrEntity -> {
 			String attrIdentifier = attrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER);
 			if (attrIdentifier == null)
 			{
 				String attrName = attrEntity.getString(AttributeMetaDataMetaData.NAME);
-				Entity existingAttrEntity = existingAttrs.get(attrName);
-				if (existingAttrEntity != null)
+				attrIdentifier = attrIdentifiers.get(attrName);
+				if (attrIdentifier != null)
 				{
-					String existingIdentifier = existingAttrEntity.getString(AttributeMetaDataMetaData.IDENTIFIER);
-					attrEntity.set(AttributeMetaDataMetaData.IDENTIFIER, existingIdentifier);
+					attrEntity.set(AttributeMetaDataMetaData.IDENTIFIER, attrIdentifier);
 				}
 			}
 			if (attrEntity.getString(AttributeMetaDataMetaData.DATA_TYPE)
 					.equals(FieldTypeEnum.COMPOUND.toString().toLowerCase()))
 			{
 				Iterable<Entity> attrParts = attrEntity.getEntities(AttributeMetaDataMetaData.PARTS);
-				injectAttrIdentifiersRec(attrParts, existingAttrs);
+				injectAttrEntityIdentifiersRec(attrParts, attrIdentifiers);
 			}
 		});
 	}
@@ -630,7 +737,6 @@ public class MetaDataServiceImpl implements MetaDataService
 
 		Map<String, EntityMetaData> emds = event.getApplicationContext().getBeansOfType(EntityMetaData.class);
 
-		// Create repositories from EntityMetaData in EntityMetaData repo
 		for (EntityMetaData emd : entityMetaDataRepository.getMetaDatas())
 		{
 			if (!emd.isAbstract() && !dataService.hasRepository(emd.getName()))
@@ -642,19 +748,15 @@ public class MetaDataServiceImpl implements MetaDataService
 			}
 		}
 
+		// Add or update static packages
+		Map<String, Package> packageBeans = event.getApplicationContext().getBeansOfType(Package.class);
+		packageBeans.values().stream().filter(this::doUpdatePackage).forEach(this::updatePackage);
+		packageBeans.values().stream().filter(this::doAddPackage).forEach(this::addPackage);
+
 		// Discover static EntityMetaData
-		DependencyResolver.resolve(Sets.newHashSet(emds.values())).stream()
-				.filter(emd -> !dataService.hasRepository(emd.getName())).forEach(this::addEntityMeta);
-
-		// Update update manageable backends
-		DependencyResolver.resolve(Sets.newHashSet(emds.values())).stream().filter(this::isManageableBackend)
-				.forEach(this::updateEntityMeta);
-	}
-
-	private boolean isManageableBackend(EntityMetaData emd)
-	{
-		// Might work for more than just MySQL backend
-		return emd.getBackend() == null || "MySql".equals(emd.getBackend());
+		List<EntityMetaData> entityMetaDataOrdered = DependencyResolver.resolve(emds.values());
+		entityMetaDataOrdered.stream().filter(this::doAddEntityMeta).forEach(this::addEntityMeta);
+		entityMetaDataOrdered.stream().filter(this::doUpdateEntityMeta).forEach(this::updateEntityMeta);
 	}
 
 	@Override

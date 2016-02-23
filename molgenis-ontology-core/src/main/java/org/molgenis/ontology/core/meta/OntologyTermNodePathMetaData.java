@@ -19,7 +19,7 @@ public class OntologyTermNodePathMetaData extends SystemEntityMetaData
 
 	private OntologyTermNodePathMetaData()
 	{
-		super(SIMPLE_NAME, OntologyPackage.getPackageInstance());
+		super(SIMPLE_NAME, OntologyPackage.INSTANCE);
 		addAttributeMetaData(new DefaultAttributeMetaData(ID).setVisible(false), ROLE_ID);
 		addAttributeMetaData(
 				new DefaultAttributeMetaData(ONTOLOGY_TERM_NODE_PATH, FieldTypeEnum.STRING).setNillable(false),

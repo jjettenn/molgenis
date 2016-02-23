@@ -1,6 +1,5 @@
 package org.molgenis.data.mysql;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.testng.Assert.assertEquals;
@@ -8,7 +7,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -30,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.Assert;
-import org.testng.annotations.ExpectedExceptions;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
@@ -164,7 +161,7 @@ public class MysqlRepositoryTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void addStreamDeleteStreamFindAll()
 	{
-		DefaultEntityMetaData metaData = new DefaultEntityMetaData("IntValue");
+		DefaultEntityMetaData metaData = new DefaultEntityMetaData("IntValue1");
 		metaData.addAttribute("intAttr", ROLE_ID).setDataType(MolgenisFieldTypes.INT);
 
 		Repository repo = metaDataRepositories.addEntityMeta(metaData);
@@ -210,7 +207,7 @@ public class MysqlRepositoryTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testFindAll()
 	{
-		DefaultEntityMetaData metaData = new DefaultEntityMetaData("IntValue");
+		DefaultEntityMetaData metaData = new DefaultEntityMetaData("IntValue2");
 		metaData.addAttribute("intAttr", ROLE_ID).setDataType(MolgenisFieldTypes.INT);
 
 		Repository repo = metaDataRepositories.addEntityMeta(metaData);

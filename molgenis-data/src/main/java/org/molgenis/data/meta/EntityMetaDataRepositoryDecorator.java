@@ -260,10 +260,11 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 
 	private void validateAddAllowed(Entity entity)
 	{
-		String entityName = entity.getString(EntityMetaDataMetaData.FULL_NAME);
-		if (systemEntityMetaDataRegistry.isSystemEntity(entityName))
+		Entity existingEntity = findOne(entity.getIdValue(), new Fetch().field(EntityMetaDataMetaData.FULL_NAME));
+		if (existingEntity != null)
 		{
-			throw new MolgenisDataException(format("Adding system entity [%s] is not allowed", entityName));
+			throw new MolgenisDataException(format("Adding existing entity [%s] is not allowed",
+					entity.getString(EntityMetaDataMetaData.FULL_NAME)));
 		}
 	}
 
@@ -286,10 +287,11 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 
 	private void validateDeleteAllowed(Entity entity)
 	{
-		String entityName = entity.getString(EntityMetaDataMetaData.FULL_NAME);
-		if (systemEntityMetaDataRegistry.isSystemEntity(entityName))
+		Boolean isSystem = entity.getBoolean(EntityMetaDataMetaData.SYSTEM);
+		if (isSystem == null || isSystem.booleanValue())
 		{
-			throw new MolgenisDataException(format("Deleting system entity [%s] is not allowed", entityName));
+			throw new MolgenisDataException(format("Deleting system entity [%s] is not allowed",
+					entity.getString(EntityMetaDataMetaData.FULL_NAME)));
 		}
 	}
 

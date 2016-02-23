@@ -542,8 +542,11 @@ public class RepositoryValidationDecorator implements Repository
 						validationResource.addViolation(constraintViolation);
 					}
 				}
-				validationResource.addRefEntityId(getName(), refEntity.getIdValue());
+				validationResource.addRefEntityId(refAttr.getRefEntity().getName(), refEntity.getIdValue());
 			}
+
+			// only do if self reference
+			validationResource.addRefEntityId(getName(), entity.getIdValue());
 		});
 	}
 

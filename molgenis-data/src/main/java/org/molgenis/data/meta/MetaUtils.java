@@ -26,7 +26,9 @@ import static org.molgenis.data.meta.AttributeMetaDataMetaData.VISIBLE_EXPRESSIO
 import static org.molgenis.util.SecurityDecoratorUtils.validatePermission;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
@@ -252,7 +254,7 @@ public class MetaUtils
 
 	/**
 	 * Converts a entity to an attribute
-	 * 
+	 *
 	 * @param attrEntity
 	 * @param entityMetaRepo
 	 * @param languageCodes
@@ -260,6 +262,12 @@ public class MetaUtils
 	 */
 	public static AttributeMetaData toAttribute(Entity attrEntity, Repository entityMetaRepo,
 			List<String> languageCodes)
+	{
+		return toAttributeRec(attrEntity, entityMetaRepo, languageCodes, new HashMap<>());
+	}
+
+	private static AttributeMetaData toAttributeRec(Entity attrEntity, Repository entityMetaRepo,
+			List<String> languageCodes, Map<String, EntityMetaData> entityMetas)
 	{
 		DefaultAttributeMetaData attributeMetaData = new DefaultAttributeMetaData(attrEntity.getString(NAME));
 		attributeMetaData.setIdentifier(attrEntity.getString(IDENTIFIER));
@@ -290,12 +298,16 @@ public class MetaUtils
 		if (attrEntity.get(REF_ENTITY) != null)
 		{
 			final String refEntityName = attrEntity.getString(REF_ENTITY);
-			EntityMetaData refEntity = toEntityMeta(entityMetaRepo.findOne(refEntityName), entityMetaRepo,
-					languageCodes);
+			Entity refEntityEntity = entityMetaRepo.findOne(refEntityName);
+			EntityMetaData refEntity = entityMetas.get(refEntityEntity.getString(EntityMetaDataMetaData.FULL_NAME));
+			if (refEntity == null)
+			{
+				refEntity = toEntityMetaRec(refEntityEntity, entityMetaRepo, languageCodes, entityMetas);
+			}
 			attributeMetaData.setRefEntity(refEntity);
 		}
 		stream(attrEntity.getEntities(PARTS).spliterator(), false)
-				.map(attrPart -> MetaUtils.toAttribute(attrPart, entityMetaRepo, languageCodes))
+				.map(attrPart -> MetaUtils.toAttributeRec(attrPart, entityMetaRepo, languageCodes, entityMetas))
 				.forEach(attributeMetaData::addAttributePart);
 		attributeMetaData.setVisibleExpression(attrEntity.getString(VISIBLE_EXPRESSION));
 		attributeMetaData.setValidationExpression(attrEntity.getString(VALIDATION_EXPRESSION));
@@ -327,28 +339,41 @@ public class MetaUtils
 	public static EntityMetaData toEntityMeta(Entity entityEntity, Repository entityMetaRepo,
 			List<String> languageCodes)
 	{
+		return toEntityMetaRec(entityEntity, entityMetaRepo, languageCodes, new HashMap<>());
+	}
+
+	private static EntityMetaData toEntityMetaRec(Entity entityEntity, Repository entityMetaRepo,
+			List<String> languageCodes, Map<String, EntityMetaData> entityMetas)
+	{
 		String simpleName = entityEntity.getString(EntityMetaDataMetaData.SIMPLE_NAME);
 		DefaultEntityMetaData entityMeta = new DefaultEntityMetaData(simpleName);
+		entityMetas.put(entityEntity.getString(EntityMetaDataMetaData.FULL_NAME), entityMeta);
 		entityMeta.setBackend(entityEntity.getString(EntityMetaDataMetaData.BACKEND));
 		Entity idAttrEntity = entityEntity.getEntity(EntityMetaDataMetaData.ID_ATTRIBUTE);
 		if (idAttrEntity != null)
 		{
-			entityMeta.setIdAttribute(toAttribute(idAttrEntity, entityMetaRepo, languageCodes));
+			entityMeta.setIdAttribute(toAttributeRec(idAttrEntity, entityMetaRepo, languageCodes, entityMetas));
 		}
 		Entity labelAttrEntity = entityEntity.getEntity(EntityMetaDataMetaData.LABEL_ATTRIBUTE);
 		if (labelAttrEntity != null)
 		{
-			entityMeta.setLabelAttribute(toAttribute(labelAttrEntity, entityMetaRepo, languageCodes));
+			entityMeta.setLabelAttribute(toAttributeRec(labelAttrEntity, entityMetaRepo, languageCodes, entityMetas));
 		}
 		Iterable<Entity> lookupAttrEntities = entityEntity.getEntities(EntityMetaDataMetaData.LOOKUP_ATTRIBUTES);
 		entityMeta.setLookupAttributes(stream(lookupAttrEntities.spliterator(), false)
-				.map(lookupAttrEntity -> toAttribute(lookupAttrEntity, entityMetaRepo, languageCodes)));
+				.map(lookupAttrEntity -> toAttributeRec(lookupAttrEntity, entityMetaRepo, languageCodes, entityMetas)));
 		entityMeta.setAbstract(entityEntity.getBoolean(EntityMetaDataMetaData.ABSTRACT));
 		entityMeta.setLabel(entityEntity.getString(EntityMetaDataMetaData.LABEL));
 		Entity extendsEntity = entityEntity.getEntity(EntityMetaDataMetaData.EXTENDS);
 		if (extendsEntity != null)
 		{
-			entityMeta.setExtends(toEntityMeta(extendsEntity, entityMetaRepo, languageCodes));
+			String extendsFullName = extendsEntity.getString(EntityMetaDataMetaData.FULL_NAME);
+			EntityMetaData extendsEntityMeta = entityMetas.get(extendsFullName);
+			if (extendsEntityMeta == null)
+			{
+				extendsEntityMeta = toEntityMetaRec(extendsEntity, entityMetaRepo, languageCodes, entityMetas);
+			}
+			entityMeta.setExtends(extendsEntityMeta);
 		}
 		entityMeta.setDescription(entityEntity.getString(EntityMetaDataMetaData.DESCRIPTION));
 		Entity packageEntity = entityEntity.getEntity(EntityMetaDataMetaData.PACKAGE);
@@ -359,7 +384,7 @@ public class MetaUtils
 
 		Iterable<Entity> attrEntities = entityEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES);
 		stream(attrEntities.spliterator(), false)
-				.map(attrEntity -> toAttribute(attrEntity, entityMetaRepo, languageCodes))
+				.map(attrEntity -> toAttributeRec(attrEntity, entityMetaRepo, languageCodes, entityMetas))
 				.forEach(attr -> entityMeta.addAttributeMetaData(attr));
 		entityMeta.setSystem(entityEntity.getBoolean(EntityMetaDataMetaData.SYSTEM));
 		return entityMeta;
@@ -476,6 +501,42 @@ public class MetaUtils
 		}).toList();
 	}
 
+	public static boolean equals(Entity packageEntity, Package package_)
+	{
+		if (!Objects.equal(packageEntity.getString(PackageMetaData.FULL_NAME), package_.getName()))
+		{
+			return false;
+		}
+		if (!Objects.equal(packageEntity.getString(PackageMetaData.SIMPLE_NAME), package_.getSimpleName()))
+		{
+			return false;
+		}
+		if (!Objects.equal(packageEntity.getString(PackageMetaData.DESCRIPTION), package_.getDescription()))
+		{
+			return false;
+		}
+		Entity parentPackageEntity = packageEntity.getEntity(PackageMetaData.PARENT);
+		String parentPackageEntityId = parentPackageEntity != null
+				? parentPackageEntity.getString(PackageMetaData.FULL_NAME) : null;
+		Package parentPackage = package_.getParent();
+		String parentPackageId = parentPackage != null ? parentPackage.getName() : null;
+		if (!Objects.equal(parentPackageEntityId, parentPackageId))
+		{
+			return false;
+		}
+
+		Iterable<Entity> packageEntityTags = packageEntity.getEntities(PackageMetaData.TAGS);
+		List<String> packageEntityTagIds = stream(packageEntityTags.spliterator(), false)
+				.map(tagEntity -> tagEntity.getIdValue().toString()).collect(toList());
+		Iterable<Tag<Package, LabeledResource, LabeledResource>> packageTags = package_.getTags();
+		List<String> packageTagIds = stream(packageTags.spliterator(), false).map(Tag::getIdentifier).collect(toList());
+		if (!Objects.equal(packageEntityTagIds, packageTagIds))
+		{
+			return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Compares a Entity and EntityMetaData representation of entity meta data. For references to other entities (e.g.
 	 * representing attributes and packages) checks if both representations refer to the same identifiers.
@@ -487,7 +548,9 @@ public class MetaUtils
 	 * @param metaDataService
 	 * @return true if entityMetaEntity and entityMeta represent the same meta data
 	 */
-	public static boolean equals(Entity entityMetaEntity, EntityMetaData entityMeta, MetaDataService metaDataService)
+	public static boolean equals(Entity entityMetaEntity, EntityMetaData entityMeta, MetaDataService metaDataService) // FIXME
+																														// add
+																														// tags
 	{
 		if (!Objects.equal(entityMetaEntity.getString(EntityMetaDataMetaData.SIMPLE_NAME), entityMeta.getSimpleName()))
 		{
@@ -569,7 +632,7 @@ public class MetaUtils
 		if (package_ == null)
 		{
 			// use default package if entity stored in repository has package and entity meta has no package
-			package_ = PackageImpl.defaultPackage;
+			package_ = DefaultPackage.INSTANCE;
 		}
 		String otherPackageName = package_ != null ? package_.getName() : null;
 		if (!Objects.equal(thisPackageName, otherPackageName))
@@ -600,7 +663,7 @@ public class MetaUtils
 	 * @param attr
 	 * @return true if attrEntity and attr represent the same meta data
 	 */
-	public static boolean equals(Entity attrEntity, AttributeMetaData attr)
+	public static boolean equals(Entity attrEntity, AttributeMetaData attr) // FIXME add tags
 	{
 		if (!Objects.equal(attrEntity.getString(AttributeMetaDataMetaData.NAME), attr.getName()))
 		{

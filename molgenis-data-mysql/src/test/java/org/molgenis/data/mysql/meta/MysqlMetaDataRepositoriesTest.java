@@ -1,5 +1,6 @@
 package org.molgenis.data.mysql.meta;
 
+import static org.mockito.Mockito.mock;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -18,12 +19,15 @@ import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Package;
 import org.molgenis.data.Range;
 import org.molgenis.data.UnknownEntityException;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.MetaDataServiceImpl;
 import org.molgenis.data.meta.PackageImpl;
 import org.molgenis.data.mysql.MysqlRepositoryCollection;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
+import org.molgenis.util.ApplicationContextProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.AfterClass;
@@ -48,6 +52,7 @@ public class MysqlMetaDataRepositoriesTest extends AbstractTestNGSpringContextTe
 		try
 		{
 			metaDataService.recreateMetaDataRepositories();
+			metaDataService.addPackage(DefaultPackage.INSTANCE);
 		}
 		catch (UnknownEntityException e)
 		{
@@ -58,6 +63,9 @@ public class MysqlMetaDataRepositoriesTest extends AbstractTestNGSpringContextTe
 	@Test
 	public void addAndGetAttributeMetaData()
 	{
+		ApplicationContext ctx = mock(ApplicationContext.class);
+		new ApplicationContextProvider().setApplicationContext(ctx);
+
 		DefaultEntityMetaData emd = new DefaultEntityMetaData("test");
 		emd.addAttribute("id", ROLE_ID);
 		metaDataService.addEntityMeta(emd);

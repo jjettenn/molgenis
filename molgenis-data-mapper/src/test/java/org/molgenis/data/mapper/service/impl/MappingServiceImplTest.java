@@ -1,7 +1,6 @@
 package org.molgenis.data.mapper.service.impl;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.molgenis.MolgenisFieldTypes.DECIMAL;
@@ -20,6 +19,7 @@ import javax.annotation.PostConstruct;
 import org.elasticsearch.common.collect.Lists;
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
@@ -38,9 +38,9 @@ import org.molgenis.data.mapper.repository.impl.MappingProjectRepositoryImpl;
 import org.molgenis.data.mapper.repository.impl.MappingTargetRepositoryImpl;
 import org.molgenis.data.mapper.service.MappingService;
 import org.molgenis.data.mem.InMemoryRepositoryCollection;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.MetaDataService;
 import org.molgenis.data.meta.MetaDataServiceImpl;
-import org.molgenis.data.meta.PackageImpl;
 import org.molgenis.data.semanticsearch.service.OntologyTagService;
 import org.molgenis.data.semanticsearch.service.SemanticSearchService;
 import org.molgenis.data.support.DataServiceImpl;
@@ -98,8 +98,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 
 	private DefaultEntityMetaData exonMetaData;
 
-	private final UuidGenerator uuidGenerator = new UuidGenerator();
-
 	@BeforeMethod
 	public void beforeMethod()
 	{
@@ -107,15 +105,15 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 		user.setUsername("Piet");
 		when(userService.getUser("Piet")).thenReturn(user);
 
-		hopMetaData = new DefaultEntityMetaData("HopEntity", PackageImpl.defaultPackage);
+		hopMetaData = new DefaultEntityMetaData("HopEntity", DefaultPackage.INSTANCE);
 		hopMetaData.addAttribute("identifier", ROLE_ID);
 		hopMetaData.addAttribute("height").setDataType(DECIMAL).setNillable(false);
 
-		geneMetaData = new DefaultEntityMetaData("Gene", PackageImpl.defaultPackage);
+		geneMetaData = new DefaultEntityMetaData("Gene", DefaultPackage.INSTANCE);
 		geneMetaData.addAttribute("id", ROLE_ID);
 		geneMetaData.addAttribute("length").setDataType(DECIMAL).setNillable(false);
 
-		exonMetaData = new DefaultEntityMetaData("Exon", PackageImpl.defaultPackage);
+		exonMetaData = new DefaultEntityMetaData("Exon", DefaultPackage.INSTANCE);
 		exonMetaData.addAttribute("id", ROLE_ID);
 		exonMetaData.addAttribute("basepairs").setDataType(DECIMAL).setNillable(false);
 
@@ -125,9 +123,19 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 		}
 
 		// add 3 Gene entities
-		Repository gene = dataService.getMeta().addEntityMeta(geneMetaData);
+		Repository gene;
+		if (!dataService.hasRepository(geneMetaData.getName()))
+		{
+			gene = dataService.getMeta().addEntityMeta(geneMetaData);
+		}
+		else
+		{
+			gene = dataService.getRepository(geneMetaData.getName());
+		}
 		gene.deleteAll(); // refresh
-		for (int i = 1; i < 4; i++)
+		for (
+
+		int i = 1; i < 4; i++)
 		{
 			MapEntity geneEntity = new MapEntity(geneMetaData);
 			geneEntity.set("id", Integer.valueOf(i).toString());
@@ -136,7 +144,15 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 		}
 
 		// add 1 Exon entity
-		Repository exon = dataService.getMeta().addEntityMeta(exonMetaData);
+		Repository exon;
+		if (!dataService.hasRepository(exonMetaData.getName()))
+		{
+			exon = dataService.getMeta().addEntityMeta(exonMetaData);
+		}
+		else
+		{
+			exon = dataService.getRepository(exonMetaData.getName());
+		}
 		exon.deleteAll(); // refresh
 		MapEntity geneEntity = new MapEntity(exonMetaData);
 		geneEntity.set("id", "A");
@@ -154,8 +170,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testAddMappingProject()
 	{
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
-
 		MappingProject added = mappingService.addMappingProject("Test123", user, "HopEntity");
 		assertEquals(added.getName(), "Test123");
 
@@ -179,8 +193,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testCloneMappingProjectString()
 	{
-		when(idGenerator.generateId()).thenReturn("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-
 		MappingProject mappingProject = createMappingProjectWithMappings("testCloneMappingProject");
 		mappingService.updateMappingProject(mappingProject);
 
@@ -237,12 +249,9 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testAddTarget()
 	{
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
-
 		MappingProject mappingProject = mappingService.addMappingProject("Test123", user, "HopEntity");
 		mappingProject.addTarget(geneMetaData);
 
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
 		mappingService.updateMappingProject(mappingProject);
 
 		MappingProject retrieved = mappingService.getMappingProject(mappingProject.getIdentifier());
@@ -252,8 +261,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test(expectedExceptions = IllegalStateException.class)
 	public void testAddExistingTarget()
 	{
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
-
 		MappingProject mappingProject = mappingService.addMappingProject("Test123", user, "HopEntity");
 		mappingProject.addTarget(hopMetaData);
 	}
@@ -261,8 +268,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testAddNewSource()
 	{
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
-
 		MappingProject mappingProject = mappingService.addMappingProject("Test123", user, "HopEntity");
 
 		// now add new source
@@ -278,8 +283,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testAddExistingSource()
 	{
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
-
 		MappingProject mappingProject = mappingService.addMappingProject("Test123", user, "HopEntity");
 		mappingProject.getMappingTarget("HopEntity").addSource(geneMetaData);
 
@@ -299,7 +302,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	public void testApplyMappings()
 	{
 		String entityName = "Koetjeboe";
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
 		createMappingProjectWithMappings(entityName);
 
 		Repository actual = dataService.getRepository(entityName);
@@ -333,7 +335,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	public void testAdd()
 	{
 		String entityName = "addEntity";
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
 
 		// make project and apply mappings once
 		MappingProject project = createMappingProjectWithMappings(entityName);
@@ -380,7 +381,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	public void testUpdate()
 	{
 		String entityName = "updateEntity";
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
 
 		// make project and apply mappings once
 		MappingProject project = createMappingProjectWithMappings(entityName);
@@ -422,7 +422,6 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	public void testDelete()
 	{
 		String entityName = "deleteEntity";
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
 
 		// make project and apply mappings once
 		MappingProject project = createMappingProjectWithTwoSourcesWithMappings(entityName);
@@ -512,11 +511,7 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 	@Test
 	public void testStringId()
 	{
-		reset(idGenerator);
-		when(idGenerator.generateId()).thenReturn(uuidGenerator.generateId());
-
 		mappingService.generateId(MolgenisFieldTypes.STRING, 1l);
-		verify(idGenerator).generateId();
 	}
 
 	@Configuration
@@ -567,8 +562,7 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 		@Bean
 		IdGenerator idGenerator()
 		{
-			IdGenerator idGenerator = mock(IdGenerator.class);
-			return idGenerator;
+			return new UuidGenerator();
 		}
 
 		@Bean
@@ -600,6 +594,7 @@ public class MappingServiceImplTest extends AbstractTestNGSpringContextTests
 			metaDataService.addEntityMeta(AttributeMappingRepositoryImpl.META_DATA);
 			metaDataService.addEntityMeta(EntityMappingRepositoryImpl.META_DATA);
 			metaDataService.addEntityMeta(MappingTargetRepositoryImpl.META_DATA);
+			metaDataService.addEntityMeta(new MolgenisUserMetaData());
 			metaDataService.addEntityMeta(MappingProjectRepositoryImpl.META_DATA);
 		}
 	}

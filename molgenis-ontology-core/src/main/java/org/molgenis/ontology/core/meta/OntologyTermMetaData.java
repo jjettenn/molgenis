@@ -23,7 +23,7 @@ public class OntologyTermMetaData extends SystemEntityMetaData
 
 	private OntologyTermMetaData()
 	{
-		super(SIMPLE_NAME, OntologyPackage.getPackageInstance());
+		super(SIMPLE_NAME, OntologyPackage.INSTANCE);
 
 		addAttributeMetaData(new DefaultAttributeMetaData(ID).setVisible(false), ROLE_ID);
 		addAttributeMetaData(new DefaultAttributeMetaData(ONTOLOGY_TERM_IRI, FieldTypeEnum.STRING).setNillable(false));

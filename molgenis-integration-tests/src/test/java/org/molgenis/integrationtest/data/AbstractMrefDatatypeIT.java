@@ -1,9 +1,9 @@
 package org.molgenis.integrationtest.data;
 
 import static org.molgenis.MolgenisFieldTypes.INT;
+import static org.molgenis.MolgenisFieldTypes.MREF;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
-import static org.molgenis.MolgenisFieldTypes.MREF;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -27,9 +27,8 @@ public class AbstractMrefDatatypeIT extends AbstractDatatypeIT
 	public EntityMetaData createMetaData()
 	{
 		refEntityMetaData = new DefaultEntityMetaData("StringTarget");
-		refEntityMetaData.addAttribute("label", ROLE_LABEL);
 		refEntityMetaData.addAttribute("identifier", ROLE_ID).setNillable(false);
-		refEntityMetaData.addAttribute("label");
+		refEntityMetaData.addAttribute("label", ROLE_LABEL);
 		metaDataService.addEntityMeta(refEntityMetaData);
 
 		refEntity2MetaData = new DefaultEntityMetaData("IntTarget");

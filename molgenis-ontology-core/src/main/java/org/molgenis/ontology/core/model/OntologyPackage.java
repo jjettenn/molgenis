@@ -1,17 +1,17 @@
 package org.molgenis.ontology.core.model;
 
-import org.molgenis.data.Package;
 import org.molgenis.data.meta.PackageImpl;
+import org.springframework.stereotype.Component;
 
-public class OntologyPackage
+@Component
+public class OntologyPackage extends PackageImpl
 {
-	private static Package ontologyPackage = null;
 	public final static String PACKAGE_NAME = "Ontology";
 
-	public static Package getPackageInstance()
+	public final static OntologyPackage INSTANCE = new OntologyPackage();
+
+	public OntologyPackage()
 	{
-		if (ontologyPackage == null) ontologyPackage = new PackageImpl(PACKAGE_NAME,
-				"This is a pacakge for storing ontology related model", null);
-		return ontologyPackage;
+		super(PACKAGE_NAME, "This is a pacakge for storing ontology related model", null);
 	}
 }

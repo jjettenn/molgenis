@@ -18,7 +18,7 @@ public class OntologyTermSynonymMetaData extends SystemEntityMetaData
 
 	private OntologyTermSynonymMetaData()
 	{
-		super(SIMPLE_NAME, OntologyPackage.getPackageInstance());
+		super(SIMPLE_NAME, OntologyPackage.INSTANCE);
 		addAttributeMetaData(new DefaultAttributeMetaData(ID).setVisible(false), ROLE_ID);
 
 		DefaultAttributeMetaData ontologyTermSynonymAttr = new DefaultAttributeMetaData(ONTOLOGY_TERM_SYNONYM,

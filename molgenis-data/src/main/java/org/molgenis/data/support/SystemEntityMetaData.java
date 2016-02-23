@@ -3,8 +3,9 @@ package org.molgenis.data.support;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Package;
+import org.molgenis.data.meta.DefaultPackage;
 
-public class SystemEntityMetaData extends DefaultEntityMetaData
+public abstract class SystemEntityMetaData extends DefaultEntityMetaData
 {
 	public SystemEntityMetaData(EntityMetaData entityMetaData)
 	{
@@ -12,16 +13,11 @@ public class SystemEntityMetaData extends DefaultEntityMetaData
 		setSystem(true);
 	}
 
-	public SystemEntityMetaData(String simpleName, Class<? extends Entity> entityClass, Package package_)
+	public SystemEntityMetaData(String simpleName)
 	{
-		super(simpleName, entityClass, package_);
+		super(simpleName);
 		setSystem(true);
-	}
-
-	public SystemEntityMetaData(String simpleName, Class<? extends Entity> entityClass)
-	{
-		super(simpleName, entityClass);
-		setSystem(true);
+		setPackage(DefaultPackage.INSTANCE);
 	}
 
 	public SystemEntityMetaData(String simpleName, EntityMetaData entityMetaData)
@@ -36,9 +32,16 @@ public class SystemEntityMetaData extends DefaultEntityMetaData
 		setSystem(true);
 	}
 
-	public SystemEntityMetaData(String simpleName)
+	public SystemEntityMetaData(String simpleName, Class<? extends Entity> entityClass)
 	{
-		super(simpleName);
+		super(simpleName, entityClass);
+		setSystem(true);
+		setPackage(DefaultPackage.INSTANCE);
+	}
+
+	public SystemEntityMetaData(String simpleName, Class<? extends Entity> entityClass, Package package_)
+	{
+		super(simpleName, entityClass, package_);
 		setSystem(true);
 	}
 }

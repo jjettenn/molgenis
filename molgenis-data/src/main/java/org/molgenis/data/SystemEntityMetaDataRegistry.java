@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.molgenis.data.meta.AttributeMetaDataMetaData;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.EntityMetaDataMetaData;
-import org.molgenis.data.meta.PackageImpl;
 import org.molgenis.util.ApplicationContextProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -78,12 +78,12 @@ public class SystemEntityMetaDataRegistry
 
 	public Package getSystemPackage(String packageName)
 	{
-		return packageName.equals(PackageImpl.defaultPackage.getName()) ? PackageImpl.defaultPackage : null;
+		return packageName.equals(DefaultPackage.PACKAGE_NAME) ? DefaultPackage.INSTANCE : null;
 	}
 
 	public boolean isSystemPackage(String packageName)
 	{
-		return packageName.equals(PackageImpl.defaultPackage.getName());
+		return packageName.equals(DefaultPackage.PACKAGE_NAME);
 	}
 
 	private void initSystemEntityMap()

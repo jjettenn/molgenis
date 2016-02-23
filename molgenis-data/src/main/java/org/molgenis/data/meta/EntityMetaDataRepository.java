@@ -201,7 +201,7 @@ class EntityMetaDataRepository
 		}
 		if (entityMetaData.getPackage() == null)
 		{
-			emd.setPackage(PackageImpl.defaultPackage);
+			emd.setPackage(DefaultPackage.INSTANCE);
 		}
 		else
 		{

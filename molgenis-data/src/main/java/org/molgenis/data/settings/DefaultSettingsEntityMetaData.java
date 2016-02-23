@@ -29,7 +29,7 @@ public abstract class DefaultSettingsEntityMetaData extends SystemEntityMetaData
 	{
 		super(id);
 		setExtends(settingsEntityMeta);
-		setPackage(SettingsEntityMeta.PACKAGE_SETTINGS);
+		setPackage(SettingsPackage.INSTANCE);
 		addAttribute(ATTR_ID, ROLE_ID).setLabel("Id").setVisible(false);
 	}
 
@@ -41,7 +41,7 @@ public abstract class DefaultSettingsEntityMetaData extends SystemEntityMetaData
 
 	public static String getSettingsEntityName(String id)
 	{
-		return SettingsEntityMeta.PACKAGE_SETTINGS.getName() + '_' + id;
+		return SettingsPackage.PACKAGE_NAME + '_' + id;
 	}
 
 	private Entity getDefaultSettings()

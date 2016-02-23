@@ -19,6 +19,7 @@ import org.molgenis.data.semanticsearch.config.SemanticSearchConfig;
 import org.molgenis.data.semanticsearch.service.SemanticSearchService;
 import org.molgenis.data.semanticsearch.service.impl.SemanticSearchServiceHelper;
 import org.molgenis.data.support.DataServiceImpl;
+import org.molgenis.data.support.UuidGenerator;
 import org.molgenis.framework.ui.MolgenisPluginRegistry;
 import org.molgenis.framework.ui.MolgenisPluginRegistryImpl;
 import org.molgenis.mysql.embed.EmbeddedMysqlDatabaseBuilder;
@@ -65,8 +66,8 @@ public class ImportTestConfig
 		metaDataService().setDefaultBackend(mysqlRepositoryCollection());
 
 		// Login
-		SecurityContextHolder.getContext().setAuthentication(
-				new TestingAuthenticationToken("admin", "admin", "ROLE_SYSTEM"));
+		SecurityContextHolder.getContext()
+				.setAuthentication(new TestingAuthenticationToken("admin", "admin", "ROLE_SYSTEM"));
 	}
 
 	@Bean
@@ -178,7 +179,7 @@ public class ImportTestConfig
 	@Bean
 	IdGenerator idGenerator()
 	{
-		return mock(IdGenerator.class);
+		return new UuidGenerator();
 	}
 
 	@Bean

@@ -237,10 +237,11 @@ public class PackageRepositoryDecorator implements Repository
 
 	private void validateAddAllowed(Entity entity)
 	{
-		String packageName = entity.getString(PackageMetaData.FULL_NAME);
-		if (systemEntityMetaDataRegistry.isSystemPackage(packageName))
+		Entity existingEntity = findOne(entity.getIdValue(), new Fetch().field(PackageMetaData.FULL_NAME));
+		if (existingEntity != null)
 		{
-			throw new MolgenisDataException(format("Adding system package [%s] is not allowed", packageName));
+			throw new MolgenisDataException(format("Adding existing package [%s] is not allowed",
+					entity.getString(EntityMetaDataMetaData.FULL_NAME)));
 		}
 	}
 

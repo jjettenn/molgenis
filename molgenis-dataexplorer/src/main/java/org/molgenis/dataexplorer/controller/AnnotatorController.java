@@ -1,7 +1,23 @@
 package org.molgenis.dataexplorer.controller;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.BaseEncoding;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
+import static org.molgenis.dataexplorer.controller.AnnotatorController.URI;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.AttributeMetaData;
@@ -11,7 +27,7 @@ import org.molgenis.data.Repository;
 import org.molgenis.data.annotation.AnnotationJob;
 import org.molgenis.data.annotation.AnnotationService;
 import org.molgenis.data.annotation.RepositoryAnnotator;
-import org.molgenis.data.settings.SettingsEntityMeta;
+import org.molgenis.data.settings.SettingsPackage;
 import org.molgenis.security.core.MolgenisPermissionService;
 import org.molgenis.security.core.Permission;
 import org.molgenis.security.core.utils.SecurityUtils;
@@ -40,22 +56,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import javax.servlet.http.HttpServletRequest;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.requireNonNull;
-import static org.molgenis.dataexplorer.controller.AnnotatorController.URI;
+import com.google.common.collect.Lists;
+import com.google.common.io.BaseEncoding;
 
 @Controller
 @RequestMapping(URI)
@@ -246,8 +248,8 @@ public class AnnotatorController
 				map.put("outputAttributes", createAttrsResponse(outputAttrs));
 				map.put("outputAttributeTypes", toMap(annotator.getOutputMetaData()));
 
-				String settingsEntityName = SettingsEntityMeta.PACKAGE_NAME
-						+ org.molgenis.data.Package.PACKAGE_SEPARATOR + annotator.getInfo().getCode();
+				String settingsEntityName = SettingsPackage.PACKAGE_NAME + org.molgenis.data.Package.PACKAGE_SEPARATOR
+						+ annotator.getInfo().getCode();
 				map.put("showSettingsButton",
 						molgenisPermissionService.hasPermissionOnEntity(settingsEntityName, Permission.WRITE));
 				mapOfAnnotators.put(annotator.getSimpleName(), map);

@@ -22,10 +22,12 @@ import org.molgenis.data.Package;
 import org.molgenis.data.Repository;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.mem.InMemoryRepositoryCollection;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.MetaDataServiceImpl;
 import org.molgenis.data.settings.AppSettings;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.data.support.FileRepositoryCollection;
+import org.molgenis.data.support.UuidGenerator;
 import org.molgenis.data.validation.EntityAttributesValidator;
 import org.molgenis.data.validation.ExpressionValidator;
 import org.molgenis.data.validation.RepositoryValidationDecorator;
@@ -44,6 +46,7 @@ public class VcfImporterServiceTest
 		MetaDataServiceImpl metaDataService = new MetaDataServiceImpl(dataService);
 		metaDataService.setLanguageService(new LanguageService(dataService, Mockito.mock(AppSettings.class)));
 		metaDataService.setDefaultBackend(new InMemoryRepositoryCollection("ElasticSearch"));
+		metaDataService.setIdGenerator(new UuidGenerator());
 		dataService.setMeta(metaDataService);
 
 		File f = ResourceUtils.getFile(getClass(), "/testdata.vcf");
@@ -84,6 +87,8 @@ public class VcfImporterServiceTest
 						new ExpressionValidator());
 			}
 		});
+		metaDataService.setIdGenerator(new UuidGenerator());
+		metaDataService.addPackage(DefaultPackage.INSTANCE);
 		dataService.setMeta(metaDataService);
 
 		File f = ResourceUtils.getFile(getClass(), "/testlargeinsertdelete.vcf");
@@ -113,8 +118,8 @@ public class VcfImporterServiceTest
 
 		File testdata = new File(FileUtils.getTempDirectory(), "testdata.vcf");
 
-		Mockito.when(fileRepositoryCollectionFactory.createFileRepositoryCollection(testdata)).thenReturn(
-				fileRepositoryCollection);
+		Mockito.when(fileRepositoryCollectionFactory.createFileRepositoryCollection(testdata))
+				.thenReturn(fileRepositoryCollection);
 		Mockito.when(fileRepositoryCollection.getEntityNames()).thenReturn(Collections.singletonList(entityName));
 
 		Repository repo = Mockito.mock(Repository.class);
