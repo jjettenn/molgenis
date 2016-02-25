@@ -328,7 +328,7 @@ public class ImportWriter
 		{
 			if (p != null)
 			{
-				dataService.getMeta().addPackage(p);
+				dataService.getMeta().upsertPackage(p);
 			}
 		}
 	}

@@ -23,7 +23,6 @@ import static org.molgenis.data.meta.AttributeMetaDataMetaData.UNIQUE;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.VALIDATION_EXPRESSION;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.VISIBLE;
 import static org.molgenis.data.meta.AttributeMetaDataMetaData.VISIBLE_EXPRESSION;
-import static org.molgenis.util.SecurityDecoratorUtils.validatePermission;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,8 +34,6 @@ import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.MolgenisDataAccessException;
-import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Package;
 import org.molgenis.data.Range;
 import org.molgenis.data.Repository;
@@ -48,12 +45,8 @@ import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.MapEntity;
 import org.molgenis.fieldtypes.FieldType;
-import org.molgenis.security.core.Permission;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
 
 public class MetaUtils
 {
@@ -362,7 +355,8 @@ public class MetaUtils
 		Iterable<Entity> lookupAttrEntities = entityEntity.getEntities(EntityMetaDataMetaData.LOOKUP_ATTRIBUTES);
 		entityMeta.setLookupAttributes(stream(lookupAttrEntities.spliterator(), false)
 				.map(lookupAttrEntity -> toAttributeRec(lookupAttrEntity, entityMetaRepo, languageCodes, entityMetas)));
-		entityMeta.setAbstract(entityEntity.getBoolean(EntityMetaDataMetaData.ABSTRACT));
+		Boolean abstract_ = entityEntity.getBoolean(EntityMetaDataMetaData.ABSTRACT);
+		entityMeta.setAbstract(abstract_ != null ? abstract_ : false);
 		entityMeta.setLabel(entityEntity.getString(EntityMetaDataMetaData.LABEL));
 		Entity extendsEntity = entityEntity.getEntity(EntityMetaDataMetaData.EXTENDS);
 		if (extendsEntity != null)
@@ -386,7 +380,8 @@ public class MetaUtils
 		stream(attrEntities.spliterator(), false)
 				.map(attrEntity -> toAttributeRec(attrEntity, entityMetaRepo, languageCodes, entityMetas))
 				.forEach(attr -> entityMeta.addAttributeMetaData(attr));
-		entityMeta.setSystem(entityEntity.getBoolean(EntityMetaDataMetaData.SYSTEM));
+		Boolean system = entityEntity.getBoolean(EntityMetaDataMetaData.SYSTEM);
+		entityMeta.setSystem(system != null ? system : false);
 		return entityMeta;
 	}
 
@@ -415,90 +410,6 @@ public class MetaUtils
 			package_.addTag(MetaUtils.toTag(tagEntity, package_));
 		});
 		return package_;
-	}
-
-	public static List<AttributeMetaData> updateEntityMeta(MetaDataService metaDataService, EntityMetaData entityMeta,
-			boolean sync)
-	{
-		String backend = entityMeta.getBackend() != null ? entityMeta.getBackend()
-				: metaDataService.getDefaultBackend().getName();
-
-		EntityMetaData existingEntityMetaData = metaDataService.getEntityMetaData(entityMeta.getName());
-		if (!existingEntityMetaData.getBackend().equals(backend))
-		{
-			throw new MolgenisDataException(
-					"Changing the backend of an entity is not supported. You tried to change the backend of entity '"
-							+ entityMeta.getName() + "' from '" + existingEntityMetaData.getBackend() + "' to '"
-							+ backend + "'");
-		}
-
-		List<AttributeMetaData> addedAttributes = Lists.newArrayList();
-
-		for (AttributeMetaData attr : existingEntityMetaData.getAttributes())
-		{
-			if (entityMeta.getAttribute(attr.getName()) == null)
-			{
-				throw new MolgenisDataException(
-						"Removing of existing attributes is currently not supported. You tried to remove attribute ["
-								+ attr.getName() + "] of entity [" + entityMeta.getName() + "]");
-			}
-		}
-
-		for (AttributeMetaData attr : entityMeta.getAttributes())
-		{
-			AttributeMetaData currentAttribute = existingEntityMetaData.getAttribute(attr.getName());
-			if (currentAttribute != null)
-			{
-				if (!currentAttribute.isSameAs(attr))
-				{
-					throw new MolgenisDataException(
-							"Changing existing attributes is not currently supported. You tried to alter attribute ["
-									+ attr.getName() + "] of entity [" + entityMeta.getName()
-									+ "]. Only adding of new attributes is supported.");
-				}
-			}
-			else if (!attr.isNillable())
-			{
-				throw new MolgenisDataException(
-						"Adding non-nillable attributes is not currently supported.  You tried to add non-nillable attribute ["
-								+ attr.getName() + "] of entity [" + entityMeta.getName() + "].");
-			}
-			else
-			{
-				validatePermission(entityMeta.getName(), Permission.WRITEMETA);
-
-				if (sync) metaDataService.addAttributeSync(entityMeta.getName(), attr);
-				else metaDataService.addAttribute(entityMeta.getName(), attr);
-
-				addedAttributes.add(attr);
-			}
-		}
-
-		return addedAttributes;
-	}
-
-	/**
-	 * Convert a list of AttributeMetaDataEntity to AttributeMetaData
-	 * 
-	 * @param entityMetaData
-	 * @param attributeMetaDataEntities
-	 * @return
-	 */
-	public static Iterable<AttributeMetaData> toExistingAttributeMetaData(EntityMetaData entityMetaData,
-			Iterable<Entity> attributeMetaDataEntities)
-	{
-		return FluentIterable.from(attributeMetaDataEntities).transform(new Function<Entity, AttributeMetaData>()
-		{
-			@Override
-			public AttributeMetaData apply(Entity attributeMetaDataEntity)
-			{
-				String attributeName = attributeMetaDataEntity.getString(AttributeMetaDataMetaData.NAME);
-				AttributeMetaData attribute = entityMetaData.getAttribute(attributeName);
-				if (attribute == null) throw new MolgenisDataAccessException("The attributeMetaData : " + attributeName
-						+ " does not exsit in EntityMetaData : " + entityMetaData.getName());
-				return attribute;
-			}
-		}).toList();
 	}
 
 	public static boolean equals(Entity packageEntity, Package package_)

@@ -127,7 +127,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 		// metadata repositories get created here.
 		localDataService.getMeta().setDefaultBackend(backend);
 		List<EntityMetaData> metas = DependencyResolver
-				.resolve(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
+				.resolveEntityMetaDependencies(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
 
 		for (EntityMetaData emd : metas)
 		{

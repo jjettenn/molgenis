@@ -1,5 +1,6 @@
 package org.molgenis.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.MolgenisDataException;
+import org.molgenis.data.Package;
 import org.molgenis.data.Repository;
 import org.molgenis.data.UnknownEntityException;
 import org.molgenis.fieldtypes.XrefField;
@@ -42,8 +44,9 @@ public class DependencyResolver
 			repoByName.put(repo.getEntityMetaData().getName(), repo);
 		}
 
-		return resolve(repoByName.values().stream().map(repo -> repo.getEntityMetaData()).collect(Collectors.toSet()))
-				.stream().map(emd -> repoByName.get(emd.getName())).collect(Collectors.toList());
+		return resolveEntityMetaDependencies(
+				repoByName.values().stream().map(repo -> repo.getEntityMetaData()).collect(Collectors.toSet())).stream()
+						.map(emd -> repoByName.get(emd.getName())).collect(Collectors.toList());
 	}
 
 	/**
@@ -52,7 +55,7 @@ public class DependencyResolver
 	 * @param coll
 	 * @return
 	 */
-	public static List<EntityMetaData> resolve(Collection<EntityMetaData> coll)
+	public static List<EntityMetaData> resolveEntityMetaDependencies(Collection<EntityMetaData> coll)
 	{
 		// EntityMetaData by entityname
 		Map<String, EntityMetaData> metaDataByName = Maps.newHashMap();
@@ -267,4 +270,8 @@ public class DependencyResolver
 		return resolved;
 	}
 
+	public static List<Package> resolvePackageDependencies(Collection<Package> packages)
+	{
+		return new ArrayList<Package>(packages); // FIXME todo, see EmxMetaDataParser
+	}
 }

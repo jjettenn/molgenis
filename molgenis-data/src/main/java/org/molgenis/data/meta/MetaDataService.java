@@ -1,6 +1,5 @@
 package org.molgenis.data.meta;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.molgenis.data.AttributeMetaData;
@@ -12,8 +11,6 @@ import org.molgenis.data.RepositoryCollection;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
-
-import com.google.common.collect.ImmutableMap;
 
 public interface MetaDataService
 		extends Iterable<RepositoryCollection>, ApplicationListener<ContextRefreshedEvent>, Ordered
@@ -74,9 +71,16 @@ public interface MetaDataService
 	/**
 	 * Adds a new Package
 	 * 
-	 * @param pack
+	 * @param package_
 	 */
-	void addPackage(Package pack);
+	void addPackage(Package package_);
+
+	/**
+	 * Adds a package if the package does not exist, else updates the package
+	 * 
+	 * @param package_
+	 */
+	void upsertPackage(Package package_);
 
 	/**
 	 * Gets the entity meta data for a given entity.
@@ -104,6 +108,13 @@ public interface MetaDataService
 	 * @return
 	 */
 	Repository addEntityMeta(EntityMetaData entityMeta);
+
+	/**
+	 * Adds an entity if the entity does not exist, else updates the entity
+	 * 
+	 * @param entityMeta
+	 */
+	void upsertEntityMeta(EntityMetaData entityMeta);
 
 	/**
 	 * Deletes an EntityMeta
@@ -135,9 +146,6 @@ public interface MetaDataService
 	 */
 	void addAttribute(String entityName, AttributeMetaData attribute);
 
-	// FIXME remove this method
-	void addAttributeSync(String entityName, AttributeMetaData attribute);
-
 	/**
 	 * Deletes an Attribute
 	 * 
@@ -146,34 +154,6 @@ public interface MetaDataService
 	 */
 	void deleteAttribute(String entityName, String attributeName);
 
-	// FIXME remove this method
-	List<AttributeMetaData> updateSync(EntityMetaData sourceEntityMetaData);
-
-	/**
-	 * Check the integration of an entity meta data with existing entities Check only if the existing attributes are the
-	 * same as the new attributes
-	 * 
-	 * @param repositoryCollection
-	 *            the new entities
-	 * @return
-	 */
-	LinkedHashMap<String, Boolean> integrationTestMetaData(RepositoryCollection repositoryCollection);
-
-	/**
-	 * Check the integration of an entity meta data with existing entities Check only if the existing attributes are the
-	 * same as the new attributes
-	 * 
-	 * @param newEntitiesMetaDataMap
-	 *            the new entities in a map where the keys are the names
-	 * @param skipEntities
-	 *            do not check the entities, returns true.
-	 * @param defaultPackage
-	 *            the default package for the entities that does not have a package
-	 * @return
-	 */
-	LinkedHashMap<String, Boolean> integrationTestMetaData(ImmutableMap<String, EntityMetaData> newEntitiesMetaDataMap,
-			List<String> skipEntities, String defaultPackage);
-
 	/**
 	 * Has backend will check if the requested backend already exists and is registered.
 	 * 
@@ -181,4 +161,20 @@ public interface MetaDataService
 	 * @return
 	 */
 	boolean hasBackend(String backendName);
+
+	/**
+	 * Returns whether this repository is a repository that contains meta data (e.g. entities, attributes, packages)
+	 * 
+	 * @param entityName
+	 * @return
+	 */
+	boolean isMetaRepository(String entityName);
+
+	/**
+	 * Returns repository for meta data repository with applied decorators
+	 * 
+	 * @param decoratedRepository
+	 * @return
+	 */
+	Repository createDecoratedMetaRepository(Repository decoratedRepository);
 }

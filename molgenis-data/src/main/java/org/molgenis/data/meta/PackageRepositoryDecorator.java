@@ -7,9 +7,11 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.molgenis.data.AggregateQuery;
 import org.molgenis.data.AggregateResult;
+import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
@@ -19,16 +21,21 @@ import org.molgenis.data.Query;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.collect.TreeTraverser;
 
 public class PackageRepositoryDecorator implements Repository
 {
 	private final Repository decoratedRepo;
+	private final DataService dataService;
 	private final SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
 
-	public PackageRepositoryDecorator(Repository decoratedRepo,
+	public PackageRepositoryDecorator(Repository decoratedRepo, DataService dataService,
 			SystemEntityMetaDataRegistry systemEntityMetaDataRegistry)
 	{
 		this.decoratedRepo = requireNonNull(decoratedRepo);
+		this.dataService = requireNonNull(dataService);
 		this.systemEntityMetaDataRegistry = requireNonNull(systemEntityMetaDataRegistry);
 	}
 
@@ -138,43 +145,36 @@ public class PackageRepositoryDecorator implements Repository
 		}));
 	}
 
+	@Transactional
 	@Override
 	public void delete(Entity entity)
 	{
-		validateDeleteAllowed(entity);
-		decoratedRepo.delete(entity);
+		deletePackage(entity);
 	}
 
+	@Transactional
 	@Override
 	public void delete(Stream<? extends Entity> entities)
 	{
-		decoratedRepo.delete(entities.filter(entity -> {
-			validateDeleteAllowed(entity);
-			return true;
-		}));
+		entities.forEach(this::deletePackage);
 	}
 
 	@Override
 	public void deleteById(Object id)
 	{
-		validateDeleteAllowed(findOne(id));
-		decoratedRepo.deleteById(id);
+		deletePackage(findOne(id));
 	}
 
 	@Override
 	public void deleteById(Stream<Object> ids)
 	{
-		decoratedRepo.deleteById(ids.filter(id -> {
-			validateDeleteAllowed(findOne(id));
-			return true;
-		}));
+		findAll(ids).forEach(this::deletePackage);
 	}
 
 	@Override
 	public void deleteAll()
 	{
-		iterator().forEachRemaining(this::validateDeleteAllowed);
-		decoratedRepo.deleteAll();
+		stream().forEach(this::deletePackage);
 	}
 
 	@Override
@@ -252,6 +252,39 @@ public class PackageRepositoryDecorator implements Repository
 		{
 			throw new MolgenisDataException(format("Updating system package [%s] is not allowed", packageName));
 		}
+	}
+
+	private void deletePackage(Entity packageEntity)
+	{
+		validateDeleteAllowed(packageEntity);
+
+		// recursively delete sub packages
+		StreamSupport.stream(new TreeTraverser<Entity>()
+		{
+			@Override
+			public Iterable<Entity> children(Entity packageEntity)
+			{
+				return new Iterable<Entity>()
+				{
+					@Override
+					public Iterator<Entity> iterator()
+					{
+						return query().eq(PackageMetaData.PARENT, packageEntity).findAll().iterator();
+					}
+				};
+			}
+		}.postOrderTraversal(packageEntity).spliterator(), false).forEach(this::deletePackageAndContents);
+	}
+
+	private void deletePackageAndContents(Entity packageEntity)
+	{
+		// delete entities in package
+		Repository entityRepo = dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME);
+		Stream<Entity> entityEntities = entityRepo.query().eq(EntityMetaDataMetaData.PACKAGE, packageEntity).findAll();
+		entityRepo.delete(entityEntities); // TODO dependency resolving
+
+		// delete row from package table
+		decoratedRepo.delete(packageEntity);
 	}
 
 	private void validateDeleteAllowed(Entity entity)

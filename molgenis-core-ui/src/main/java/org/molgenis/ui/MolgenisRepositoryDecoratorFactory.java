@@ -11,6 +11,7 @@ import org.molgenis.data.IdGenerator;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryDecoratorFactory;
 import org.molgenis.data.RepositorySecurityDecorator;
+import org.molgenis.data.meta.MetaDataRepositoryDecorator;
 import org.molgenis.data.mysql.MysqlRepositoryCollection;
 import org.molgenis.data.settings.AppSettings;
 import org.molgenis.data.support.OwnedEntityMetaData;
@@ -56,6 +57,12 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 			decoratedRepository = new MolgenisUserDecorator(decoratedRepository);
 		}
 
+		// 10. Meta data decorators
+		if (dataService.getMeta().isMetaRepository(repository.getName()))
+		{
+			decoratedRepository = dataService.getMeta().createDecoratedMetaRepository(decoratedRepository);
+		}
+
 		// 9. Owned decorator
 		if (EntityUtils.doesExtend(decoratedRepository.getEntityMetaData(), OwnedEntityMetaData.ENTITY_NAME))
 		{
@@ -91,6 +98,11 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 		// 1. security decorator
 		decoratedRepository = new RepositorySecurityDecorator(decoratedRepository, appSettings);
 
+		// 0. meta data security decorator
+		if (dataService.getMeta().isMetaRepository(repository.getName()))
+		{
+			decoratedRepository = new MetaDataRepositoryDecorator(decoratedRepository, dataService.getMeta());
+		}
 		return decoratedRepository;
 	}
 }

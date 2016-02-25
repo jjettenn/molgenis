@@ -202,6 +202,7 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 	@Override
 	public void add(Entity entity)
 	{
+		// FIXME validate name
 		decoratedRepo.add(entity);
 	}
 

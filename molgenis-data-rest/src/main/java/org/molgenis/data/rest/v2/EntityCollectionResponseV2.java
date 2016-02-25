@@ -1,18 +1,23 @@
 package org.molgenis.data.rest.v2;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.molgenis.data.DataService;
+import org.molgenis.data.Entity;
+import org.molgenis.data.EntityCollection;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Fetch;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.rest.EntityPager;
+import org.molgenis.data.support.MapEntity;
 import org.molgenis.security.core.MolgenisPermissionService;
 
-class EntityCollectionResponseV2
+public class EntityCollectionResponseV2 implements EntityCollection
 {
 	private final String href;
 	private final EntityMetaDataResponseV2 meta;
@@ -87,6 +92,27 @@ class EntityCollectionResponseV2
 	public List<Map<String, Object>> getItems()
 	{
 		return items;
+	}
+
+	@Override
+	public Iterator<Entity> iterator()
+	{
+		return items.stream().map(item -> {
+			return (Entity) new MapEntity(item);
+		}).iterator();
+	}
+
+	@Override
+	public Iterable<String> getAttributeNames()
+	{
+		return meta.getAttributes().stream().map(AttributeMetaDataResponseV2::getName).collect(toList());
+	}
+
+	@Override
+	public boolean isLazy()
+	{
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

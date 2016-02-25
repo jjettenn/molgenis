@@ -100,4 +100,64 @@ public class EntitiesValidationReportImpl implements EntitiesValidationReport
 	{
 		return packages;
 	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((fieldsAvailable == null) ? 0 : fieldsAvailable.hashCode());
+		result = prime * result + ((fieldsImportable == null) ? 0 : fieldsImportable.hashCode());
+		result = prime * result + ((fieldsRequired == null) ? 0 : fieldsRequired.hashCode());
+		result = prime * result + ((fieldsUnknown == null) ? 0 : fieldsUnknown.hashCode());
+		result = prime * result + ((importOrder == null) ? 0 : importOrder.hashCode());
+		result = prime * result + ((packages == null) ? 0 : packages.hashCode());
+		result = prime * result + ((sheetsImportable == null) ? 0 : sheetsImportable.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		EntitiesValidationReportImpl other = (EntitiesValidationReportImpl) obj;
+		if (fieldsAvailable == null)
+		{
+			if (other.fieldsAvailable != null) return false;
+		}
+		else if (!fieldsAvailable.equals(other.fieldsAvailable)) return false;
+		if (fieldsImportable == null)
+		{
+			if (other.fieldsImportable != null) return false;
+		}
+		else if (!fieldsImportable.equals(other.fieldsImportable)) return false;
+		if (fieldsRequired == null)
+		{
+			if (other.fieldsRequired != null) return false;
+		}
+		else if (!fieldsRequired.equals(other.fieldsRequired)) return false;
+		if (fieldsUnknown == null)
+		{
+			if (other.fieldsUnknown != null) return false;
+		}
+		else if (!fieldsUnknown.equals(other.fieldsUnknown)) return false;
+		if (importOrder == null)
+		{
+			if (other.importOrder != null) return false;
+		}
+		else if (!importOrder.equals(other.importOrder)) return false;
+		if (packages == null)
+		{
+			if (other.packages != null) return false;
+		}
+		else if (!packages.equals(other.packages)) return false;
+		if (sheetsImportable == null)
+		{
+			if (other.sheetsImportable != null) return false;
+		}
+		else if (!sheetsImportable.equals(other.sheetsImportable)) return false;
+		return true;
+	}
 }

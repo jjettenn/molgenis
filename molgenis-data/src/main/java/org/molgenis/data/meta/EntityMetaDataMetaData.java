@@ -36,8 +36,8 @@ public class EntityMetaDataMetaData extends SystemEntityMetaData
 		setLabel("Entity");
 		addAttribute(FULL_NAME, ROLE_ID).setLabel("Fully qualified name");
 		addAttribute(SIMPLE_NAME, ROLE_LABEL).setLabel("Name").setNillable(false).setReadOnly(true);
-		addAttribute(BACKEND).setLabel("Backend").setReadOnly(true);
-		addAttribute(PACKAGE).setLabel("Package").setDataType(XREF).setRefEntity(PackageRepository.META_DATA)
+		addAttribute(BACKEND).setLabel("Backend").setNillable(false).setReadOnly(true);
+		addAttribute(PACKAGE).setLabel("Package").setDataType(XREF).setRefEntity(PackageMetaData.INSTANCE)
 				.setReadOnly(true);
 		addAttribute(ID_ATTRIBUTE).setLabel("ID attribute").setDataType(XREF)
 				.setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
@@ -51,7 +51,7 @@ public class EntityMetaDataMetaData extends SystemEntityMetaData
 		addAttribute(DESCRIPTION, ROLE_LOOKUP).setLabel("Description").setDataType(TEXT);
 		addAttribute(TAGS).setDataType(MREF).setLabel("Tags").setRefEntity(TagMetaData.INSTANCE);
 		addAttribute(ATTRIBUTES).setLabel("Attributes").setDataType(MREF)
-				.setRefEntity(AttributeMetaDataMetaData.INSTANCE);
+				.setRefEntity(AttributeMetaDataMetaData.INSTANCE).setNillable(false);
 		addAttribute(SYSTEM).setLabel("System").setDataType(BOOL).setNillable(false).setReadOnly(true);
 	}
 }

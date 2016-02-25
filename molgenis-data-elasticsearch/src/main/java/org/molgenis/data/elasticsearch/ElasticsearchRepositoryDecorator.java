@@ -104,8 +104,8 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 	@Transactional
 	public void delete(Entity entity)
 	{
-		decoratedRepo.delete(entity);
 		super.delete(entity);
+		decoratedRepo.delete(entity);
 	}
 
 	@Override
@@ -114,8 +114,8 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 	{
 		// TODO look into performance improvements
 		Iterators.partition(entities.iterator(), BATCH_SIZE).forEachRemaining(batch -> {
-			decoratedRepo.delete(batch.stream());
 			super.delete(batch.stream());
+			decoratedRepo.delete(batch.stream());
 		});
 	}
 
@@ -123,8 +123,8 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 	@Transactional
 	public void deleteById(Object id)
 	{
-		decoratedRepo.deleteById(id);
 		super.deleteById(id);
+		decoratedRepo.deleteById(id);
 	}
 
 	@Override
@@ -133,8 +133,8 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 	{
 		// TODO look into performance improvements
 		Iterators.partition(ids.iterator(), BATCH_SIZE).forEachRemaining(batch -> {
-			decoratedRepo.deleteById(batch);
 			super.deleteById(batch);
+			decoratedRepo.deleteById(batch);
 		});
 	}
 
@@ -142,8 +142,8 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 	@Transactional
 	public void deleteAll()
 	{
-		decoratedRepo.deleteAll();
 		super.deleteAll();
+		decoratedRepo.deleteAll();
 	}
 
 	// retrieve entity by id via decorated repository

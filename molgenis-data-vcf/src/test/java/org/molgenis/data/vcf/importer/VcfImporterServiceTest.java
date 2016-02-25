@@ -331,9 +331,6 @@ public class VcfImporterServiceTest
 		// Test with multiple input repositories not possible due to
 		// https://github.com/molgenis/molgenis/issues/4544
 
-		// Test with multiple input repositories not possible due to
-		// https://github.com/molgenis/molgenis/issues/4544
-
 		File file = mock(File.class);
 
 		String entityName0 = "entity0";
@@ -397,9 +394,6 @@ public class VcfImporterServiceTest
 	@Test
 	public void validateImportWithSamplesAlreadyExists()
 	{
-		// Test with multiple input repositories not possible due to
-		// https://github.com/molgenis/molgenis/issues/4544
-
 		// Test with multiple input repositories not possible due to
 		// https://github.com/molgenis/molgenis/issues/4544
 

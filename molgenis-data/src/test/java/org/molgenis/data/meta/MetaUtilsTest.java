@@ -14,19 +14,14 @@ import java.util.Arrays;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.MolgenisDataAccessException;
 import org.molgenis.data.Package;
 import org.molgenis.data.Range;
 import org.molgenis.data.semantic.LabeledResource;
 import org.molgenis.data.semantic.Relation;
 import org.molgenis.data.semantic.Tag;
-import org.molgenis.data.support.DefaultAttributeMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
-import org.molgenis.data.support.MapEntity;
 import org.molgenis.fieldtypes.FieldType;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -293,42 +288,5 @@ public class MetaUtilsTest
 		assertEquals(packageEntity.getString(PackageMetaData.DESCRIPTION), packageDescription0);
 		assertNotNull(packageEntity.getEntity(PackageMetaData.PARENT));
 		assertEquals(Lists.newArrayList(packageEntity.getEntities(PackageMetaData.TAGS)).size(), 1);
-	}
-
-	@Test
-	public void toExistingAttributeMetaData()
-	{
-		DefaultEntityMetaData entityMetaData = new DefaultEntityMetaData("entityMetaData");
-		AttributeMetaData attributeHeight = new DefaultAttributeMetaData("height_0");
-		AttributeMetaData attributeWeight = new DefaultAttributeMetaData("weight_0");
-		entityMetaData.addAttributeMetaData(attributeHeight);
-		entityMetaData.addAttributeMetaData(attributeWeight);
-
-		MapEntity entity1 = new MapEntity(
-				ImmutableMap.of(AttributeMetaDataMetaData.NAME, "height_0", AttributeMetaDataMetaData.LABEL, "height",
-						AttributeMetaDataMetaData.DESCRIPTION, "this is a height measurement in m!"));
-		Iterable<Entity> attributeMetaDataEntities = Arrays.<Entity> asList(entity1);
-
-		Iterable<AttributeMetaData> actual = MetaUtils.toExistingAttributeMetaData(entityMetaData,
-				attributeMetaDataEntities);
-		Iterable<AttributeMetaData> expected = Arrays.<AttributeMetaData> asList(attributeHeight);
-		assertEquals(actual, expected);
-	}
-
-	@Test(expectedExceptions =
-	{ MolgenisDataAccessException.class })
-	public void toExistingAttributeMetaData_MolgenisDataAccessException()
-	{
-		DefaultEntityMetaData entityMetaData = new DefaultEntityMetaData("entityMetaData");
-		AttributeMetaData attributeHeight = new DefaultAttributeMetaData("height_0");
-		AttributeMetaData attributeWeight = new DefaultAttributeMetaData("weight_0");
-		entityMetaData.addAttributeMetaData(attributeHeight);
-		entityMetaData.addAttributeMetaData(attributeWeight);
-
-		MapEntity entity1 = new MapEntity(
-				ImmutableMap.of(AttributeMetaDataMetaData.NAME, "height_wrong_name", AttributeMetaDataMetaData.LABEL,
-						"height", AttributeMetaDataMetaData.DESCRIPTION, "this is a height measurement in m!"));
-		Iterable<Entity> attributeMetaDataEntities = Arrays.<Entity> asList(entity1);
-		MetaUtils.toExistingAttributeMetaData(entityMetaData, attributeMetaDataEntities);
 	}
 }

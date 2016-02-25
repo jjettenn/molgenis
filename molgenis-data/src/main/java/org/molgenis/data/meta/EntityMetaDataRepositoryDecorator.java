@@ -4,17 +4,21 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static org.molgenis.util.SecurityDecoratorUtils.validatePermission;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.molgenis.data.AggregateQuery;
 import org.molgenis.data.AggregateResult;
+import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
@@ -27,21 +31,26 @@ import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.i18n.LanguageService;
+import org.molgenis.data.support.DataServiceImpl;
+import org.molgenis.security.core.Permission;
+import org.molgenis.security.core.utils.SecurityUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeTraverser;
 
 public class EntityMetaDataRepositoryDecorator implements Repository
 {
 	private final Repository decoratedRepo;
 	private final SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
-	private final MetaDataService metaDataService;
+	private final DataService dataService;
 	private final LanguageService languageService;
 
-	public EntityMetaDataRepositoryDecorator(Repository decoratedRepo, MetaDataService metaDataService,
+	public EntityMetaDataRepositoryDecorator(Repository decoratedRepo, DataService dataService,
 			SystemEntityMetaDataRegistry systemEntityMetaDataRegistry, LanguageService languageService)
 	{
 		this.decoratedRepo = requireNonNull(decoratedRepo);
-		this.metaDataService = requireNonNull(metaDataService);
+		this.dataService = requireNonNull(dataService);
 		this.systemEntityMetaDataRegistry = requireNonNull(systemEntityMetaDataRegistry);
 		this.languageService = requireNonNull(languageService);
 	}
@@ -136,84 +145,72 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 		return decoratedRepo.aggregate(aggregateQuery);
 	}
 
+	@Transactional
 	@Override
 	public void update(Entity entity)
 	{
-		validateUpdateAllowed(entity);
-		updateEntityAttributes(entity, findOne(entity.getIdValue()));
-		decoratedRepo.update(entity);
+		updateEntity(entity);
 	}
 
+	@Transactional
 	@Override
 	public void update(Stream<? extends Entity> entities)
 	{
-		decoratedRepo.update(entities.filter(entity -> {
-			validateUpdateAllowed(entity);
-			updateEntityAttributes(entity, findOne(entity.getIdValue()));
-			return true;
-		}));
+		entities.forEach(this::updateEntity);
 	}
 
+	@Transactional
 	@Override
 	public void delete(Entity entity)
 	{
-		validateDeleteAllowed(entity);
-		decoratedRepo.delete(entity);
-		// FIXME delete table
+		deleteEntity(entity);
 	}
 
+	@Transactional
 	@Override
 	public void delete(Stream<? extends Entity> entities)
 	{
-		decoratedRepo.delete(entities.filter(entity -> {
-			validateDeleteAllowed(entity);
-			return true;
-		}));
-		// FIXME delete table
+		entities.forEach(this::deleteEntity);
 	}
 
+	@Transactional
 	@Override
 	public void deleteById(Object id)
 	{
-		validateDeleteAllowed(findOne(id));
-		decoratedRepo.deleteById(id);
-		// FIXME delete table
+		deleteEntity(findOne(id));
 	}
 
+	@Transactional
 	@Override
 	public void deleteById(Stream<Object> ids)
 	{
-		decoratedRepo.deleteById(ids.filter(id -> {
-			validateDeleteAllowed(findOne(id));
-			return true;
-		}));
-		// FIXME delete table
+		findAll(ids).forEach(this::deleteEntity);
 	}
 
+	@Transactional
 	@Override
 	public void deleteAll()
 	{
-		iterator().forEachRemaining(this::validateDeleteAllowed);
-		decoratedRepo.deleteAll();
-		// FIXME delete table
+		iterator().forEachRemaining(this::deleteEntity);
 	}
 
+	@Transactional
 	@Override
 	public void add(Entity entity)
 	{
-		validateAddAllowed(entity);
-		decoratedRepo.add(entity);
-		// FIXME create table
+		addEntity(entity);
 	}
 
+	@Transactional
 	@Override
 	public Integer add(Stream<? extends Entity> entities)
 	{
-		return decoratedRepo.add(entities.filter(entity -> {
-			validateAddAllowed(entity);
+		AtomicInteger count = new AtomicInteger();
+		entities.filter(entity -> {
+			count.incrementAndGet();
 			return true;
-		}));
-		// FIXME create table
+		}).forEach(this::addEntity);
+		return count.get();
 	}
 
 	@Override
@@ -258,14 +255,44 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 		decoratedRepo.removeEntityListener(entityListener);
 	}
 
+	private void addEntity(Entity entityEntity)
+	{
+		validateAddAllowed(entityEntity);
+
+		// add row to entities table
+		decoratedRepo.add(entityEntity);
+
+		// create entity table
+		EntityMetaData entityMeta = MetaUtils.toEntityMeta(entityEntity, this, languageService.getLanguageCodes());
+		if (!entityMeta.isAbstract())
+		{
+			Repository entityRepo = dataService.getMeta().getBackend(entityMeta.getBackend()).addEntityMeta(entityMeta);
+			((DataServiceImpl) dataService).addRepository(entityRepo); // FIXME remove cast
+		}
+	}
+
 	private void validateAddAllowed(Entity entity)
 	{
+		validatePermission(entity.getString(EntityMetaDataMetaData.FULL_NAME), Permission.WRITEMETA);
+
 		Entity existingEntity = findOne(entity.getIdValue(), new Fetch().field(EntityMetaDataMetaData.FULL_NAME));
 		if (existingEntity != null)
 		{
 			throw new MolgenisDataException(format("Adding existing entity [%s] is not allowed",
 					entity.getString(EntityMetaDataMetaData.FULL_NAME)));
 		}
+
+		EntityMetaData entityMeta = MetaUtils.toEntityMeta(entity, this, languageService.getLanguageCodes());
+		MetaValidationUtils.validateEntityMetaData(entityMeta);
+	}
+
+	private void updateEntity(Entity entityEntity)
+	{
+		validateUpdateAllowed(entityEntity);
+
+		updateEntityAttributes(entityEntity, findOne(entityEntity.getIdValue()));
+
+		decoratedRepo.update(entityEntity);
 	}
 
 	/**
@@ -277,22 +304,16 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	 */
 	private void validateUpdateAllowed(Entity entity)
 	{
+		validatePermission(entity.getString(EntityMetaDataMetaData.FULL_NAME), Permission.WRITEMETA);
+
 		String entityName = entity.getString(EntityMetaDataMetaData.FULL_NAME);
 		EntityMetaData entityMetaData = systemEntityMetaDataRegistry.getSystemEntity(entityName);
-		if (entityMetaData != null && !MetaUtils.equals(entity, entityMetaData, metaDataService))
+		if (entityMetaData != null && !MetaUtils.equals(entity, entityMetaData, dataService.getMeta()))
 		{
 			throw new MolgenisDataException(format("Updating system entity [%s] is not allowed", entityName));
 		}
-	}
 
-	private void validateDeleteAllowed(Entity entity)
-	{
-		Boolean isSystem = entity.getBoolean(EntityMetaDataMetaData.SYSTEM);
-		if (isSystem == null || isSystem.booleanValue())
-		{
-			throw new MolgenisDataException(format("Deleting system entity [%s] is not allowed",
-					entity.getString(EntityMetaDataMetaData.FULL_NAME)));
-		}
+		MetaValidationUtils.validateEntityMetaData(entityMetaData);
 	}
 
 	private void updateEntityAttributes(Entity entity, Entity existingEntity)
@@ -314,7 +335,7 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 		{
 			String entityName = entity.getString(EntityMetaDataMetaData.FULL_NAME);
 			String backend = entity.getString(EntityMetaDataMetaData.BACKEND);
-			RepositoryCollection repoCollection = metaDataService.getBackend(backend);
+			RepositoryCollection repoCollection = dataService.getMeta().getBackend(backend);
 			if (!(repoCollection instanceof ManageableRepositoryCollection))
 			{
 				throw new MolgenisDataException(format("Modifying attributes not allowed for entity [%s]", entityName));
@@ -350,6 +371,86 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 				});
 
 			}
+		}
+	}
+
+	private void deleteEntity(Entity entityEntity)
+	{
+		validateDeleteAllowed(entityEntity);
+
+		// delete row from entities table
+		decoratedRepo.delete(entityEntity);
+
+		// delete rows from attributes table
+		deleteEntityAttributes(entityEntity);
+
+		// delete rows from tags table
+		deleteEntityTags(entityEntity);
+
+		// delete entity table
+		deleteEntityInstances(entityEntity);
+
+		// delete entity permissions
+		deleteEntityPermissions(entityEntity);
+	}
+
+	private void validateDeleteAllowed(Entity entity)
+	{
+		validatePermission(entity.getString(EntityMetaDataMetaData.FULL_NAME), Permission.WRITEMETA);
+
+		Boolean isSystem = entity.getBoolean(EntityMetaDataMetaData.SYSTEM);
+		if (isSystem == null || isSystem.booleanValue())
+		{
+			throw new MolgenisDataException(format("Deleting system entity [%s] is not allowed",
+					entity.getString(EntityMetaDataMetaData.FULL_NAME)));
+		}
+	}
+
+	private void deleteEntityAttributes(Entity entityEntity)
+	{
+		Iterable<Entity> rootAttrEntities = entityEntity.getEntities(EntityMetaDataMetaData.ATTRIBUTES);
+		Stream<Entity> attrEntities = StreamSupport.stream(rootAttrEntities.spliterator(), false)
+				.flatMap(attrEntity -> StreamSupport.stream(new TreeTraverser<Entity>()
+				{
+					@Override
+					public Iterable<Entity> children(Entity attrEntity)
+					{
+						return attrEntity.getEntities(AttributeMetaDataMetaData.PARTS);
+					}
+				}.postOrderTraversal(attrEntity).spliterator(), false));
+		dataService.delete(AttributeMetaDataMetaData.ENTITY_NAME, attrEntities);
+	}
+
+	private void deleteEntityTags(Entity entityEntity)
+	{
+		Iterable<Entity> tagEntities = entityEntity.getEntities(EntityMetaDataMetaData.TAGS);
+		dataService.delete(TagMetaData.ENTITY_NAME, StreamSupport.stream(tagEntities.spliterator(), false));
+	}
+
+	private void deleteEntityInstances(Entity entityEntity)
+	{
+		String entityName = entityEntity.getString(EntityMetaDataMetaData.FULL_NAME);
+		String backend = entityEntity.getString(EntityMetaDataMetaData.BACKEND);
+		((ManageableRepositoryCollection) dataService.getMeta().getBackend(backend)).deleteEntityMeta(entityName);
+	}
+
+	private void deleteEntityPermissions(Entity entityEntity)
+	{
+		String entityName = entityEntity.getString(EntityMetaDataMetaData.FULL_NAME);
+		List<String> authorities = SecurityUtils.getEntityAuthorities(entityName);
+
+		// User permissions
+		if (dataService.hasRepository("UserAuthority"))
+		{
+			Stream<Entity> userPermissions = dataService.query("UserAuthority").in("role", authorities).findAll();
+			dataService.delete("UserAuthority", userPermissions);
+		}
+
+		// Group permissions
+		if (dataService.hasRepository("GroupAuthority"))
+		{
+			Stream<Entity> groupPermissions = dataService.query("GroupAuthority").in("role", authorities).findAll();
+			dataService.delete("GroupAuthority", groupPermissions);
 		}
 	}
 }

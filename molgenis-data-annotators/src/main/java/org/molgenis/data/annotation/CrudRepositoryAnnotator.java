@@ -1,5 +1,10 @@
 package org.molgenis.data.annotation;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
@@ -14,11 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 @Component
 public class CrudRepositoryAnnotator
@@ -53,14 +53,14 @@ public class CrudRepositoryAnnotator
 	 */
 	@Transactional
 	@RunAsSystem
-	public Repository annotate(RepositoryAnnotator annotator, Repository repository)
-			throws IOException
+	public Repository annotate(RepositoryAnnotator annotator, Repository repository) throws IOException
 	{
 		if (!repository.getCapabilities().contains(RepositoryCapability.WRITABLE))
 		{
 			throw new UnsupportedOperationException("Currently only writable repositories can be annotated");
 		}
-		try {
+		try
+		{
 			EntityMetaData entityMetaData = dataService.getMeta().getEntityMetaData(repository.getName());
 			DefaultAttributeMetaData compoundAttributeMetaData = AnnotatorUtils.getCompoundResultAttribute(annotator,
 					entityMetaData);
@@ -69,7 +69,9 @@ public class CrudRepositoryAnnotator
 
 			Repository crudRepository = iterateOverEntitiesAndAnnotate(repository, annotator);
 			return crudRepository;
-		}catch(Exception e){
+		}
+		catch (Exception e)
+		{
 			throw new RuntimeException(e);
 		}
 	}
@@ -77,8 +79,7 @@ public class CrudRepositoryAnnotator
 	/**
 	 * Iterates over all the entities within a repository and annotates.
 	 */
-	private Repository iterateOverEntitiesAndAnnotate(Repository repository,
-			RepositoryAnnotator annotator)
+	private Repository iterateOverEntitiesAndAnnotate(Repository repository, RepositoryAnnotator annotator)
 	{
 		Iterator<Entity> it = annotator.annotate(repository);
 
@@ -121,7 +122,7 @@ public class CrudRepositoryAnnotator
 		{
 			DefaultEntityMetaData newEntityMetaData = new DefaultEntityMetaData(entityMetaData);
 			newEntityMetaData.addAttributeMetaData(compoundAttributeMetaData);
-			dataService.getMeta().updateSync(newEntityMetaData);
+			dataService.getMeta().updateEntityMeta(newEntityMetaData);
 		}
 	}
 
