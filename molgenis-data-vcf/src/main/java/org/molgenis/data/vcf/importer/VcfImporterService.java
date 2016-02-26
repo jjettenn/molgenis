@@ -1,7 +1,6 @@
 package org.molgenis.data.vcf.importer;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.StreamSupport.stream;
 
 import java.io.File;
 import java.io.IOException;
