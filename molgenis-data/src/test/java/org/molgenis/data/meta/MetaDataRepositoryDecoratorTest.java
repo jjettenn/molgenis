@@ -12,6 +12,7 @@ import static org.testng.Assert.assertEquals;
 import java.util.stream.Stream;
 
 import org.molgenis.data.Entity;
+import org.molgenis.data.Fetch;
 import org.molgenis.data.Repository;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -121,5 +122,13 @@ public class MetaDataRepositoryDecoratorTest
 		metaDataRepoDecorator.update(stream);
 		verify(decoratedRepo, times(1)).update(stream);
 		verify(metaDataService, times(1)).refreshCaches();
+	}
+
+	@Test
+	public void streamFetch()
+	{
+		Fetch fetch = new Fetch();
+		metaDataRepoDecorator.stream(fetch);
+		verify(decoratedRepo, times(1)).stream(fetch);
 	}
 }

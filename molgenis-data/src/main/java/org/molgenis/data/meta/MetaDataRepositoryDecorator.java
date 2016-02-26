@@ -44,6 +44,12 @@ public class MetaDataRepositoryDecorator implements Repository
 	}
 
 	@Override
+	public Stream<Entity> stream(Fetch fetch)
+	{
+		return decoratedRepo.stream(fetch);
+	}
+
+	@Override
 	public void close() throws IOException
 	{
 		decoratedRepo.close();
@@ -233,5 +239,4 @@ public class MetaDataRepositoryDecorator implements Repository
 	{
 		decoratedRepo.removeEntityListener(entityListener);
 	}
-
 }

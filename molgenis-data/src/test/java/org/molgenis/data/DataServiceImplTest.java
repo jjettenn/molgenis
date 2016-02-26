@@ -308,10 +308,32 @@ public class DataServiceImplTest
 
 		// The test
 		verify(metaDataService).addEntityMeta(copy.getEntityMetaData());
+		@SuppressWarnings(
+		{ "unchecked", "rawtypes" })
 		ArgumentCaptor<Stream<Entity>> argument = ArgumentCaptor.forClass((Class) Stream.class);
 		verify(repo2, times(1)).add(argument.capture());
 		List<Entity> list = argument.getAllValues().get(0).collect(toList());
 		assertEquals(list, Arrays.asList(entity0, entity1));
 	}
 
+	@Test
+	public void streamStringFetch()
+	{
+		Entity entity0 = mock(Entity.class);
+		Fetch fetch = new Fetch();
+		when(repo1.stream(fetch)).thenReturn(Stream.of(entity0));
+		Stream<Entity> entities = dataService.stream("Entity1", fetch);
+		assertEquals(entities.collect(Collectors.toList()), Arrays.asList(entity0));
+	}
+
+	@Test
+	public void streamStringFetchClass()
+	{
+		Entity entity0 = mock(Entity.class);
+		Class<Entity> clazz = Entity.class;
+		Fetch fetch = new Fetch();
+		when(repo1.stream(fetch)).thenReturn(Stream.of(entity0));
+		Stream<Entity> entities = dataService.stream("Entity1", fetch, clazz);
+		assertEquals(entities.collect(Collectors.toList()), Arrays.asList(entity0));
+	}
 }
