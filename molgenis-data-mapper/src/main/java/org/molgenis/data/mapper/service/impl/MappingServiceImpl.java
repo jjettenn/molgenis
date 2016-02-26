@@ -11,13 +11,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.common.collect.Lists;
-import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.auth.MolgenisUser;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.IdGenerator;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.UnknownEntityException;
@@ -32,7 +30,6 @@ import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.MapEntity;
 import org.molgenis.data.support.QueryImpl;
-import org.molgenis.fieldtypes.FieldType;
 import org.molgenis.security.core.runas.RunAsSystem;
 import org.molgenis.security.permission.PermissionSystemService;
 import org.slf4j.Logger;
@@ -54,19 +51,16 @@ public class MappingServiceImpl implements MappingService
 
 	private final AlgorithmService algorithmService;
 
-	private final IdGenerator idGenerator;
-
 	private final MappingProjectRepository mappingProjectRepository;
 
 	private final PermissionSystemService permissionSystemService;
 
 	@Autowired
-	public MappingServiceImpl(DataService dataService, AlgorithmService algorithmService, IdGenerator idGenerator,
+	public MappingServiceImpl(DataService dataService, AlgorithmService algorithmService,
 			MappingProjectRepository mappingProjectRepository, PermissionSystemService permissionSystemService)
 	{
 		this.dataService = requireNonNull(dataService);
 		this.algorithmService = requireNonNull(algorithmService);
-		this.idGenerator = requireNonNull(idGenerator);
 		this.mappingProjectRepository = requireNonNull(mappingProjectRepository);
 		this.permissionSystemService = requireNonNull(permissionSystemService);
 	}
@@ -285,22 +279,6 @@ public class MappingServiceImpl implements MappingService
 		sourceMapping.getAttributeMappings().forEach(attributeMapping -> applyMappingToAttribute(attributeMapping,
 				sourceEntity, target, sourceEntityMetaData));
 		return target;
-	}
-
-	@Override
-	public String generateId(FieldType dataType, Long count)
-	{
-		Object id;
-		if (dataType.equals(MolgenisFieldTypes.INT) || dataType.equals(MolgenisFieldTypes.LONG)
-				|| dataType.equals(MolgenisFieldTypes.DECIMAL))
-		{
-			id = count + 1;
-		}
-		else
-		{
-			id = idGenerator.generateId();
-		}
-		return id.toString();
 	}
 
 	private void applyMappingToAttribute(AttributeMapping attributeMapping, Entity sourceEntity, MapEntity target,

@@ -9,6 +9,7 @@ import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryDecoratorFactory;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.elasticsearch.ElasticsearchEntityFactory;
 import org.molgenis.data.elasticsearch.ElasticsearchRepositoryCollection;
 import org.molgenis.data.elasticsearch.SearchService;
@@ -101,6 +102,12 @@ public abstract class AbstractDataApiTestConfig
 	}
 
 	@Bean
+	public SystemEntityMetaDataRegistry systemEntityMetaDataRegistry()
+	{
+		return new SystemEntityMetaDataRegistry(dataService());
+	}
+
+	@Bean
 	public MolgenisTransactionManager transactionManager()
 	{
 		return new MolgenisTransactionManager(idGenerator(), dataSource());
@@ -146,7 +153,7 @@ public abstract class AbstractDataApiTestConfig
 			{
 				return new MolgenisRepositoryDecoratorFactory(entityManager(), transactionLogService,
 						entityAttributesValidator(), idGenerator(), appSettings(), dataService(), expressionValidator)
-						.createDecoratedRepository(repository);
+								.createDecoratedRepository(repository);
 			}
 		};
 	}

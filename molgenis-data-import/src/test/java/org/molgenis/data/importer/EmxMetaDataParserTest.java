@@ -23,18 +23,12 @@ import org.molgenis.data.mysql.MysqlRepository;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.framework.db.EntitiesValidationReport;
 import org.molgenis.util.ResourceUtils;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-/**
- * Parser specific tests.
- */
-@ContextConfiguration(classes = ImportTestConfig.class)
-public class EmxMetaDataParserTest extends AbstractTestNGSpringContextTests
+public class EmxMetaDataParserTest
 {
 	private MetaDataParser parser;
 	private DataService dataService;

@@ -43,7 +43,7 @@ public class EmxImportService implements ImportService
 	public boolean canImport(File file, RepositoryCollection source)
 	{
 		String fileNameExtension = StringUtils.getFilenameExtension(file.getName());
-		if (GenericImporterExtensions.getEMX().contains(fileNameExtension.toLowerCase()))
+		if (getSupportedFileExtensions().contains(fileNameExtension.toLowerCase()))
 		{
 			for (String entityName : source.getEntityNames())
 			{
@@ -73,7 +73,7 @@ public class EmxImportService implements ImportService
 	 * 
 	 * @return {@link EntityImportReport} describing what happened
 	 */
-	public EntityImportReport doImport(EmxImportJob job)
+	private EntityImportReport doImport(EmxImportJob job)
 	{
 		try
 		{

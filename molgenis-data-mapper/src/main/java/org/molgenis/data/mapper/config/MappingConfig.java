@@ -1,7 +1,6 @@
 package org.molgenis.data.mapper.config;
 
 import org.molgenis.data.DataService;
-import org.molgenis.data.IdGenerator;
 import org.molgenis.data.mapper.algorithmgenerator.service.AlgorithmGeneratorService;
 import org.molgenis.data.mapper.algorithmgenerator.service.impl.AlgorithmGeneratorServiceImpl;
 import org.molgenis.data.mapper.repository.impl.AttributeMappingRepositoryImpl;
@@ -48,9 +47,6 @@ public class MappingConfig
 	OntologyService ontologyService;
 
 	@Autowired
-	IdGenerator idGenerator;
-
-	@Autowired
 	PermissionSystemService permissionSystemService;
 
 	@Autowired
@@ -59,7 +55,7 @@ public class MappingConfig
 	@Bean
 	public MappingService mappingService()
 	{
-		return new MappingServiceImpl(dataService, algorithmServiceImpl(), idGenerator, mappingProjectRepository(),
+		return new MappingServiceImpl(dataService, algorithmServiceImpl(), mappingProjectRepository(),
 				permissionSystemService);
 	}
 

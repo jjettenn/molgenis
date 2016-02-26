@@ -7,7 +7,6 @@ import org.molgenis.data.mapper.mapping.model.AttributeMapping;
 import org.molgenis.data.mapper.mapping.model.EntityMapping;
 import org.molgenis.data.mapper.mapping.model.MappingProject;
 import org.molgenis.data.mapper.mapping.model.MappingTarget;
-import org.molgenis.fieldtypes.FieldType;
 
 public interface MappingService
 {
@@ -17,14 +16,14 @@ public interface MappingService
 	 * @param target
 	 *            name of the first target entity
 	 */
-	abstract MappingProject addMappingProject(String name, MolgenisUser owner, String target);
+	MappingProject addMappingProject(String name, MolgenisUser owner, String target);
 
 	/**
 	 * Retrieves all {@link MappingProject}s.
 	 * 
 	 * @return list of all {@link MappingProject}s.
 	 */
-	abstract List<MappingProject> getAllMappingProjects();
+	List<MappingProject> getAllMappingProjects();
 
 	/**
 	 * Updates a MappingProject in the repository. All {@link MappingTarget}s, {@link EntityMapping}s and
@@ -33,7 +32,7 @@ public interface MappingService
 	 * @param mappingProject
 	 *            the {@link MappingProject} to update.
 	 */
-	abstract void updateMappingProject(MappingProject mappingProject);
+	void updateMappingProject(MappingProject mappingProject);
 
 	/**
 	 * Retrieves a {@link MappingProject} from the repository.
@@ -42,7 +41,7 @@ public interface MappingService
 	 *            ID of the {@link MappingProject}
 	 * @return the retrieved MappingProject
 	 */
-	abstract MappingProject getMappingProject(String identifier);
+	MappingProject getMappingProject(String identifier);
 
 	/**
 	 * Applies all mappings in a {@link MappingTarget}
@@ -85,6 +84,4 @@ public interface MappingService
 	 * @return cloned {@link MappingProject}
 	 */
 	MappingProject cloneMappingProject(String mappingProjectId, String clonedMappingProjectName);
-
-	String generateId(FieldType dataType, Long count);
 }

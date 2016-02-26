@@ -5,6 +5,7 @@ import static com.google.common.collect.Lists.reverse;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.StreamSupport.stream;
@@ -82,7 +83,7 @@ public class MetaDataServiceImpl implements MetaDataService
 
 	public MetaDataServiceImpl(DataServiceImpl dataService)
 	{
-		this.dataService = dataService;
+		this.dataService = requireNonNull(dataService);
 	}
 
 	@Autowired

@@ -313,7 +313,8 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 			throw new MolgenisDataException(format("Updating system entity [%s] is not allowed", entityName));
 		}
 
-		MetaValidationUtils.validateEntityMetaData(entityMetaData);
+		MetaValidationUtils
+				.validateEntityMetaData(MetaUtils.toEntityMeta(entity, this, languageService.getLanguageCodes()));
 	}
 
 	private void updateEntityAttributes(Entity entity, Entity existingEntity)

@@ -358,6 +358,10 @@ public class MetaUtils
 		Boolean abstract_ = entityEntity.getBoolean(EntityMetaDataMetaData.ABSTRACT);
 		entityMeta.setAbstract(abstract_ != null ? abstract_ : false);
 		entityMeta.setLabel(entityEntity.getString(EntityMetaDataMetaData.LABEL));
+		languageCodes.forEach(languageCode -> {
+			entityMeta.setLabel(languageCode,
+					entityEntity.getString(EntityMetaDataMetaData.LABEL + "-" + languageCode));
+		});
 		Entity extendsEntity = entityEntity.getEntity(EntityMetaDataMetaData.EXTENDS);
 		if (extendsEntity != null)
 		{
@@ -370,6 +374,10 @@ public class MetaUtils
 			entityMeta.setExtends(extendsEntityMeta);
 		}
 		entityMeta.setDescription(entityEntity.getString(EntityMetaDataMetaData.DESCRIPTION));
+		languageCodes.forEach(languageCode -> {
+			entityMeta.setDescription(languageCode,
+					entityEntity.getString(EntityMetaDataMetaData.DESCRIPTION + "-" + languageCode));
+		});
 		Entity packageEntity = entityEntity.getEntity(EntityMetaDataMetaData.PACKAGE);
 		if (packageEntity != null)
 		{
