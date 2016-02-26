@@ -2,7 +2,6 @@ package org.molgenis;
 
 import static java.util.stream.Collectors.toList;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -20,7 +19,6 @@ import org.molgenis.fieldtypes.FieldType;
 import org.molgenis.fieldtypes.FileField;
 import org.molgenis.fieldtypes.HtmlField;
 import org.molgenis.fieldtypes.HyperlinkField;
-import org.molgenis.fieldtypes.ImageField;
 import org.molgenis.fieldtypes.IntField;
 import org.molgenis.fieldtypes.LongField;
 import org.molgenis.fieldtypes.MrefField;
@@ -49,26 +47,6 @@ public class MolgenisFieldTypes
 	public enum FieldTypeEnum
 	{
 		BOOL, CATEGORICAL, CATEGORICAL_MREF, COMPOUND, DATE, DATE_TIME, DECIMAL, EMAIL, ENUM, FILE, HTML, HYPERLINK, INT, LONG, MREF, SCRIPT, STRING, TEXT, XREF;
-
-		public static FieldTypeEnum get(String fieldTypeEnumStr)
-		{
-			fieldTypeEnumStr = fieldTypeEnumStr.replaceAll("_", "");
-			for (FieldTypeEnum value : values())
-			{
-				if (value.toString().replaceAll("_", "").equalsIgnoreCase(fieldTypeEnumStr))
-				{
-					return value;
-				}
-			}
-			return null;
-		}
-
-		public static List<String> getOptionsLowercase()
-		{
-			return Arrays.stream(values()).map(value -> {
-				return value.toString().replace("_", "");
-			}).map(String::toLowerCase).collect(toList());
-		}
 	}
 
 	public static final FieldType BOOL = new BoolField();
@@ -118,7 +96,6 @@ public class MolgenisFieldTypes
 			addType(SCRIPT);
 			addType(TEXT);
 			addType(XREF);
-			addType(ENUM);
 
 			init = true;
 		}
@@ -155,6 +132,14 @@ public class MolgenisFieldTypes
 			LOG.warn("couldn't get type for name '" + name + "'");
 			return null;
 		}
+	}
+
+	public static List<String> getTypeNames()
+	{
+		init();
+
+		return types.keySet().stream().map(typeName -> typeName.substring(0, typeName.length() - "field".length()))
+				.collect(toList());
 	}
 
 	public static FieldType get(Field f) throws MolgenisModelException

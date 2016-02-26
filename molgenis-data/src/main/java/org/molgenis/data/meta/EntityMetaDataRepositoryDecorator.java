@@ -110,6 +110,12 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	}
 
 	@Override
+	public Stream<Entity> stream(Fetch fetch)
+	{
+		return decoratedRepo.stream(fetch);
+	}
+
+	@Override
 	public Entity findOne(Query q)
 	{
 		return decoratedRepo.findOne(q);

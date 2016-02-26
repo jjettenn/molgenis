@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
 import org.molgenis.data.AggregateQuery;
 import org.molgenis.data.AggregateResult;
@@ -104,6 +105,12 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 	public Iterator<Entity> iterator()
 	{
 		return decoratedRepo.iterator();
+	}
+
+	@Override
+	public Stream<Entity> stream(Fetch fetch)
+	{
+		return decoratedRepo.stream(fetch);
 	}
 
 	@Override
@@ -307,8 +314,8 @@ public class AttributeMetaDataRepositoryDecorator implements Repository
 
 	private void validateUpdateDataType(String currentDataTypeStr, String newDataTypeStr)
 	{
-		FieldTypeEnum currentDataType = FieldTypeEnum.get(currentDataTypeStr);
-		FieldTypeEnum newDataType = FieldTypeEnum.get(newDataTypeStr);
+		FieldTypeEnum currentDataType = MolgenisFieldTypes.getType(currentDataTypeStr).getEnumType();
+		FieldTypeEnum newDataType = MolgenisFieldTypes.getType(newDataTypeStr).getEnumType();
 		EnumSet<FieldTypeEnum> allowedDataTypes = DATA_TYPE_ALLOWED_TRANSITIONS.get(currentDataType);
 		if (allowedDataTypes == null || !allowedDataTypes.contains(newDataType))
 		{

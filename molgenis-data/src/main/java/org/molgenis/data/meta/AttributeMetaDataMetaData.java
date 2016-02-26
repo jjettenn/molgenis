@@ -8,7 +8,7 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
-import org.molgenis.MolgenisFieldTypes.FieldTypeEnum;
+import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
 import org.molgenis.fieldtypes.LongField;
@@ -47,7 +47,7 @@ public class AttributeMetaDataMetaData extends SystemEntityMetaData
 		addAttribute(IDENTIFIER, ROLE_ID).setLabel("Identifier").setVisible(false);
 		addAttribute(NAME, ROLE_LABEL, ROLE_LOOKUP).setLabel("Name").setNillable(false).setReadOnly(true);
 		addAttribute(DATA_TYPE).setLabel("Data type").setDataType(new EnumField())
-				.setEnumOptions(FieldTypeEnum.getOptionsLowercase()).setNillable(false);
+				.setEnumOptions(MolgenisFieldTypes.getTypeNames()).setNillable(false);
 		addAttribute(PARTS).setLabel("Parts").setDataType(MREF).setRefEntity(this).setReadOnly(true);
 		addAttribute(REF_ENTITY).setLabel("Reference entity").setReadOnly(true);
 		addAttribute(EXPRESSION).setLabel("Expression").setNillable(true);
