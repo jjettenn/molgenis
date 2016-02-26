@@ -430,7 +430,7 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 				new ElasticsearchEntityFactory(localEntityManager, sourceToEntityConverter, entityToSourceConverter));
 
 		List<EntityMetaData> metas = DependencyResolver
-				.resolveEntityMetaDependencies(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
+				.resolve(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
 
 		// Sort repos to the same sequence as the resolves metas
 		List<Repository> repos = Lists.newArrayList(localDataService);

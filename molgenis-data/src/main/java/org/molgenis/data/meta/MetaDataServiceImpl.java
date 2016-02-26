@@ -159,7 +159,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	@Override
 	public void delete(List<EntityMetaData> entities)
 	{
-		reverse(DependencyResolver.resolveEntityMetaDependencies(entities)).stream().map(EntityMetaData::getName)
+		reverse(DependencyResolver.resolve(entities)).stream().map(EntityMetaData::getName)
 				.forEach(this::deleteEntityMeta);
 	}
 
@@ -480,7 +480,7 @@ public class MetaDataServiceImpl implements MetaDataService
 
 		// Add or update static entity meta data
 		Map<String, EntityMetaData> entityMetaBeans = ctx.getBeansOfType(EntityMetaData.class);
-		List<EntityMetaData> entities = DependencyResolver.resolveEntityMetaDependencies(entityMetaBeans.values());
+		List<EntityMetaData> entities = DependencyResolver.resolve(entityMetaBeans.values());
 		entities.forEach(this::upsertEntityMeta);
 	}
 

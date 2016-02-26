@@ -40,7 +40,7 @@ public class DependencyResolverTest
 		e4.addAttribute("ref").setDataType(MolgenisFieldTypes.XREF).setRefEntity(e2);
 
 		List<EntityMetaData> resolved = DependencyResolver
-				.resolveEntityMetaDependencies(Sets.<EntityMetaData> newHashSet(e1, e2, e3, e4, e5));
+				.resolve(Sets.<EntityMetaData> newHashSet(e1, e2, e3, e4, e5));
 		assertEquals(resolved, Arrays.asList(e2, e4, e3, e5, e1));
 	}
 

@@ -919,7 +919,7 @@ public class EmxMetaDataParser implements MetaDataParser
 		Iterables.addAll(allMetaData, existingMetaData);
 
 		// Use all metadata for dependency resolving
-		List<EntityMetaData> resolved = DependencyResolver.resolveEntityMetaDependencies(allMetaData);
+		List<EntityMetaData> resolved = DependencyResolver.resolve(allMetaData);
 
 		// Only import source
 		resolved.retainAll(metaDataList);
