@@ -429,8 +429,8 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 		SearchService localSearchService = embeddedElasticSearchServiceFactory.create(localDataService,
 				new ElasticsearchEntityFactory(localEntityManager, sourceToEntityConverter, entityToSourceConverter));
 
-		List<EntityMetaData> metas = DependencyResolver
-				.resolve(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
+		List<EntityMetaData> metas = DependencyResolver.resolve(Sets.newHashSet(localDataService.getMeta()
+				.getEntityMetaDatas()));
 
 		// Sort repos to the same sequence as the resolves metas
 		List<Repository> repos = Lists.newArrayList(localDataService);
@@ -521,7 +521,7 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 			{
 				return new MolgenisRepositoryDecoratorFactory(entityManager(), transactionLogService,
 						entityAttributesValidator, idGenerator, appSettings, dataService(), expressionValidator)
-								.createDecoratedRepository(repository);
+						.createDecoratedRepository(repository);
 			}
 		};
 	}
