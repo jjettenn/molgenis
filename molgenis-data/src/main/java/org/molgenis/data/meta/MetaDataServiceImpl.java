@@ -9,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.StreamSupport.stream;
+import static org.molgenis.security.core.utils.SecurityUtils.getCurrentUsername;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -151,6 +152,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	{
 		getEntityRepository().deleteById(entityName);
 		refreshCaches();
+		LOG.info("Repository [{}] deleted by user [{}]", entityName, getCurrentUsername());
 	}
 
 	@Transactional
