@@ -30,6 +30,7 @@ import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
+import org.molgenis.data.UnknownEntityException;
 import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.security.core.Permission;
@@ -183,7 +184,12 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	@Override
 	public void deleteById(Object id)
 	{
-		deleteEntity(findOne(id));
+		Entity entity = findOne(id);
+		if (entity == null)
+		{
+			throw new UnknownEntityException(format("Unknown entity [%s] with id [%s]", getName(), id.toString()));
+		}
+		deleteEntity(entity);
 	}
 
 	@Transactional
@@ -296,7 +302,12 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	{
 		validateUpdateAllowed(entityEntity);
 
-		updateEntityAttributes(entityEntity, findOne(entityEntity.getIdValue()));
+		Entity existingEntityEntity = findOne(entityEntity.getIdValue());
+		if (existingEntityEntity == null)
+		{
+			throw new UnknownEntityException(format("Unknown entity [%s] with id [%s]", getName(), entityEntity.getIdValue().toString()));
+		}
+		updateEntityAttributes(entityEntity, existingEntityEntity);
 
 		decoratedRepo.update(entityEntity);
 	}
