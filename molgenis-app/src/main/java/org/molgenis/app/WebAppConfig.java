@@ -55,7 +55,7 @@ import freemarker.template.TemplateException;
 @EnableTransactionManagement
 @EnableWebMvc
 @EnableAsync
-@ComponentScan(basePackages = "org.molgenis", excludeFilters = @Filter(type = FilterType.ANNOTATION, value = CommandLineOnlyConfiguration.class) )
+@ComponentScan(basePackages = "org.molgenis", excludeFilters = @Filter(type = FilterType.ANNOTATION, value = CommandLineOnlyConfiguration.class))
 @Import(
 { WebAppSecurityConfig.class, DatabaseConfig.class, HttpClientConfig.class, EmbeddedElasticSearchConfig.class,
 		GsonConfig.class })
@@ -135,7 +135,8 @@ public class WebAppConfig extends MolgenisWebAppConfig
 			{
 				if (MysqlRepositoryCollection.NAME.equals(emd.getBackend()))
 				{
-					localDataService.addRepository(backend.addEntityMeta(emd));
+					// localDataService.addRepository(backend.addEntityMeta(emd)); // FIXME determine why this is
+					// required and what needs to happen?
 				}
 				else if (ElasticsearchRepositoryCollection.NAME.equals(emd.getBackend()))
 				{

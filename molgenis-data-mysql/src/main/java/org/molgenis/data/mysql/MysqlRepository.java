@@ -460,7 +460,6 @@ public class MysqlRepository extends AbstractRepository
 			}
 			if (doCreateEnumType(att))
 			{
-				jdbcTemplate.execute(getDropEnumTypeSql(att));
 				jdbcTemplate.execute(getCreateEnumTypeSql(att));
 			}
 		}
