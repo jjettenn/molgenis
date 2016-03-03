@@ -277,8 +277,6 @@ public class PostgreSqlRepository extends AbstractRepository
 			case COMPOUND:
 			case MREF:
 				throw new RuntimeException(format("No data type exists for attribute type [%s]", attrType));
-			case IMAGE:
-				throw new RuntimeException(format("Unsupported attribute type [%s]", attrType));
 			default:
 				throw new RuntimeException(format("Unknown attribute type [%s]", attrType));
 		}

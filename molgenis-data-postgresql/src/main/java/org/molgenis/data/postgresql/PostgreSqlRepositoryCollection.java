@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.molgenis.data.AttributeMetaData;
+import org.molgenis.data.DataService;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PostgreSqlRepositoryCollection implements ManageableRepositoryCollection
 {
-	private static final String NAME = "PostgreSQL";
+	static final String NAME = "PostgreSQL";
 
 	private final JdbcTemplate jdbcTemplate;
 	private final DataSource dataSource;
@@ -30,7 +31,7 @@ public class PostgreSqlRepositoryCollection implements ManageableRepositoryColle
 
 	@Autowired
 	public PostgreSqlRepositoryCollection(JdbcTemplate jdbcTemplate, DataSource dataSource,
-			MetaDataService metaDataService)
+			MetaDataService metaDataService, DataService dataService)
 	{
 		this.jdbcTemplate = requireNonNull(jdbcTemplate);
 		this.dataSource = requireNonNull(dataSource);

@@ -13,7 +13,7 @@ public class JobMetaData extends DefaultEntity
 
 	public static final String ENTITY_NAME = "JobMetaData";
 	public static final String IDENTIFIER = "identifier"; // Job ID
-	public static final String USER = "user"; // Owner of the job
+	public static final String USER = "user_"; // Owner of the job
 	public static final String STATUS = "status"; // Job status like running or failed
 	public static final String TYPE = "type"; // Job type like ImportJob
 	public static final String SUBMISSION_DATE = "submissionDate";

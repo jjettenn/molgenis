@@ -133,21 +133,21 @@ public class MetaDataServiceImpl implements MetaDataService
 		Supplier<Stream<String>> languageCodes = () -> languageService.getLanguageCodes().stream();
 
 		// Add language attributes to the AttributeMetaDataMetaData
-		languageCodes.get().map(code -> AttributeMetaDataMetaData.LABEL + '-' + code)
+		languageCodes.get().map(code -> AttributeMetaDataMetaData.LABEL + code)
 				.forEach(AttributeMetaDataMetaData.INSTANCE::addAttribute);
 
 		// Add description attributes to the AttributeMetaDataMetaData
-		languageCodes.get().map(code -> AttributeMetaDataMetaData.DESCRIPTION + '-' + code)
+		languageCodes.get().map(code -> AttributeMetaDataMetaData.DESCRIPTION + code)
 				.forEach(attrName -> AttributeMetaDataMetaData.INSTANCE.addAttribute(attrName)
 						.setDataType(MolgenisFieldTypes.TEXT));
 
 		// Add description attributes to the EntityMetaDataMetaData
-		languageCodes.get().map(code -> EntityMetaDataMetaData.DESCRIPTION + '-' + code)
+		languageCodes.get().map(code -> EntityMetaDataMetaData.DESCRIPTION + code)
 				.forEach(attrName -> EntityMetaDataMetaData.INSTANCE.addAttribute(attrName)
 						.setDataType(MolgenisFieldTypes.TEXT));
 
 		// Add language attributes to the EntityMetaDataMetaData
-		languageCodes.get().map(code -> EntityMetaDataMetaData.LABEL + '-' + code)
+		languageCodes.get().map(code -> EntityMetaDataMetaData.LABEL + code)
 				.forEach(EntityMetaDataMetaData.INSTANCE::addAttribute);
 
 		// Add language attributes to I18nStringMetaData

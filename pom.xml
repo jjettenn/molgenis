@@ -647,6 +647,12 @@
             <version>${mysql.connector.java.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.4.1207</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <modules>
@@ -667,7 +673,7 @@
         <module>molgenis-data-system</module>
         <module>molgenis-data-merge</module>
         <module>molgenis-data-mysql</module>
-		<module>molgenis-data-postgresql</module>
+		<!--  <module>molgenis-data-postgresql</module>-->
         <module>molgenis-data-vcf</module>
         <module>molgenis-data-rest</module>
         <module>molgenis-data-elasticsearch</module>
