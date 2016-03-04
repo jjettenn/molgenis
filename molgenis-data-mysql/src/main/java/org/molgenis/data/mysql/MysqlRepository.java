@@ -45,6 +45,8 @@ import org.molgenis.data.support.AbstractRepository;
 import org.molgenis.data.support.BatchingQueryResult;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.QueryImpl;
+import org.molgenis.fieldtypes.DateField;
+import org.molgenis.fieldtypes.DatetimeField;
 import org.molgenis.fieldtypes.EnumField;
 import org.molgenis.fieldtypes.FieldType;
 import org.molgenis.fieldtypes.MrefField;
@@ -1060,7 +1062,14 @@ public class MysqlRepository extends AbstractRepository
 			}
 			if (!(att.getDataType() instanceof MrefField))
 			{
-				sql.append(att.getName()).append(" = ?, ");
+				if (att.getDataType() instanceof EnumField)
+				{
+					sql.append(att.getName()).append(" = ?::" + getEnumTypeName(att) + ", ");
+				}
+				else
+				{
+					sql.append(att.getName()).append(" = ?, ");
+				}
 			}
 		}
 		if (sql.charAt(sql.length() - 1) == ' ' && sql.charAt(sql.length() - 2) == ',')
@@ -1273,8 +1282,16 @@ public class MysqlRepository extends AbstractRepository
 								}
 								else
 								{
-									preparedStatement.setObject(fieldIndex++,
-											att.getDataType().convert(batch.get(rowIndex).get(att.getName())));
+									Object value = att.getDataType().convert(batch.get(rowIndex).get(att.getName()));
+									if (att.getDataType() instanceof DateField)
+									{
+										value = new java.sql.Date(((java.util.Date) value).getTime());
+									}
+									else if (att.getDataType() instanceof DatetimeField)
+									{
+										value = new java.sql.Timestamp(((java.util.Date) value).getTime());
+									}
+									preparedStatement.setObject(fieldIndex++, value);
 								}
 							}
 						}
@@ -1404,8 +1421,16 @@ public class MysqlRepository extends AbstractRepository
 							}
 							else
 							{
-								preparedStatement.setObject(fieldIndex++,
-										att.getDataType().convert(e.get(att.getName())));
+								Object value = att.getDataType().convert(e.get(att.getName()));
+								if (att.getDataType() instanceof DateField)
+								{
+									value = new java.sql.Date(((java.util.Date) value).getTime());
+								}
+								else if (att.getDataType() instanceof DatetimeField)
+								{
+									value = new java.sql.Timestamp(((java.util.Date) value).getTime());
+								}
+								preparedStatement.setObject(fieldIndex++, value);
 							}
 						}
 					}
