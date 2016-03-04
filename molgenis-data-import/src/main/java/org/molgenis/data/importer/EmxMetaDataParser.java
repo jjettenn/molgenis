@@ -52,7 +52,6 @@ import org.molgenis.data.i18n.LanguageMetaData;
 import org.molgenis.data.importer.MyEntitiesValidationReport.AttributeState;
 import org.molgenis.data.meta.AttributeMetaDataMetaData;
 import org.molgenis.data.meta.EntityMetaDataMetaData;
-import org.molgenis.data.meta.MetaValidationUtils;
 import org.molgenis.data.meta.PackageImpl;
 import org.molgenis.data.meta.PackageMetaData;
 import org.molgenis.data.meta.TagMetaData;
@@ -856,7 +855,10 @@ public class EmxMetaDataParser implements MetaDataParser
 			List<EntityMetaData> metadataList = new ArrayList<EntityMetaData>();
 			for (String name : source.getEntityNames())
 			{
-				metadataList.add(dataService.getRepository(name).getEntityMetaData());
+				if (dataService.hasRepository(name))
+				{
+					metadataList.add(dataService.getRepository(name).getEntityMetaData());
+				}
 			}
 			IntermediateParseResults intermediateResults = parseTagsSheet(source.getRepository(TAGS));
 			parsePackagesSheet(source.getRepository(PACKAGES), intermediateResults);
@@ -946,7 +948,10 @@ public class EmxMetaDataParser implements MetaDataParser
 		ImmutableMap.Builder<String, EntityMetaData> builder = ImmutableMap.<String, EntityMetaData> builder();
 		for (String name : entityNames)
 		{
-			builder.put(name, dataService.getRepository(name).getEntityMetaData());
+			if (dataService.hasRepository(name))
+			{
+				builder.put(name, dataService.getRepository(name).getEntityMetaData());
+			}
 		}
 		return builder.build();
 	}
@@ -960,7 +965,7 @@ public class EmxMetaDataParser implements MetaDataParser
 
 		for (EntityMetaData emd : metaDataMap.values())
 		{
-			MetaValidationUtils.validateEntityMetaData(emd);
+			// MetaValidationUtils.validateEntityMetaData(emd);
 		}
 
 		for (String sheet : source.getEntityNames())
