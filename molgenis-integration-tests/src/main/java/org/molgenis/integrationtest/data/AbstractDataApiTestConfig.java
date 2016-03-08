@@ -1,7 +1,9 @@
 package org.molgenis.integrationtest.data;
 
+import java.beans.PropertyVetoException;
+import java.sql.SQLException;
+
 import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
 
 import org.molgenis.data.EntityManager;
 import org.molgenis.data.EntityManagerImpl;
@@ -27,13 +29,14 @@ import org.molgenis.data.validation.EntityAttributesValidator;
 import org.molgenis.data.validation.ExpressionValidator;
 import org.molgenis.file.FileMetaMetaData;
 import org.molgenis.js.RhinoConfig;
-import org.molgenis.mysql.embed.EmbeddedMysqlDatabaseBuilder;
 import org.molgenis.security.core.MolgenisPasswordEncoder;
 import org.molgenis.security.core.runas.RunAsSystemBeanPostProcessor;
 import org.molgenis.security.permission.PermissionSystemService;
 import org.molgenis.ui.MolgenisRepositoryDecoratorFactory;
 import org.molgenis.ui.RepositoryDecoratorRegistry;
 import org.molgenis.util.ApplicationContextProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -50,6 +53,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import com.google.common.io.Files;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 @EnableTransactionManagement(proxyTargetClass = true)
 @ComponentScan(
@@ -60,6 +64,8 @@ import com.google.common.io.Files;
 		OwnedEntityMetaData.class, RhinoConfig.class, ExpressionValidator.class, LanguageService.class })
 public abstract class AbstractDataApiTestConfig
 {
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractDataApiTestConfig.class);
+
 	@Autowired
 	protected SearchService searchService;
 
@@ -69,17 +75,61 @@ public abstract class AbstractDataApiTestConfig
 	@Autowired
 	public ExpressionValidator expressionValidator;
 
+	// private String dbName;
+
 	protected AbstractDataApiTestConfig()
 	{
 		System.setProperty("molgenis.home", Files.createTempDir().getAbsolutePath());
 	}
 
 	@PostConstruct
-	public void init()
+	public void init() throws SQLException
 	{
+		// if (this.dbName == null)
+		// {
+		// this.dbName = "test_" + idGenerator().generateId();
+		// createDatabase(dbName);
+		// }
+
 		dataService().setMeta(metaDataService());
 		metaDataService().setDefaultBackend(getBackend());
 	}
+
+	// private void createDatabase(String dbName) throws SQLException
+	// {
+	// String dbDriverClass = "org.postgresql.Driver";
+	// String dbJdbcUri = "jdbc:postgresql://localhost/";
+	// String dbUser = "postgres";
+	// String dbPassword = "P18kanjers";
+	//
+	// try
+	// {
+	// Class.forName(dbDriverClass);
+	// }
+	// catch (ClassNotFoundException e)
+	// {
+	// throw new RuntimeException(e);
+	// }
+	//
+	// Connection connection = DriverManager.getConnection(dbJdbcUri, dbUser, dbPassword);
+	// try
+	// {
+	// Statement statement = connection.createStatement();
+	// try
+	// {
+	// statement.executeUpdate("CREATE DATABASE " + dbName + ";");
+	// }
+	// finally
+	// {
+	// statement.close();
+	// }
+	// }
+	// finally
+	// {
+	// connection.close();
+	// }
+	// LOG.debug("Created database [{}]", dbName);
+	// }
 
 	protected abstract ManageableRepositoryCollection getBackend();
 
@@ -158,11 +208,185 @@ public abstract class AbstractDataApiTestConfig
 		};
 	}
 
-	@Bean(destroyMethod = "shutdown")
-	public DataSource dataSource()
+	@Bean(destroyMethod = "close")
+	// public DataSource dataSource()
+	// {
+	// return new EmbeddedMysqlDatabaseBuilder().build();
+	// }
+	public ComboPooledDataSource dataSource()
 	{
-		return new EmbeddedMysqlDatabaseBuilder().build();
+		// if (this.dbName == null)
+		// {
+		// this.dbName = "test_" + idGenerator().generateId();
+		// try
+		// {
+		// createDatabase(this.dbName);
+		// try
+		// {
+		// Thread.sleep(1000);
+		// }
+		// catch (InterruptedException e)
+		// {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// }
+		// catch (SQLException e)
+		// {
+		// throw new RuntimeException(e);
+		// }
+		// }
+		// this.dbName = "test_" + idGenerator().generateId();
+		// try
+		// {
+		// createDatabase(dbName);
+		// }
+		// catch (SQLException e)
+		// {
+		// throw new RuntimeException(e);
+		// }
+
+		String dbDriverClass = "org.postgresql.Driver";
+		String dbJdbcUri = "jdbc:postgresql://localhost/molgenistest";
+		String dbUser = "postgres";
+		String dbPassword = "P18kanjers";
+		// if(dbDriverClass == null) throw new IllegalArgumentException("db_driver is null");
+		// if(dbJdbcUri == null) throw new IllegalArgumentException("db_uri is null");
+		// if(dbUser == null) throw new IllegalArgumentException("please configure the db_user property in your
+		// molgenis-server.properties");
+		// if(dbPassword == null) throw new IllegalArgumentException("please configure the db_password property in your
+		// molgenis-server.properties");
+
+		ComboPooledDataSource dataSource = new ComboPooledDataSource();
+		try
+		{
+			dataSource.setDriverClass(dbDriverClass);
+		}
+		catch (PropertyVetoException e)
+		{
+			throw new RuntimeException(e);
+		}
+		dataSource.setJdbcUrl(dbJdbcUri);
+		dataSource.setUser(dbUser);
+		dataSource.setPassword(dbPassword);
+		dataSource.setMinPoolSize(5);
+		// dataSource.setMaxPoolSize(150);
+		dataSource.setMaxPoolSize(100);
+		dataSource.setTestConnectionOnCheckin(true);
+		dataSource.setIdleConnectionTestPeriod(120);
+		return dataSource;
+		// return new DatabaseRemovingDataSource(dataSource, this.dbName);
+		// return new EmbeddedMysqlDatabaseBuilder().build();
 	}
+
+	// public static class DatabaseRemovingDataSource implements DataSource
+	// {
+	// private final ComboPooledDataSource dataSource;
+	// private final String dbName;
+	//
+	// public DatabaseRemovingDataSource(ComboPooledDataSource dataSource, String dbName)
+	// {
+	// this.dataSource = dataSource;
+	// this.dbName = dbName;
+	// }
+	//
+	// @Override
+	// public PrintWriter getLogWriter() throws SQLException
+	// {
+	// return dataSource.getLogWriter();
+	// }
+	//
+	// @Override
+	// public void setLogWriter(PrintWriter out) throws SQLException
+	// {
+	// dataSource.setLogWriter(out);
+	// }
+	//
+	// @Override
+	// public void setLoginTimeout(int seconds) throws SQLException
+	// {
+	// dataSource.setLoginTimeout(seconds);
+	// }
+	//
+	// @Override
+	// public int getLoginTimeout() throws SQLException
+	// {
+	// return dataSource.getLoginTimeout();
+	// }
+	//
+	// @Override
+	// public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
+	// {
+	// return dataSource.getParentLogger();
+	// }
+	//
+	// @Override
+	// public <T> T unwrap(Class<T> iface) throws SQLException
+	// {
+	// return dataSource.unwrap(iface);
+	// }
+	//
+	// @Override
+	// public boolean isWrapperFor(Class<?> iface) throws SQLException
+	// {
+	// return dataSource.isWrapperFor(iface);
+	// }
+	//
+	// @Override
+	// public Connection getConnection() throws SQLException
+	// {
+	// return dataSource.getConnection();
+	// }
+	//
+	// @Override
+	// public Connection getConnection(String username, String password) throws SQLException
+	// {
+	// return dataSource.getConnection(username, password);
+	// }
+	//
+	// public void close() throws SQLException
+	// {
+	// dropDatabase();
+	//
+	// dataSource.close();
+	// }
+	//
+	// private void dropDatabase() throws SQLException
+	// {
+	// String dbDriverClass = "org.postgresql.Driver";
+	// String dbJdbcUri = "jdbc:postgresql://localhost/";
+	// String dbUser = "postgres";
+	// String dbPassword = "P18kanjers";
+	//
+	// try
+	// {
+	// Class.forName(dbDriverClass);
+	// }
+	// catch (ClassNotFoundException e)
+	// {
+	// throw new RuntimeException(e);
+	// }
+	//
+	// Connection connection = DriverManager.getConnection(dbJdbcUri, dbUser, dbPassword);
+	// try
+	// {
+	// Statement statement = connection.createStatement();
+	// try
+	// {
+	// statement.executeUpdate("DROP DATABASE " + dbName + ";");
+	// }
+	// finally
+	// {
+	// statement.close();
+	// }
+	// }
+	// finally
+	// {
+	// connection.close();
+	// }
+	// LOG.debug("Destroyed database [{}]", dbName);
+	// }
+	// }
 
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer properties()

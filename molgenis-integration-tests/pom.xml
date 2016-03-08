@@ -92,5 +92,11 @@
       		<version>5.0.12</version>
       		<scope>test</scope>
     	</dependency>
+    	<dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.4.1207</version>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 </project>

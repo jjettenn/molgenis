@@ -438,6 +438,7 @@ public class MetaDataServiceImpl implements MetaDataService
 
 	public void addBackend(RepositoryCollection backend)
 	{
+		LOG.info("Registering backend [{}]", backend.getName());
 		backends.put(backend.getName(), backend);
 	}
 

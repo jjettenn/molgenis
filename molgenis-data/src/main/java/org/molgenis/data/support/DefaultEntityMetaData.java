@@ -445,7 +445,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	{
 		this.ownLookupAttrs = lookupAttrs
 				.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
-					throw new IllegalStateException(String.format("Duplicate key %s", u));
+					throw new IllegalStateException(String.format("Duplicate key %s", u.getName()));
 				}, LinkedCaseInsensitiveMap::new));
 		clearCache();
 	}

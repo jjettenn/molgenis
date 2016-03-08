@@ -191,6 +191,7 @@ public class MysqlRepository extends AbstractRepository
 		try
 		{
 			jdbcTemplate.execute(getCreateSql());
+			LOG.debug("Created table [{}]", getTableName());
 
 			for (AttributeMetaData attr : getEntityMetaData().getAtomicAttributes())
 			{
@@ -205,6 +206,7 @@ public class MysqlRepository extends AbstractRepository
 				if (attr.getDataType() instanceof MrefField)
 				{
 					jdbcTemplate.execute(getMrefCreateSql(attr));
+					LOG.debug("Created junction table [{}_{}]", getTableName(), getColumnName(attr));
 				}
 				else if (attr.getDataType() instanceof XrefField)
 				{
@@ -357,7 +359,7 @@ public class MysqlRepository extends AbstractRepository
 		String refAttrMysqlType = (att.getRefEntity().getIdAttribute().getDataType() instanceof StringField ? VARCHAR
 				: att.getRefEntity().getIdAttribute().getDataType().getMysqlType());
 
-		sql.append(" CREATE TABLE ").append(getTableName()).append('_').append(att.getName())
+		sql.append(" CREATE TABLE IF NOT EXISTS ").append(getTableName()).append('_').append(att.getName())
 				.append(" (sequence_num INT,").append(idAttribute.getName()).append(' ').append(idAttrMysqlType)
 				.append(" NOT NULL, ").append(att.getName()).append(' ').append(refAttrMysqlType)
 				.append(" NOT NULL, FOREIGN KEY (").append(idAttribute.getName()).append(") REFERENCES ")
@@ -400,9 +402,10 @@ public class MysqlRepository extends AbstractRepository
 			case SCRIPT:
 			case STRING:
 			case TEXT:
-				return "text";
 			case ENUM:
-				return getEnumTypeName(attr);
+				return "text";
+			// case ENUM:
+			// return getEnumTypeName(attr);
 			case INT:
 				return "integer";
 			case LONG:
@@ -416,10 +419,19 @@ public class MysqlRepository extends AbstractRepository
 		}
 	}
 
-	private boolean doCreateEnumType(AttributeMetaData attr)
-	{
-		return attr.getExpression() == null && attr.getDataType() instanceof EnumField;
-	}
+	// private boolean doCreateEnumType(AttributeMetaData attr)
+	// {
+	// if (attr.getExpression() == null && attr.getDataType() instanceof EnumField)
+	// {
+	// List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(
+	// "select exists (select 1 from pg_type where typname = '" + getEnumTypeName(attr) + "')");
+	// return queryForList.iterator().next().get("exists").equals(Boolean.FALSE);
+	// }
+	// else
+	// {
+	// return false;
+	// }
+	// }
 
 	private String getColumnName(AttributeMetaData attr)
 	{
@@ -431,22 +443,22 @@ public class MysqlRepository extends AbstractRepository
 		return new StringBuilder(getTableName()).append('_').append(getColumnName(attr)).toString();
 	}
 
-	private String getDropEnumTypeSql(AttributeMetaData attr)
-	{
-		StringBuilder strBuilder = new StringBuilder("DROP TYPE IF EXISTS ");
-		strBuilder.append(getEnumTypeName(attr)).append(';');
-		return strBuilder.toString();
-	}
-
-	private String getCreateEnumTypeSql(AttributeMetaData attr)
-	{
-		StringBuilder strBuilder = new StringBuilder("CREATE TYPE ");
-		strBuilder.append(getEnumTypeName(attr)).append(" AS ENUM (");
-		strBuilder
-				.append(attr.getEnumOptions().stream().map(enumOption -> "'" + enumOption + "'").collect(joining(",")));
-		strBuilder.append(");");
-		return strBuilder.toString();
-	}
+	// private String getDropEnumTypeSql(AttributeMetaData attr)
+	// {
+	// StringBuilder strBuilder = new StringBuilder("DROP TYPE IF EXISTS ");
+	// strBuilder.append(getEnumTypeName(attr)).append(';');
+	// return strBuilder.toString();
+	// }
+	//
+	// private String getCreateEnumTypeSql(AttributeMetaData attr)
+	// {
+	// StringBuilder strBuilder = new StringBuilder("CREATE TYPE ");
+	// strBuilder.append(getEnumTypeName(attr)).append(" AS ENUM (");
+	// strBuilder
+	// .append(attr.getEnumOptions().stream().map(enumOption -> "'" + enumOption + "'").collect(joining(",")));
+	// strBuilder.append(");");
+	// return strBuilder.toString();
+	// }
 
 	protected String getCreateSql() throws MolgenisModelException
 	{
@@ -460,10 +472,17 @@ public class MysqlRepository extends AbstractRepository
 			{
 				sql.append(", ");
 			}
-			if (doCreateEnumType(att))
-			{
-				jdbcTemplate.execute(getCreateEnumTypeSql(att));
-			}
+			// if (doCreateEnumType(att))
+			// {
+			// try
+			// {
+			// jdbcTemplate.execute(getCreateEnumTypeSql(att));
+			// }
+			// catch (Exception e)
+			// {
+			// e.printStackTrace();
+			// }
+			// }
 		}
 		// primary key is first attribute unless otherwise indicated
 		AttributeMetaData idAttribute = getEntityMetaData().getIdAttribute();
@@ -591,6 +610,12 @@ public class MysqlRepository extends AbstractRepository
 			{
 				sql.append(" NOT NULL");
 			}
+			if (att.getDataType() instanceof EnumField)
+			{
+				sql.append(" CHECK (" + att.getName() + " IN (").append(
+						att.getEnumOptions().stream().map(enumOption -> "'" + enumOption + "'").collect(joining(",")))
+						.append("))");
+			}
 			// int + auto = auto_increment
 			if (att.getDataType().equals(MolgenisFieldTypes.INT) && att.isAuto())
 			{
@@ -617,9 +642,10 @@ public class MysqlRepository extends AbstractRepository
 
 	protected String getUniqueSql(AttributeMetaData att)
 	{
+		// PostgreSQL name convention
 		return new StringBuilder().append("ALTER TABLE ").append(getTableName()).append(" ADD CONSTRAINT ")
-				.append(att.getName()).append("_unique").append(" UNIQUE (").append(att.getName()).append(")")
-				.toString();
+				.append(getTableName()).append('_').append(att.getName()).append("_key").append(" UNIQUE (")
+				.append(att.getName()).append(")").toString();
 	}
 
 	@Override
@@ -660,14 +686,14 @@ public class MysqlRepository extends AbstractRepository
 			if (!(att.getDataType() instanceof MrefField))
 			{
 				sql.append(att.getName()).append(", ");
-				if (att.getDataType() instanceof EnumField)
-				{
-					params.append("?" + "::" + getEnumTypeName(att) + ", ");
-				}
-				else
-				{
-					params.append("?, ");
-				}
+				// if (att.getDataType() instanceof EnumField)
+				// {
+				// params.append("?" + "::" + getEnumTypeName(att) + ", ");
+				// }
+				// else
+				// {
+				params.append("?, ");
+				// }
 			}
 		}
 		if (sql.charAt(sql.length() - 1) == ' ' && sql.charAt(sql.length() - 2) == ',')
@@ -783,9 +809,11 @@ public class MysqlRepository extends AbstractRepository
 					// TODO needed when autoids are used to join
 					if (att.getDataType() instanceof MrefField)
 					{
-						select.append("string_agg(").append(att.getName()).append('.').append(att.getName())
-								.append(", ',' ORDER BY ").append(att.getName()).append(".sequence_num) AS ")
-								.append(att.getName());
+						// select.append("string_agg(").append(att.getName()).append('.').append(att.getName())
+						// .append(", ',' ORDER BY ").append(att.getName()).append(".sequence_num) AS ")
+						// .append(att.getName());
+						select.append("string_agg(distinct(").append(att.getName()).append('.').append(att.getName())
+								.append(")::character varying, ','").append(") AS ").append(att.getName());
 					}
 					else
 					{
@@ -1062,14 +1090,14 @@ public class MysqlRepository extends AbstractRepository
 			}
 			if (!(att.getDataType() instanceof MrefField))
 			{
-				if (att.getDataType() instanceof EnumField)
-				{
-					sql.append(att.getName()).append(" = ?::" + getEnumTypeName(att) + ", ");
-				}
-				else
-				{
-					sql.append(att.getName()).append(" = ?, ");
-				}
+				// if (att.getDataType() instanceof EnumField)
+				// {
+				// sql.append(att.getName()).append(" = ?::" + getEnumTypeName(att) + ", ");
+				// }
+				// else
+				// {
+				sql.append(att.getName()).append(" = ?, ");
+				// }
 			}
 		}
 		if (sql.charAt(sql.length() - 1) == ' ' && sql.charAt(sql.length() - 2) == ',')
