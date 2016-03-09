@@ -90,12 +90,14 @@ public abstract class AbstractI18nIT extends AbstractDataIntegrationIT
 		entityMetaData.setLabel("en", "The label");
 		entityMetaData.setLabel("nl", "Het label");
 		entityMetaData.addAttribute("id", ROLE_ID).setNillable(false);
-		entityMetaData.addAttribute("attr-nl", ROLE_LABEL).setDescription("en", "The description (nl)")
+		String attrNlName = "attrnl";
+		entityMetaData.addAttribute(attrNlName, ROLE_LABEL).setDescription("en", "The description (nl)")
 				.setDescription("nl", "De omschrijving (nl)").setLabel("en", "The label (nl)")
 				.setLabel("nl", "Het label (nl)");
-		entityMetaData.addAttribute("attr-en").setDescription("en", "The description (en)")
-		.setDescription("nl", "De omschrijving (en)").setLabel("en", "The label (en)")
-		.setLabel("nl", "Het label (en)");
+		String attrEnName = "attren";
+		entityMetaData.addAttribute(attrEnName).setDescription("en", "The description (en)")
+				.setDescription("nl", "De omschrijving (en)").setLabel("en", "The label (en)")
+				.setLabel("nl", "Het label (en)");
 
 		metaDataService.addEntityMeta(entityMetaData);
 
@@ -104,7 +106,7 @@ public abstract class AbstractI18nIT extends AbstractDataIntegrationIT
 		assertEquals(retrieved.getDescription(languageCode), "De omschrijving");
 		assertEquals(retrieved.getLabel(languageCode), "Het label");
 
-		AttributeMetaData attr = entityMetaData.getAttribute("attr-" + languageCode);
+		AttributeMetaData attr = entityMetaData.getAttribute("attr" + languageCode);
 		assertNotNull(attr);
 		assertEquals(attr.getDescription(languageCode), "De omschrijving (nl)");
 		assertEquals(attr.getLabel(languageCode), "Het label (nl)");
@@ -112,8 +114,7 @@ public abstract class AbstractI18nIT extends AbstractDataIntegrationIT
 		{ "en", "nl" });
 		assertEquals(entityMetaData.getLabelAttribute(), attr);
 
-		
-		attr = entityMetaData.getAttribute("attr-en");
+		attr = entityMetaData.getAttribute(attrEnName);
 		entityMetaData.setLabelAttribute(attr);
 		assertNotNull(attr);
 		assertEquals(attr.getDescription(languageCode), "De omschrijving (en)");

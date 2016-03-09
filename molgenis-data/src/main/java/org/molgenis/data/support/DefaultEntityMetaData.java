@@ -24,13 +24,12 @@ import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EditableEntityMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.Package;
-import org.molgenis.data.PackageChangeListener;
+import org.molgenis.data.Package;import org.molgenis.data.PackageChangeListener;<<<<<<<HEAD
 import org.molgenis.data.semantic.LabeledResource;
-import org.molgenis.data.semantic.Tag;
-import org.molgenis.util.CaseInsensitiveLinkedHashMap;
+import org.molgenis.data.semantic.Tag;import org.molgenis.util.CaseInsensitiveLinkedHashMap;=======>>>>>>>feature/postgres
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -124,7 +123,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		EntityMetaData extends_ = entityMetaData.getExtends();
 		this.extends_ = extends_ != null ? new DefaultEntityMetaData(extends_) : null;
 		this.backend = entityMetaData.getBackend();
-		this.attributes = new CaseInsensitiveLinkedHashMap<>();
+		this.attributes = new LinkedCaseInsensitiveMap<>();
 
 		this.attrChangeListener = new AttributeChangeListenerImpl(this);
 
@@ -134,7 +133,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		this.ownLookupAttrs = stream(entityMetaData.getOwnLookupAttributes().spliterator(), false)
 				.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 					throw new IllegalStateException(String.format("Duplicate key %s", u));
-				}, CaseInsensitiveLinkedHashMap::new));
+				}, LinkedCaseInsensitiveMap::new));
 		this.system = entityMetaData.isSystem();
 		this.tags = Lists.newArrayList(entityMetaData.getOwnTags());
 	}
@@ -460,7 +459,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	@Override
 	public void addLookupAttribute(AttributeMetaData lookupAttr)
 	{
-		if (this.ownLookupAttrs == null) this.ownLookupAttrs = new CaseInsensitiveLinkedHashMap<>();
+		if (this.ownLookupAttrs == null) this.ownLookupAttrs = new LinkedCaseInsensitiveMap<>();
 		this.ownLookupAttrs.put(lookupAttr.getName(), lookupAttr);
 		clearCache();
 	}
@@ -471,7 +470,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		this.ownLookupAttrs = lookupAttrs
 				.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 					throw new IllegalStateException(String.format("Duplicate key %s", u));
-				}, CaseInsensitiveLinkedHashMap::new));
+				}, LinkedCaseInsensitiveMap::new));
 		clearCache();
 	}
 
@@ -543,7 +542,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 	{
 		if (cachedAllAttrs == null)
 		{
-			cachedAllAttrs = new CaseInsensitiveLinkedHashMap<>();
+			cachedAllAttrs = new LinkedCaseInsensitiveMap<>();
 			fillCachedAllAttrsRec(attributes.values());
 		}
 		return cachedAllAttrs;
@@ -641,10 +640,13 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 				cachedLookupAttrs = stream(extends_.getLookupAttributes().spliterator(), false)
 						.collect(toMap(AttributeMetaData::getName, Function.<AttributeMetaData> identity(), (u, v) -> {
 							throw new IllegalStateException(String.format("Duplicate key %s", u));
-						}, CaseInsensitiveLinkedHashMap::new));
+						}, LinkedCaseInsensitiveMap::new));
 			}
 		}
-		return cachedLookupAttrs != null ? cachedLookupAttrs : emptyMap();
+		return cachedLookupAttrs != null ? cachedLookupAttrs :
+
+				emptyMap();
+
 	}
 
 	private boolean getCachedHasAttrWithExpression()

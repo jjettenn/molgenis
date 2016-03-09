@@ -2,21 +2,28 @@ package org.molgenis.integrationtest.data;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.io.FileUtils;
 import org.molgenis.data.DataService;
 import org.molgenis.data.elasticsearch.factory.EmbeddedElasticSearchServiceFactory;
 import org.molgenis.data.meta.MetaDataServiceImpl;
 import org.molgenis.data.transaction.AsyncTransactionLog;
-import org.molgenis.mysql.embed.EmbeddedMysqlDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 public abstract class AbstractDataIntegrationIT extends AbstractTestNGSpringContextTests
 {
@@ -38,7 +45,104 @@ public abstract class AbstractDataIntegrationIT extends AbstractTestNGSpringCont
 	AsyncTransactionLog asyncTransactionLog;
 
 	@Autowired
-	EmbeddedMysqlDatabase dataSource;
+	DataSource dataSource;
+
+	// @BeforeClass
+	// public void setUpBeforeClass() throws SQLException
+	// {
+	// Connection connection = dataSource.getConnection();
+	// try
+	// {
+	// Statement statement = connection.createStatement();
+	// try
+	// {
+	// statement.executeUpdate("CREATE DATABASE molgenistest;");
+	// logger.debug("Created database molgenistest");
+	// }
+	// finally
+	// {
+	// statement.close();
+	// }
+	// }
+	// finally
+	// {
+	// connection.close();
+	// }
+	// }
+
+	@BeforeMethod
+	public void setUpBeforeMethod() throws SQLException
+	{
+		String dbDriverClass = "org.postgresql.Driver";
+		String dbJdbcUri = "jdbc:postgresql://localhost/";
+		String dbUser = "postgres";
+		String dbPassword = "P18kanjers";
+
+		try
+		{
+			Class.forName(dbDriverClass);
+		}
+		catch (ClassNotFoundException e)
+		{
+			throw new RuntimeException(e);
+		}
+
+		Connection connection = DriverManager.getConnection(dbJdbcUri, dbUser, dbPassword);
+		try
+		{
+			Statement statement = connection.createStatement();
+			try
+			{
+				try
+				{
+					statement.executeUpdate("drop schema molgenistest;");
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+				statement.executeUpdate("create schema molgenistest;");
+			}
+			finally
+			{
+				statement.close();
+			}
+		}
+		finally
+		{
+			connection.close();
+		}
+		logger.debug("Created database [{}]", "molgenistest");
+	}
+
+	// @AfterClass
+	// public void tearDownAfterClass() throws SQLException
+	// {
+	// Connection connection = dataSource.getConnection();
+	// try
+	// {
+	// Statement statement = connection.createStatement();
+	// try
+	// {
+	// statement.executeUpdate("DROP DATABASE molgenistest;");
+	// logger.debug("Dropped database molgenistest");
+	// }
+	// finally
+	// {
+	// statement.close();
+	// }
+	// }
+	// finally
+	// {
+	// connection.close();
+	// }
+	// }
+
+	@AfterMethod
+	public void tearDownAfterMethod() throws SQLException
+	{
+
+	}
 
 	@BeforeClass
 	public void init()

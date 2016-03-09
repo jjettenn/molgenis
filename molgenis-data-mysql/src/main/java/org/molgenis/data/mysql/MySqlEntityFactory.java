@@ -161,7 +161,7 @@ public class MySqlEntityFactory
 
 		private String getMrefSelectSql(Entity e, AttributeMetaData att)
 		{
-			return String.format("SELECT `%s` FROM `%s_%1$s` WHERE `%s` = '%s' ORDER BY `order`", att.getName(),
+			return String.format("SELECT %s FROM %s_%1$s WHERE %s = '%s' ORDER BY sequence_num", att.getName(),
 					tableName, entityMetaData.getIdAttribute().getName().toLowerCase(),
 					e.get(entityMetaData.getIdAttribute().getName()));
 		}

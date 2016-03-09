@@ -229,7 +229,7 @@ public class LanguageRepositoryDecorator implements Repository
 		String languageCode = entity.getString(LanguageMetaData.CODE);
 
 		// Atribute label
-		AttributeMetaData attrLabel = new DefaultAttributeMetaData(AttributeMetaDataMetaData.LABEL + '-' + languageCode)
+		AttributeMetaData attrLabel = new DefaultAttributeMetaData(AttributeMetaDataMetaData.LABEL + languageCode)
 				.setNillable(true);
 
 		// Add the attribute to the attributes table
@@ -240,18 +240,18 @@ public class LanguageRepositoryDecorator implements Repository
 
 		// Attribute description
 		AttributeMetaData attrDescription = new DefaultAttributeMetaData(
-				AttributeMetaDataMetaData.DESCRIPTION + '-' + languageCode).setNillable(true);
+				AttributeMetaDataMetaData.DESCRIPTION + languageCode).setNillable(true);
 		dataService.getMeta().getDefaultBackend().addAttribute(AttributeMetaDataMetaData.ENTITY_NAME, attrDescription);
 		AttributeMetaDataMetaData.INSTANCE.addAttributeMetaData(attrDescription);
 
 		// EntityMeta description
 		AttributeMetaData entityDescription = new DefaultAttributeMetaData(
-				EntityMetaDataMetaData.DESCRIPTION + '-' + languageCode).setNillable(true);
+				EntityMetaDataMetaData.DESCRIPTION + languageCode).setNillable(true);
 		dataService.getMeta().getDefaultBackend().addAttribute(EntityMetaDataMetaData.ENTITY_NAME, entityDescription);
 		EntityMetaDataMetaData.INSTANCE.addAttributeMetaData(entityDescription);
 
 		// EntityMeta label
-		AttributeMetaData entityLabel = new DefaultAttributeMetaData(EntityMetaDataMetaData.LABEL + '-' + languageCode)
+		AttributeMetaData entityLabel = new DefaultAttributeMetaData(EntityMetaDataMetaData.LABEL + languageCode)
 				.setNillable(true);
 		dataService.getMeta().getDefaultBackend().addAttribute(EntityMetaDataMetaData.ENTITY_NAME, entityLabel);
 		EntityMetaDataMetaData.INSTANCE.addAttributeMetaData(entityLabel);

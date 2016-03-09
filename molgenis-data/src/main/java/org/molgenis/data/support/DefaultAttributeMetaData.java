@@ -42,7 +42,7 @@ import org.molgenis.data.semantic.LabeledResource;
 import org.molgenis.data.semantic.Tag;
 import org.molgenis.fieldtypes.EnumField;
 import org.molgenis.fieldtypes.FieldType;
-import org.molgenis.util.CaseInsensitiveLinkedHashMap;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import com.google.common.collect.Lists;
 
@@ -131,7 +131,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 		Iterable<AttributeMetaData> attributeParts = attributeMetaData.getAttributeParts();
 		if (attributeParts != null)
 		{
-			Map<String, AttributeMetaData> attributePartsMap = new CaseInsensitiveLinkedHashMap<>();
+			Map<String, AttributeMetaData> attributePartsMap = new LinkedCaseInsensitiveMap<>();
 			for (AttributeMetaData attributePart : attributeParts)
 			{
 				attributePartsMap.put(attributePart.getName(), new DefaultAttributeMetaData(attributePart));
@@ -287,7 +287,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 	{
 		if (this.attributePartsMap == null)
 		{
-			this.attributePartsMap = new CaseInsensitiveLinkedHashMap<>();
+			this.attributePartsMap = new LinkedCaseInsensitiveMap<>();
 		}
 		this.attributePartsMap.put(attributePart.getName(), attributePart);
 
@@ -296,7 +296,7 @@ public class DefaultAttributeMetaData implements AttributeMetaData
 
 	public void setAttributesMetaData(Iterable<AttributeMetaData> attributeParts)
 	{
-		this.attributePartsMap = new CaseInsensitiveLinkedHashMap<>();
+		this.attributePartsMap = new LinkedCaseInsensitiveMap<>();
 		attributeParts.forEach(attrPart -> {
 			attributePartsMap.put(attrPart.getName(), attrPart);
 		});

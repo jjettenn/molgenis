@@ -15,7 +15,7 @@ import org.molgenis.fieldtypes.LongField;
 
 public class AttributeMetaDataMetaData extends SystemEntityMetaData
 {
-	public static final String ENTITY_NAME = "attributes";
+	public static final String ENTITY_NAME = "attrs";
 	public static final String IDENTIFIER = "identifier";
 	public static final String NAME = "name";
 	public static final String DATA_TYPE = "dataType";
@@ -31,7 +31,7 @@ public class AttributeMetaDataMetaData extends SystemEntityMetaData
 	public static final String RANGE_MIN = "rangeMin";
 	public static final String RANGE_MAX = "rangeMax";
 	public static final String READ_ONLY = "readOnly";
-	public static final String UNIQUE = "unique";
+	public static final String UNIQUE = "unique_";
 	public static final String PARTS = "parts";
 	public static final String TAGS = "tags";
 	public static final String VISIBLE_EXPRESSION = "visibleExpression";

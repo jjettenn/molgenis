@@ -1,6 +1,5 @@
 package org.molgenis.data.meta;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.reverse;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -57,6 +56,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeTraverser;
@@ -429,7 +429,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	@Transactional
 	public void recreateMetaDataRepositories()
 	{
-		delete(newArrayList(getEntityMetaDatas()));
+		delete(Lists.newArrayList(getEntityMetaDatas()));
 		getAttributeRepository().deleteAll();
 		getEntityRepository().deleteAll();
 		getPackageRepository().deleteAll();
@@ -457,6 +457,7 @@ public class MetaDataServiceImpl implements MetaDataService
 
 	public void addBackend(RepositoryCollection backend)
 	{
+		LOG.info("Registering backend [{}]", backend.getName());
 		backends.put(backend.getName(), backend);
 	}
 

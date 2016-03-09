@@ -50,7 +50,6 @@ import org.molgenis.data.i18n.I18nStringMetaData;
 import org.molgenis.data.i18n.I18nUtils;
 import org.molgenis.data.i18n.LanguageMetaData;
 import org.molgenis.data.importer.MyEntitiesValidationReport.AttributeState;
-import org.molgenis.data.meta.AttributeMetaDataMetaData;
 import org.molgenis.data.meta.EntityMetaDataMetaData;
 import org.molgenis.data.meta.MetaValidationUtils;
 import org.molgenis.data.meta.PackageImpl;
@@ -89,7 +88,7 @@ public class EmxMetaDataParser implements MetaDataParser
 	public static final String ENTITIES = EntityMetaDataMetaData.ENTITY_NAME;
 	public static final String PACKAGES = PackageMetaData.ENTITY_NAME;
 	public static final String TAGS = TagMetaData.ENTITY_NAME;
-	public static final String ATTRIBUTES = AttributeMetaDataMetaData.ENTITY_NAME;
+	public static final String ATTRIBUTES = "attributes";// AttributeMetaDataMetaData.ENTITY_NAME;
 	public static final String LANGUAGES = LanguageMetaData.ENTITY_NAME;
 	public static final String I18NSTRINGS = I18nStringMetaData.ENTITY_NAME;
 
@@ -106,7 +105,7 @@ public class EmxMetaDataParser implements MetaDataParser
 			ID_ATTRIBUTE.toLowerCase(), LABEL.toLowerCase(), LABEL_ATTRIBUTE.toLowerCase(),
 			LOOKUP_ATTRIBUTE.toLowerCase(), NAME, NILLABLE.toLowerCase(), PART_OF_ATTRIBUTE.toLowerCase(),
 			RANGE_MAX.toLowerCase(), RANGE_MIN.toLowerCase(), READ_ONLY.toLowerCase(), REF_ENTITY.toLowerCase(),
-			VISIBLE.toLowerCase(), UNIQUE.toLowerCase(), TAGS.toLowerCase(), EXPRESSION.toLowerCase(),
+			VISIBLE.toLowerCase(), "unique", TAGS.toLowerCase(), EXPRESSION.toLowerCase(),
 			VALIDATION_EXPRESSION.toLowerCase(), DEFAULT_VALUE.toLowerCase());
 
 	static final String AUTO = "auto";
@@ -206,7 +205,10 @@ public class EmxMetaDataParser implements MetaDataParser
 
 			String attributeName = attributeEntity.getString(NAME);
 			if (attributeName == null) throw new IllegalArgumentException("attributes.name is missing on line " + i);
-
+			if (attributeName.equals("unique"))
+			{
+				attributeName = "unique_"; // FIXME use proper EMX --> MOLGENIS meta map
+			}
 			String entityName = attributeEntity.getString(ENTITY);
 			if (entityName == null) throw new IllegalArgumentException(
 					"attributes.entity is missing for attribute named: " + attributeName + " on line " + i);
@@ -233,6 +235,10 @@ public class EmxMetaDataParser implements MetaDataParser
 			Map<String, EmxAttribute> entityMap = attributesMap.get(entityName);
 
 			String attributeName = attributeEntity.getString(NAME);
+			if (attributeName.equals("unique"))
+			{
+				attributeName = "unique_"; // FIXME use proper EMX --> MOLGENIS meta map
+			}
 			EmxAttribute emxAttribute = entityMap.get(attributeName);
 			DefaultAttributeMetaData attribute = emxAttribute.getAttr();
 
@@ -459,6 +465,10 @@ public class EmxMetaDataParser implements MetaDataParser
 			Map<String, EmxAttribute> entityMap = attributesMap.get(entityName);
 
 			String attributeName = attributeEntity.getString(NAME);
+			if (attributeName.equals("unique"))
+			{
+				attributeName = "unique_"; // FIXME use proper EMX --> MOLGENIS meta map
+			}
 			DefaultAttributeMetaData attribute = entityMap.get(attributeName).getAttr();
 
 			// register attribute parent-children relations for compound attributes
@@ -798,7 +808,11 @@ public class EmxMetaDataParser implements MetaDataParser
 		{
 			final String refEntityName = (String) attribute.get(REF_ENTITY);
 			final String entityName = attribute.getString(ENTITY);
-			final String attributeName = attribute.getString(NAME);
+			String attributeName = attribute.getString(NAME);
+			if (attributeName.equals("unique"))
+			{
+				attributeName = "unique_";
+			}
 			i++;
 			if (refEntityName != null)
 			{
