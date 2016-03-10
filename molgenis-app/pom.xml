@@ -290,11 +290,11 @@
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-scripts</artifactId>
 			<version>${project.version}</version>
-		</dependency>
+		</dependency><!--
 		<dependency>
 			<groupId>org.molgenis</groupId>
 			<artifactId>molgenis-file-ingester</artifactId>
 			<version>${project.version}</version>
-		</dependency>
+		</dependency>-->
 	</dependencies>
 </project>

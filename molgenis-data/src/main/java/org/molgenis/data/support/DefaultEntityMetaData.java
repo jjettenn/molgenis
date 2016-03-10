@@ -24,9 +24,10 @@ import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EditableEntityMetaData;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.Package;import org.molgenis.data.PackageChangeListener;<<<<<<<HEAD
+import org.molgenis.data.Package;
+import org.molgenis.data.PackageChangeListener;
 import org.molgenis.data.semantic.LabeledResource;
-import org.molgenis.data.semantic.Tag;import org.molgenis.util.CaseInsensitiveLinkedHashMap;=======>>>>>>>feature/postgres
+import org.molgenis.data.semantic.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.LinkedCaseInsensitiveMap;
@@ -87,7 +88,7 @@ public class DefaultEntityMetaData implements EditableEntityMetaData
 		this.simpleName = requireNonNull(simpleName);
 		this.entityClass = requireNonNull(entityClass);
 		setPackage(package_);
-		this.attributes = new CaseInsensitiveLinkedHashMap<>();
+		this.attributes = new LinkedCaseInsensitiveMap<>();
 		this.tags = new ArrayList<Tag<EntityMetaData, LabeledResource, LabeledResource>>();
 		this.attrChangeListener = new AttributeChangeListenerImpl(this);
 	}

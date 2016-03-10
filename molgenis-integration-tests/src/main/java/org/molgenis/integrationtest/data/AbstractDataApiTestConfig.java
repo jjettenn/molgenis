@@ -7,7 +7,6 @@ import org.molgenis.data.EntityManager;
 import org.molgenis.data.EntityManagerImpl;
 import org.molgenis.data.IdGenerator;
 import org.molgenis.data.ManageableRepositoryCollection;
-import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryDecoratorFactory;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.elasticsearch.ElasticsearchEntityFactory;
@@ -32,7 +31,6 @@ import org.molgenis.mysql.embed.EmbeddedMysqlDatabaseBuilder;
 import org.molgenis.security.core.MolgenisPasswordEncoder;
 import org.molgenis.security.core.runas.RunAsSystemBeanPostProcessor;
 import org.molgenis.security.permission.PermissionSystemService;
-import org.molgenis.ui.MolgenisRepositoryDecoratorFactory;
 import org.molgenis.util.ApplicationContextProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -146,16 +144,17 @@ public abstract class AbstractDataApiTestConfig
 	@Bean
 	public RepositoryDecoratorFactory repositoryDecoratorFactory()
 	{
-		return new RepositoryDecoratorFactory()
-		{
-			@Override
-			public Repository createDecoratedRepository(Repository repository)
-			{
-				return new MolgenisRepositoryDecoratorFactory(entityManager(), transactionLogService,
-						entityAttributesValidator(), idGenerator(), appSettings(), dataService(), expressionValidator)
-								.createDecoratedRepository(repository);
-			}
-		};
+		return null;
+		// return new RepositoryDecoratorFactory()
+		// {
+		// @Override
+		// public Repository createDecoratedRepository(Repository repository)
+		// {
+		// return new MolgenisRepositoryDecoratorFactory(entityManager(), transactionLogService,
+		// entityAttributesValidator(), idGenerator(), appSettings(), dataService(), expressionValidator)
+		// .createDecoratedRepository(repository);
+		// }
+		// };
 	}
 
 	@Bean(destroyMethod = "shutdown")
