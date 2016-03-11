@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.StreamSupport.stream;
 import static org.molgenis.security.core.utils.SecurityUtils.getCurrentUsername;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,7 +42,6 @@ import org.molgenis.data.i18n.I18nStringMetaData;
 import org.molgenis.data.i18n.LanguageMetaData;
 import org.molgenis.data.i18n.LanguageRepositoryDecorator;
 import org.molgenis.data.i18n.LanguageService;
-import org.molgenis.data.meta.system.ImportRunMetaData;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
@@ -57,7 +57,6 @@ import org.springframework.core.Ordered;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeTraverser;
 
@@ -76,7 +75,7 @@ public class MetaDataServiceImpl implements MetaDataService
 	private static final Logger LOG = LoggerFactory.getLogger(MetaDataServiceImpl.class);
 
 	private ManageableRepositoryCollection defaultBackend;
-	private final Map<String, RepositoryCollection> backends = Maps.newHashMap();
+	// private final Map<String, RepositoryCollection> backends = Maps.newHashMap();
 	private final DataServiceImpl dataService;
 	private LanguageService languageService;
 	private IdGenerator idGenerator;
@@ -117,18 +116,20 @@ public class MetaDataServiceImpl implements MetaDataService
 	public MetaDataService setDefaultBackend(ManageableRepositoryCollection backend)
 	{
 		this.defaultBackend = backend;
-		backends.put(backend.getName(), backend);
+		// backends.put(backend.getName(), backend);
 
-		I18nStringMetaData.INSTANCE.setBackend(backend.getName());
-		LanguageMetaData.INSTANCE.setBackend(backend.getName());
-		PackageMetaData.INSTANCE.setBackend(backend.getName());
-		TagMetaData.INSTANCE.setBackend(backend.getName());
-		EntityMetaDataMetaData.INSTANCE.setBackend(backend.getName());
-		AttributeMetaDataMetaData.INSTANCE.setBackend(backend.getName());
-
-		ImportRunMetaData.INSTANCE.setBackend(backend.getName());
-
-		bootstrapMetaRepos();
+		// I18nStringMetaData.INSTANCE.setBackend(backend.getName());
+		// LanguageMetaData.INSTANCE.setBackend(backend.getName());
+		// PackageMetaData.INSTANCE.setBackend(backend.getName());
+		// TagMetaData.INSTANCE.setBackend(backend.getName());
+		// EntityMetaDataMetaData.INSTANCE.setBackend(backend.getName());
+		// AttributeMetaDataMetaData.INSTANCE.setBackend(backend.getName());
+		// RepositoryMetaData.INSTANCE.setBackend(backend.getName());
+		// RepositoryCollectionMetaData.INSTANCE.setBackend(backend.getName());
+		//
+		// ImportRunMetaData.INSTANCE.setBackend(backend.getName());
+		//
+		// bootstrapMetaRepos();
 		return this;
 	}
 
@@ -141,7 +142,8 @@ public class MetaDataServiceImpl implements MetaDataService
 	@Override
 	public RepositoryCollection getBackend(String name)
 	{
-		return backends.get(name);
+		Entity repoCollectionEntity = getRepositoryCollectionRepository().findOne(name);
+		return repoCollectionEntity != null ? MetaUtils.toRepositoryCollection(repoCollectionEntity) : null;
 	}
 
 	/**
@@ -191,8 +193,11 @@ public class MetaDataServiceImpl implements MetaDataService
 	public RepositoryCollection getBackend(EntityMetaData emd)
 	{
 		String backendName = emd.getBackend() == null ? getDefaultBackend().getName() : emd.getBackend();
-		RepositoryCollection backend = backends.get(backendName);
-		if (backend == null) throw new RuntimeException("Unknown backend [" + backendName + "]");
+		RepositoryCollection backend = getBackend(backendName);
+		if (backend == null)
+		{
+			throw new RuntimeException("Unknown backend [" + backendName + "]");
+		}
 
 		return backend;
 	}
@@ -455,10 +460,40 @@ public class MetaDataServiceImpl implements MetaDataService
 		return Ordered.HIGHEST_PRECEDENCE;
 	}
 
-	public void addBackend(RepositoryCollection backend)
+	private void upsertRepositoryCollection(RepositoryCollection repoCollection)
 	{
-		LOG.info("Registering backend [{}]", backend.getName());
-		backends.put(backend.getName(), backend);
+		if (doAddRepositoryCollection(repoCollection))
+		{
+			addRepositoryCollection(repoCollection);
+		}
+		else if (doUpdateRepoCollection(repoCollection))
+		{
+			updateRepositoryCollection(repoCollection);
+		}
+	}
+
+	private void updateRepositoryCollection(RepositoryCollection repoCollection)
+	{
+		LOG.info(format("Updating repository collection [%s]", repoCollection.getName()));
+		getRepositoryCollectionRepository().update(MetaUtils.toEntity(repoCollection));
+	}
+
+	private void addRepositoryCollection(RepositoryCollection repoCollection)
+	{
+		LOG.info(format("Creating repository collection [%s]", repoCollection.getName()));
+		getRepositoryCollectionRepository().add(MetaUtils.toEntity(repoCollection));
+	}
+
+	private boolean doAddRepositoryCollection(RepositoryCollection repoCollection)
+	{
+		return getRepositoryCollectionRepository().query().eq(RepositoryCollectionMetaData.ID, repoCollection.getName())
+				.count() == 0l;
+	}
+
+	private boolean doUpdateRepoCollection(RepositoryCollection repoCollection)
+	{
+		Entity existingRepoCollectionEntity = getRepositoryCollectionRepository().findOne(repoCollection.getName());
+		return existingRepoCollectionEntity != null && !MetaUtils.equals(existingRepoCollectionEntity, repoCollection);
 	}
 
 	@Override
@@ -467,9 +502,22 @@ public class MetaDataServiceImpl implements MetaDataService
 	{
 		ApplicationContext ctx = event.getApplicationContext();
 
+		// FIXME introduce MetaSystemEntityMetaData and select these beans
+		// Add or update static entity meta data for meta entities
+		List<EntityMetaData> metaEntities = DependencyResolver.resolve(Arrays.asList(
+				RepositoryCollectionMetaData.INSTANCE, RepositoryMetaData.INSTANCE, EntityMetaDataMetaData.INSTANCE,
+				AttributeMetaDataMetaData.INSTANCE, I18nStringMetaData.INSTANCE, LanguageMetaData.INSTANCE,
+				PackageMetaData.INSTANCE, TagMetaData.INSTANCE));
+		DependencyResolver.resolve(metaEntities).forEach(metaEntity -> {
+			if (!getDefaultBackend().hasRepository(metaEntity.getName()))
+			{
+				getDefaultBackend().addEntityMeta(metaEntity);
+			}
+		});
+
 		// Add or update static backends
-		Map<String, RepositoryCollection> backendBeans = ctx.getBeansOfType(RepositoryCollection.class);
-		backendBeans.values().forEach(this::addBackend);
+		Map<String, RepositoryCollection> repoCollectionBeans = ctx.getBeansOfType(RepositoryCollection.class);
+		repoCollectionBeans.values().forEach(this::upsertRepositoryCollection);
 
 		// Add repositories for entity meta data in database
 		getEntityRepository().forEach(this::createEntityRepository);
@@ -488,13 +536,13 @@ public class MetaDataServiceImpl implements MetaDataService
 	@Override
 	public Iterator<RepositoryCollection> iterator()
 	{
-		return backends.values().iterator();
+		return getRepositoryCollectionRepository().stream().map(MetaUtils::toRepositoryCollection).iterator();
 	}
 
 	@Override
 	public boolean hasBackend(String backendName)
 	{
-		return backends.containsKey(backendName);
+		return getRepositoryCollectionRepository().query().eq(RepositoryCollectionMetaData.ID, backendName).count() > 0;
 	}
 
 	@Override
@@ -553,20 +601,20 @@ public class MetaDataServiceImpl implements MetaDataService
 		Supplier<Stream<String>> languageCodes = () -> languageService.getLanguageCodes().stream();
 
 		// Add language attributes to the AttributeMetaDataMetaData
-		languageCodes.get().map(code -> AttributeMetaDataMetaData.LABEL + '-' + code)
+		languageCodes.get().map(code -> AttributeMetaDataMetaData.LABEL + code)
 				.forEach(AttributeMetaDataMetaData.INSTANCE::addAttribute);
 
 		// Add description attributes to the AttributeMetaDataMetaData
-		languageCodes.get().map(code -> AttributeMetaDataMetaData.DESCRIPTION + '-' + code)
+		languageCodes.get().map(code -> AttributeMetaDataMetaData.DESCRIPTION + code)
 				.forEach(attrName -> AttributeMetaDataMetaData.INSTANCE.addAttribute(attrName)
 						.setDataType(MolgenisFieldTypes.TEXT));
 
 		// Add language attributes to the EntityMetaDataMetaData
-		languageCodes.get().map(code -> EntityMetaDataMetaData.LABEL + '-' + code)
+		languageCodes.get().map(code -> EntityMetaDataMetaData.LABEL + code)
 				.forEach(EntityMetaDataMetaData.INSTANCE::addAttribute);
 
 		// Add description attributes to the EntityMetaDataMetaData
-		languageCodes.get().map(code -> EntityMetaDataMetaData.DESCRIPTION + '-' + code)
+		languageCodes.get().map(code -> EntityMetaDataMetaData.DESCRIPTION + code)
 				.forEach(attrName -> EntityMetaDataMetaData.INSTANCE.addAttribute(attrName)
 						.setDataType(MolgenisFieldTypes.TEXT));
 
@@ -686,19 +734,24 @@ public class MetaDataServiceImpl implements MetaDataService
 		});
 	}
 
+	private Repository getRepositoryCollectionRepository()
+	{
+		return getDefaultBackend().getRepository(RepositoryCollectionMetaData.ENTITY_NAME);
+	}
+
 	private Repository getPackageRepository()
 	{
-		return dataService.getRepository(PackageMetaData.ENTITY_NAME);
+		return getDefaultBackend().getRepository(PackageMetaData.ENTITY_NAME);
 	}
 
 	private Repository getEntityRepository()
 	{
-		return dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME);
+		return getDefaultBackend().getRepository(EntityMetaDataMetaData.ENTITY_NAME);
 	}
 
 	private Repository getAttributeRepository()
 	{
-		return dataService.getRepository(AttributeMetaDataMetaData.ENTITY_NAME);
+		return getDefaultBackend().getRepository(AttributeMetaDataMetaData.ENTITY_NAME);
 	}
 
 	private void createEntityRepository(Entity entityEntity)
@@ -707,7 +760,7 @@ public class MetaDataServiceImpl implements MetaDataService
 		if (abstract_ == null || !abstract_.booleanValue())
 		{
 			String backend = entityEntity.getString(EntityMetaDataMetaData.BACKEND);
-			RepositoryCollection repoCollection = backends.get(backend);
+			RepositoryCollection repoCollection = getBackend(backend);
 			EntityMetaData entityMeta = MetaUtils.toEntityMeta(entityEntity, getEntityRepository(),
 					languageService.getLanguageCodes());
 			Repository repo = repoCollection.addEntityMeta(entityMeta);

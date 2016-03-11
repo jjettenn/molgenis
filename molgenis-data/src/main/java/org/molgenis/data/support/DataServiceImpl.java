@@ -1,12 +1,9 @@
 package org.molgenis.data.support;
 
-import static org.molgenis.security.core.utils.SecurityUtils.currentUserHasRole;
 import static org.molgenis.security.core.utils.SecurityUtils.getCurrentUsername;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 import org.molgenis.data.AggregateQuery;
@@ -23,13 +20,13 @@ import org.molgenis.data.RepositoryCapability;
 import org.molgenis.data.RepositoryDecoratorFactory;
 import org.molgenis.data.UnknownEntityException;
 import org.molgenis.data.meta.MetaDataService;
+import org.molgenis.data.meta.MetaUtils;
+import org.molgenis.data.meta.RepositoryMetaData;
+import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Implementation of the DataService interface
@@ -39,8 +36,8 @@ public class DataServiceImpl implements DataService
 {
 	private static final Logger LOG = LoggerFactory.getLogger(DataServiceImpl.class);
 
-	private final ConcurrentMap<String, Repository> repositories;
-	private final Set<String> repositoryNames;
+	// private final ConcurrentMap<String, Repository> repositories;
+	// private final Set<String> repositoryNames;
 	private MetaDataService metaDataService;
 	private final RepositoryDecoratorFactory repositoryDecoratorFactory;
 
@@ -51,8 +48,8 @@ public class DataServiceImpl implements DataService
 
 	public DataServiceImpl(RepositoryDecoratorFactory repositoryDecoratorFactory)
 	{
-		this.repositories = Maps.newConcurrentMap();
-		this.repositoryNames = new TreeSet<String>();
+		// this.repositories = Maps.newConcurrentMap();
+		// this.repositoryNames = new TreeSet<String>();
 		this.repositoryDecoratorFactory = repositoryDecoratorFactory;
 	}
 
@@ -61,8 +58,8 @@ public class DataServiceImpl implements DataService
 	 */
 	public synchronized void resetRepositories()
 	{
-		repositories.clear();
-		repositoryNames.clear();
+		// repositories.clear();
+		// repositoryNames.clear();
 	}
 
 	@Override
@@ -73,16 +70,19 @@ public class DataServiceImpl implements DataService
 
 	public synchronized void addRepository(Repository newRepository)
 	{
-		String repositoryName = newRepository.getName();
-		if (repositories.containsKey(repositoryName.toLowerCase()))
-		{
-			throw new MolgenisDataException("Entity [" + repositoryName + "] already registered.");
-		}
-		if (LOG.isDebugEnabled()) LOG.debug("Adding repository [" + repositoryName + "]");
-		repositoryNames.add(repositoryName);
-
-		Repository decoratedRepo = repositoryDecoratorFactory.createDecoratedRepository(newRepository);
-		repositories.put(repositoryName.toLowerCase(), decoratedRepo);
+		Entity repoEntity = MetaUtils.toEntity(newRepository,
+				metaDataService.getBackend(newRepository.getEntityMetaData()));
+		getRepositoryRepository().add(repoEntity);
+		// String repositoryName = newRepository.getName();
+		// if (repositories.containsKey(repositoryName.toLowerCase()))
+		// {
+		// throw new MolgenisDataException("Entity [" + repositoryName + "] already registered.");
+		// }
+		// if (LOG.isDebugEnabled()) LOG.debug("Adding repository [" + repositoryName + "]");
+		// repositoryNames.add(repositoryName);
+		//
+		// Repository decoratedRepo = repositoryDecoratorFactory.createDecoratedRepository(newRepository);
+		// repositories.put(repositoryName.toLowerCase(), decoratedRepo);
 	}
 
 	public synchronized void removeRepository(String repositoryName)
@@ -91,17 +91,8 @@ public class DataServiceImpl implements DataService
 		{
 			throw new MolgenisDataException("repositoryName may not be null");
 		}
-
-		if (!repositories.containsKey(repositoryName.toLowerCase()))
-		{
-			throw new MolgenisDataException("Repository [" + repositoryName + "] doesn't exists");
-		}
-		else
-		{
-			if (LOG.isDebugEnabled()) LOG.debug("Removing repository [" + repositoryName + "]");
-			repositoryNames.remove(repositoryName);
-			repositories.remove(repositoryName.toLowerCase());
-		}
+		if (LOG.isDebugEnabled()) LOG.debug("Removing repository [" + repositoryName + "]");
+		getRepositoryRepository().deleteById(repositoryName);
 	}
 
 	@Override
@@ -114,14 +105,18 @@ public class DataServiceImpl implements DataService
 	@Override
 	public synchronized Stream<String> getEntityNames()
 	{
-		return Lists.newArrayList(repositoryNames).stream().filter(entityName -> currentUserHasRole("ROLE_SU",
-				"ROLE_SYSTEM", "ROLE_ENTITY_COUNT_" + entityName.toUpperCase()));
+		return getRepositoryRepository().stream()
+				.filter(repoEntity -> SecurityUtils.currentUserHasRole("ROLE_SU", "ROLE_SYSTEM",
+						"ROLE_ENTITY_COUNT_" + repoEntity.getString(RepositoryMetaData.ID).toUpperCase()))
+				.map(repoEntity -> repoEntity.getString(RepositoryMetaData.ID));
+		// return Lists.newArrayList(repositoryNames).stream().filter(entityName -> currentUserHasRole("ROLE_SU",
+		// "ROLE_SYSTEM", "ROLE_ENTITY_COUNT_" + entityName.toUpperCase()));
 	}
 
 	@Override
 	public boolean hasRepository(String entityName)
 	{
-		return repositories.containsKey(entityName.toLowerCase());
+		return getRepositoryRepository().query().eq(RepositoryMetaData.ID, entityName).count() > 0l;
 	}
 
 	@Override
@@ -214,10 +209,13 @@ public class DataServiceImpl implements DataService
 	@Override
 	public Repository getRepository(String entityName)
 	{
-		Repository repository = repositories.get(entityName.toLowerCase());
-		if (repository == null) throw new UnknownEntityException("Unknown entity [" + entityName + "]");
-
-		return repository;
+		Entity repoEntity = getRepositoryRepository().findOne(entityName);
+		if (repoEntity == null)
+		{
+			throw new UnknownEntityException("Unknown entity [" + entityName + "]");
+		}
+		Repository undecoratedRepo = MetaUtils.toRepository(repoEntity);
+		return repositoryDecoratorFactory.createDecoratedRepository(undecoratedRepo);
 	}
 
 	@Override
@@ -272,7 +270,15 @@ public class DataServiceImpl implements DataService
 	@Override
 	public synchronized Iterator<Repository> iterator()
 	{
-		return Lists.newArrayList(repositories.values()).iterator();
+		return getRepositoryRepository().stream().map(repoEntity -> {
+			Repository undecoratedRepo = MetaUtils.toRepository(repoEntity);
+			return repositoryDecoratorFactory.createDecoratedRepository(undecoratedRepo);
+		}).iterator();
+	}
+
+	private Repository getRepositoryRepository()
+	{
+		return metaDataService.getDefaultBackend().getRepository(RepositoryMetaData.ENTITY_NAME);
 	}
 
 	@Override

@@ -108,7 +108,7 @@ public class WebAppConfig extends MolgenisWebAppConfig
 	protected void addReposToReindex(DataServiceImpl localDataService, MySqlEntityFactory localMySqlEntityFactory)
 	{
 		// Get the undecorated repos to index
-		MysqlRepositoryCollection backend = new MysqlRepositoryCollection()
+		MysqlRepositoryCollection backend = new MysqlRepositoryCollection(dataSource, localMySqlEntityFactory)
 		{
 			@Override
 			protected MysqlRepository createMysqlRepository()

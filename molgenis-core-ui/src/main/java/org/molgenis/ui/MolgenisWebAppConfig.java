@@ -429,8 +429,8 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 		SearchService localSearchService = embeddedElasticSearchServiceFactory.create(localDataService,
 				new ElasticsearchEntityFactory(localEntityManager, sourceToEntityConverter, entityToSourceConverter));
 
-		List<EntityMetaData> metas = DependencyResolver.resolve(Sets.newHashSet(localDataService.getMeta()
-				.getEntityMetaDatas()));
+		List<EntityMetaData> metas = DependencyResolver
+				.resolve(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
 
 		// Sort repos to the same sequence as the resolves metas
 		List<Repository> repos = Lists.newArrayList(localDataService);
@@ -470,14 +470,14 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 		if (didUpgrade)
 		{
 			LOG.info("Reindexing repositories due to MOLGENIS upgrade...");
-			reindex();
+			// reindex();
 			LOG.info("Reindexing done.");
 		}
 		else if (!indexExists())
 		{
-			LOG.info("Reindexing repositories due to missing Elasticsearch index...");
-			reindex();
-			LOG.info("Reindexing done.");
+			// LOG.info("Reindexing repositories due to missing Elasticsearch index...");
+			// reindex();
+			// LOG.info("Reindexing done.");
 		}
 		else
 		{

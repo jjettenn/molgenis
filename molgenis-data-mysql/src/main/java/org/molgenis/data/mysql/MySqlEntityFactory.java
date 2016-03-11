@@ -45,6 +45,12 @@ public class MySqlEntityFactory
 		return new EntityMapper(entityMeta, fetch, jdbcTemplate, tableName);
 	}
 
+	// FIXME remove
+	public DataService getDataService()
+	{
+		return dataService;
+	}
+
 	private class EntityMapper implements RowMapper<Entity>
 	{
 		private static final int GROUP_CONCAT_MAX_LEN = 1024;
@@ -64,7 +70,7 @@ public class MySqlEntityFactory
 		@Override
 		public Entity mapRow(ResultSet resultSet, int i) throws SQLException
 		{
-			Entity e = new DefaultEntity(entityMetaData, dataService);
+			Entity e = new DefaultEntity(entityMetaData, getDataService());
 
 			// TODO performance, iterate over fetch if available
 			for (AttributeMetaData att : entityMetaData.getAtomicAttributes())

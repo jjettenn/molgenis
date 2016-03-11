@@ -210,11 +210,11 @@ public class MysqlRepository extends AbstractRepository
 				}
 				else if (attr.getDataType() instanceof XrefField)
 				{
-					String backend = dataService.getMeta().getBackend(attr.getRefEntity()).getName();
-					if (backend.equalsIgnoreCase(MysqlRepositoryCollection.NAME))
-					{
-						jdbcTemplate.execute(getCreateFKeySql(attr));
-					}
+					// String backend = dataService.getMeta().getBackend(attr.getRefEntity()).getName();
+					// if (backend.equalsIgnoreCase(MysqlRepositoryCollection.NAME))
+					// {
+					jdbcTemplate.execute(getCreateFKeySql(attr));
+					// }
 				}
 
 				// text can't be unique, so don't add unique constraint when type is string
@@ -365,14 +365,15 @@ public class MysqlRepository extends AbstractRepository
 				.append(" NOT NULL, FOREIGN KEY (").append(idAttribute.getName()).append(") REFERENCES ")
 				.append(getTableName()).append('(').append(idAttribute.getName()).append(") ON DELETE CASCADE");
 
+		// FIXME
 		// If the refEntity is not of type MySQL do not add a foreign key to it
-		String refEntityBackend = dataService.getMeta().getBackend(att.getRefEntity()).getName();
-		if (refEntityBackend.equalsIgnoreCase(MysqlRepositoryCollection.NAME))
-		{
-			sql.append(", FOREIGN KEY (").append(att.getName()).append(") REFERENCES ")
-					.append(getTableName(att.getRefEntity())).append('(')
-					.append(att.getRefEntity().getIdAttribute().getName()).append(") ON DELETE CASCADE");
-		}
+		// String refEntityBackend = dataService.getMeta().getBackend(att.getRefEntity()).getName();
+		// if (refEntityBackend.equalsIgnoreCase(MysqlRepositoryCollection.NAME))
+		// {
+		sql.append(", FOREIGN KEY (").append(att.getName()).append(") REFERENCES ")
+				.append(getTableName(att.getRefEntity())).append('(')
+				.append(att.getRefEntity().getIdAttribute().getName()).append(") ON DELETE CASCADE");
+		// }
 
 		sql.append(");");
 

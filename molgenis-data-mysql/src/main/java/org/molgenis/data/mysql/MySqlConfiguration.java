@@ -44,7 +44,8 @@ public class MySqlConfiguration
 	{ "MysqlRepositoryCollection" })
 	public ManageableRepositoryCollection mysqlRepositoryCollection()
 	{
-		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection()
+		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection(dataSource,
+				mySqlEntityFactory)
 		{
 			@Override
 			protected MysqlRepository createMysqlRepository()

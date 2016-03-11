@@ -1,10 +1,13 @@
 package org.molgenis.data.elasticsearch;
 
+import static java.lang.String.format;
+
 import java.util.Iterator;
 
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
+import org.molgenis.data.UnknownEntityException;
 
 /**
  * Adds indexing functionality to a RepositoryCollection
@@ -81,7 +84,12 @@ public class IndexedRepositoryCollectionDecorator implements RepositoryCollectio
 	@Override
 	public Repository getRepository(String name)
 	{
-		return new ElasticsearchRepositoryDecorator(delegate.getRepository(name), searchService);
+		Repository repo = delegate.getRepository(name);
+		if (repo == null)
+		{
+			throw new UnknownEntityException(format("Unknown entity [%s]", name));
+		}
+		return new ElasticsearchRepositoryDecorator(repo, searchService);
 	}
 
 	/**

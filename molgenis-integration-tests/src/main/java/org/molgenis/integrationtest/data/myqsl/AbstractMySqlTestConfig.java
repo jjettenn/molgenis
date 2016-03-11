@@ -42,7 +42,7 @@ public abstract class AbstractMySqlTestConfig extends AbstractDataApiTestConfig
 	{ "MysqlRepositoryCollection" })
 	public ManageableRepositoryCollection mysqlRepositoryCollection()
 	{
-		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection()
+		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection(null) // FIXME
 		{
 			@Override
 			protected MysqlRepository createMysqlRepository()

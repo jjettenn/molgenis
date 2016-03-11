@@ -1,5 +1,8 @@
 package org.molgenis.data.semanticsearch.repository;
 
+import static java.util.Objects.requireNonNull;
+
+import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.IdGenerator;
 import org.molgenis.data.Query;
@@ -18,11 +21,14 @@ public class TagRepository
 {
 	public static final TagMetaData META_DATA = TagMetaData.INSTANCE;
 	private final IdGenerator idGenerator;
-	private final Repository repository;
+	// private final Repository repository;
+	private DataService dataService;
 
-	public TagRepository(Repository repository, IdGenerator idGenerator)
+	// public TagRepository(Repository repository, IdGenerator idGenerator)
+	public TagRepository(DataService dataService, IdGenerator idGenerator)
 	{
-		this.repository = repository;
+		// this.repository = repository;
+		this.dataService = requireNonNull(dataService);
 		this.idGenerator = idGenerator;
 	}
 
@@ -41,6 +47,7 @@ public class TagRepository
 	 */
 	public Entity getTagEntity(String objectIRI, String label, Relation relation, String codeSystemIRI)
 	{
+		Repository repository = getTagRepository();
 		Query q = new QueryImpl().eq(TagMetaData.OBJECT_IRI, objectIRI).and()
 				.eq(TagMetaData.RELATION_IRI, relation.getIRI()).and().eq(TagMetaData.CODE_SYSTEM, codeSystemIRI);
 		Entity result = repository.findOne(q);
@@ -57,5 +64,10 @@ public class TagRepository
 			result = mapEntity;
 		}
 		return result;
+	}
+
+	private Repository getTagRepository()
+	{
+		return dataService.getRepository(TagMetaData.ENTITY_NAME);
 	}
 }

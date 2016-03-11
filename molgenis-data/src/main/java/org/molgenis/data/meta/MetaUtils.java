@@ -37,6 +37,7 @@ import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Package;
 import org.molgenis.data.Range;
 import org.molgenis.data.Repository;
+import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.semantic.LabeledResource;
 import org.molgenis.data.semantic.Relation;
 import org.molgenis.data.semantic.Tag;
@@ -45,11 +46,40 @@ import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.MapEntity;
 import org.molgenis.fieldtypes.FieldType;
+import org.molgenis.util.ApplicationContextProvider;
+import org.springframework.context.ApplicationContext;
 
 import com.google.common.base.Objects;
 
 public class MetaUtils
 {
+	/**
+	 * Converts a repository to an entity
+	 * 
+	 * @param repo
+	 * @return
+	 */
+	public static Entity toEntity(Repository repo, RepositoryCollection repoCollection)
+	{
+		MapEntity repoEntity = new MapEntity(RepositoryMetaData.INSTANCE);
+		repoEntity.set(RepositoryMetaData.ID, repo.getName());
+		repoEntity.set(RepositoryMetaData.COLLECTION, repoCollection);
+		return repoEntity;
+	}
+
+	/**
+	 * Converts a repository collection to an entity
+	 * 
+	 * @param repoCollection
+	 * @return
+	 */
+	public static Entity toEntity(RepositoryCollection repoCollection)
+	{
+		MapEntity repoCollectionEntity = new MapEntity(RepositoryCollectionMetaData.INSTANCE);
+		repoCollectionEntity.set(RepositoryCollectionMetaData.ID, repoCollection.getName());
+		return repoCollectionEntity;
+	}
+
 	/**
 	 * Converts a tag to an entity
 	 * 
@@ -211,6 +241,36 @@ public class MetaUtils
 		entity.set(PackageMetaData.TAGS,
 				stream(package_.getTags().spliterator(), false).map(MetaUtils::toEntity).collect(toList()));
 		return entity;
+	}
+
+	/**
+	 * Converts an entity to a repository
+	 * 
+	 * @param repoEntity
+	 * @return
+	 */
+	public static Repository toRepository(Entity repoEntity)
+	{
+		Entity repoCollectionEntity = repoEntity.getEntity(RepositoryMetaData.ENTITY_NAME);
+		String entityName = repoEntity.getString(RepositoryMetaData.ENTITY_NAME);
+		return toRepositoryCollection(repoCollectionEntity).getRepository(entityName);
+	}
+
+	/**
+	 * Converts an entity to a repository collection
+	 * 
+	 * @param repoCollectionEntity
+	 * @return
+	 */
+	public static RepositoryCollection toRepositoryCollection(Entity repoCollectionEntity)
+	{
+		// FIXME find better solution, use registry with repo collections?
+		ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
+		Map<String, RepositoryCollection> repoCollectionBeans = ctx.getBeansOfType(RepositoryCollection.class);
+		String repoCollectionName = repoCollectionEntity.getString(RepositoryCollectionMetaData.ID);
+		return repoCollectionBeans.values().stream()
+				.filter(repoCollectionBean -> repoCollectionBean.getName().equals(repoCollectionName)).findFirst()
+				.orElse(null);
 	}
 
 	/**
@@ -712,6 +772,15 @@ public class MetaUtils
 			return false;
 		}
 
+		return true;
+	}
+
+	public static boolean equals(Entity existingRepoCollectionEntity, RepositoryCollection repoCollection)
+	{
+		if (!Objects.equal(existingRepoCollectionEntity.getString(PackageMetaData.FULL_NAME), repoCollection.getName()))
+		{
+			return false;
+		}
 		return true;
 	}
 }
