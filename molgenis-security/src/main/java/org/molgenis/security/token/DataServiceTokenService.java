@@ -4,7 +4,9 @@ import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.molgenis.auth.MolgenisToken;
+import org.molgenis.auth.MolgenisTokenMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.security.core.runas.RunAsSystem;
@@ -60,7 +62,7 @@ public class DataServiceTokenService implements TokenService
 	@RunAsSystem
 	public String generateAndStoreToken(String username, String description)
 	{
-		MolgenisUser user = dataService.findOne(MolgenisUser.ENTITY_NAME,
+		MolgenisUser user = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisUser.USERNAME, username), MolgenisUser.class);
 
 		if (user == null) throw new IllegalArgumentException("Unknown username [" + username + "]");
@@ -72,7 +74,7 @@ public class DataServiceTokenService implements TokenService
 		molgenisToken.setToken(token);
 		molgenisToken.setDescription(description);
 		molgenisToken.setExpirationDate(DateUtils.addHours(new Date(), 2));
-		dataService.add(MolgenisToken.ENTITY_NAME, molgenisToken);
+		dataService.add(MolgenisTokenMetaData.ENTITY_NAME, molgenisToken);
 
 		return token;
 	}
@@ -83,12 +85,12 @@ public class DataServiceTokenService implements TokenService
 	public void removeToken(String token) throws UnknownTokenException
 	{
 		MolgenisToken molgenisToken = getMolgenisToken(token);
-		dataService.delete(MolgenisToken.ENTITY_NAME, molgenisToken);
+		dataService.delete(MolgenisTokenMetaData.ENTITY_NAME, molgenisToken);
 	}
 
 	private MolgenisToken getMolgenisToken(String token) throws UnknownTokenException
 	{
-		MolgenisToken molgenisToken = dataService.findOne(MolgenisToken.ENTITY_NAME,
+		MolgenisToken molgenisToken = dataService.findOne(MolgenisTokenMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisToken.TOKEN, token), MolgenisToken.class);
 
 		if ((molgenisToken == null)

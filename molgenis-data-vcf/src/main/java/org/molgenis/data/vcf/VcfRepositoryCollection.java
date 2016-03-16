@@ -71,7 +71,7 @@ public class VcfRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
 		return getRepository(entityMeta.getName());
 	}

@@ -9,7 +9,11 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LABEL;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
 import org.molgenis.data.support.SystemEntityMetaData;
+import org.molgenis.util.ApplicationContextProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EntityMetaDataMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "entities";
@@ -28,9 +32,15 @@ public class EntityMetaDataMetaData extends SystemEntityMetaData
 	public static final String ATTRIBUTES = "attributes";
 	public static final String SYSTEM = "system";
 
-	public static final EntityMetaDataMetaData INSTANCE = new EntityMetaDataMetaData();
+	@Deprecated
+	public static EntityMetaDataMetaData get()
+	{
+		return ApplicationContextProvider.getApplicationContext().getBean(EntityMetaDataMetaData.class);
+	}
+	// public static final EntityMetaDataMetaData INSTANCE = new EntityMetaDataMetaData();
 
-	private EntityMetaDataMetaData()
+	@Autowired
+	private EntityMetaDataMetaData(AttributeMetaDataMetaData attributeMetaDataMetaData)
 	{
 		super(ENTITY_NAME);
 		setLabel("Entity");
@@ -39,19 +49,19 @@ public class EntityMetaDataMetaData extends SystemEntityMetaData
 		addAttribute(BACKEND).setLabel("Backend").setNillable(false).setReadOnly(true);
 		addAttribute(PACKAGE).setLabel("Package").setDataType(XREF).setRefEntity(PackageMetaData.INSTANCE)
 				.setReadOnly(true);
-		addAttribute(ID_ATTRIBUTE).setLabel("ID attribute").setDataType(XREF)
-				.setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
+		addAttribute(ID_ATTRIBUTE).setLabel("ID attribute").setDataType(XREF).setRefEntity(attributeMetaDataMetaData)
+				.setReadOnly(true);
 		addAttribute(LABEL_ATTRIBUTE).setLabel("Label attribute").setDataType(XREF)
-				.setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
+				.setRefEntity(attributeMetaDataMetaData).setReadOnly(true);
 		addAttribute(LOOKUP_ATTRIBUTES).setLabel("Lookup attributes").setDataType(MREF)
-				.setRefEntity(AttributeMetaDataMetaData.INSTANCE).setReadOnly(true);
+				.setRefEntity(attributeMetaDataMetaData).setReadOnly(true);
 		addAttribute(ABSTRACT).setLabel("Abstract").setDataType(BOOL).setReadOnly(true);
 		addAttribute(LABEL, ROLE_LOOKUP).setLabel("Label");
 		addAttribute(EXTENDS).setLabel("Extends").setDataType(XREF).setRefEntity(this).setReadOnly(true);
 		addAttribute(DESCRIPTION, ROLE_LOOKUP).setLabel("Description").setDataType(TEXT);
 		addAttribute(TAGS).setDataType(MREF).setLabel("Tags").setRefEntity(TagMetaData.INSTANCE);
-		addAttribute(ATTRIBUTES).setLabel("Attributes").setDataType(MREF)
-				.setRefEntity(AttributeMetaDataMetaData.INSTANCE).setNillable(false);
+		addAttribute(ATTRIBUTES).setLabel("Attributes").setDataType(MREF).setRefEntity(attributeMetaDataMetaData)
+				.setNillable(false);
 		addAttribute(SYSTEM).setLabel("System").setDataType(BOOL).setNillable(false).setReadOnly(true);
 	}
 }

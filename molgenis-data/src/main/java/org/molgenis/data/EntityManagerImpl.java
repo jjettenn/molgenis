@@ -24,6 +24,7 @@ import org.molgenis.fieldtypes.XrefField;
 import org.molgenis.util.BatchingIterable;
 import org.molgenis.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
@@ -32,6 +33,7 @@ import com.google.common.collect.SetMultimap;
 /**
  * Entity manager responsible for creating entity references and resolving references of reference attributes.
  */
+@Component
 public class EntityManagerImpl implements EntityManager
 {
 	private static final int BATCH_SIZE = 100;

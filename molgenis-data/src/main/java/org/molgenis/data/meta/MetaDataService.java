@@ -1,26 +1,47 @@
 package org.molgenis.data.meta;
 
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Package;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.Ordered;
 
-public interface MetaDataService
-		extends Iterable<RepositoryCollection>, ApplicationListener<ContextRefreshedEvent>, Ordered
+public interface MetaDataService extends Iterable<RepositoryCollection>
 {
 	/**
-	 * Sets the backend, in wich the meta data and the user data is saved
-	 *
-	 * @param ManageableRepositoryCollection
+	 * Streams the {@link RepositoryCollection}s
 	 */
-	MetaDataService setDefaultBackend(ManageableRepositoryCollection backend);
+	default Stream<RepositoryCollection> stream()
+	{
+		return StreamSupport.stream(spliterator(), false);
+	}
+
+	/**
+	 * Creates a {@link Repository} in the {@link RepositoryCollection} defined by entity meta data
+	 * 
+	 * @param entityMeta
+	 */
+	void createRepository(EntityMetaData entityMeta);
+
+	/**
+	 * Returns the {@link Repository} for the given entity meta data
+	 * 
+	 * @param entityMeta
+	 * @return
+	 */
+	Repository getRepository(EntityMetaData entityMeta);
+
+	/**
+	 * Returns the {@link Repository} for the given entity meta data name
+	 * 
+	 * @param entityName
+	 * @return
+	 */
+	Repository getRepository(String entityName);
 
 	/**
 	 * Get a backend by name or null if it does not exists
@@ -39,11 +60,18 @@ public interface MetaDataService
 	RepositoryCollection getBackend(EntityMetaData emd);
 
 	/**
-	 * Get the default backend
+	 * Get the default backend to store entities
 	 * 
 	 * @return
 	 */
-	ManageableRepositoryCollection getDefaultBackend();
+	RepositoryCollection getDefaultBackend();
+
+	/**
+	 * Get the backend that stores entity meta data
+	 * 
+	 * @return
+	 */
+	RepositoryCollection getMetaDataBackend();
 
 	/**
 	 * Get all packages
@@ -58,6 +86,13 @@ public interface MetaDataService
 	 * @return Iterable of all root Packages
 	 */
 	Iterable<Package> getRootPackages();
+
+	/**
+	 * Returns the default package
+	 * 
+	 * @return
+	 */
+	Package getDefaultPackage();
 
 	/**
 	 * Retrieves a package with a given name.
@@ -169,12 +204,4 @@ public interface MetaDataService
 	 * @return
 	 */
 	boolean isMetaRepository(String entityName);
-
-	/**
-	 * Returns repository for meta data repository with applied decorators
-	 * 
-	 * @param decoratedRepository
-	 * @return
-	 */
-	Repository createDecoratedMetaRepository(Repository decoratedRepository);
 }

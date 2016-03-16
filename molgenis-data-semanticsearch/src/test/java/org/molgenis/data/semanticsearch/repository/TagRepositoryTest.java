@@ -44,7 +44,7 @@ public class TagRepositoryTest extends AbstractTestNGSpringContextTests
 	@BeforeMethod
 	public void beforeMethod()
 	{
-		tagRepository = new TagRepository(repository, idGenerator);
+		tagRepository = new TagRepository(null/* repository */, idGenerator);
 		when(idGenerator.generateId()).thenReturn(uuid.toString());
 	}
 
@@ -62,10 +62,9 @@ public class TagRepositoryTest extends AbstractTestNGSpringContextTests
 		assertEquals(tagRepository.getTagEntity("http://edamontology.org/data_3031", "Core data", Relation.instanceOf,
 				"http://edamontology.org"), expected);
 
-		when(
-				repository.findOne(new QueryImpl().eq(TagMetaData.OBJECT_IRI, "http://edamontology.org/data_3031")
-						.and().eq(TagMetaData.RELATION_IRI, "http://molgenis.org/biobankconnect/instanceOf").and()
-						.eq(TagMetaData.CODE_SYSTEM, "http://edamontology.org"))).thenReturn(expected);
+		when(repository.findOne(new QueryImpl().eq(TagMetaData.OBJECT_IRI, "http://edamontology.org/data_3031").and()
+				.eq(TagMetaData.RELATION_IRI, "http://molgenis.org/biobankconnect/instanceOf").and()
+				.eq(TagMetaData.CODE_SYSTEM, "http://edamontology.org"))).thenReturn(expected);
 
 		assertEquals(tagRepository.getTagEntity("http://edamontology.org/data_3031", "Core data", Relation.instanceOf,
 				"http://edamontology.org"), expected);

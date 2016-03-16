@@ -46,40 +46,11 @@ import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.MapEntity;
 import org.molgenis.fieldtypes.FieldType;
-import org.molgenis.util.ApplicationContextProvider;
-import org.springframework.context.ApplicationContext;
 
 import com.google.common.base.Objects;
 
 public class MetaUtils
 {
-	/**
-	 * Converts a repository to an entity
-	 * 
-	 * @param repo
-	 * @return
-	 */
-	public static Entity toEntity(Repository repo, RepositoryCollection repoCollection)
-	{
-		MapEntity repoEntity = new MapEntity(RepositoryMetaData.INSTANCE);
-		repoEntity.set(RepositoryMetaData.ID, repo.getName());
-		repoEntity.set(RepositoryMetaData.COLLECTION, repoCollection);
-		return repoEntity;
-	}
-
-	/**
-	 * Converts a repository collection to an entity
-	 * 
-	 * @param repoCollection
-	 * @return
-	 */
-	public static Entity toEntity(RepositoryCollection repoCollection)
-	{
-		MapEntity repoCollectionEntity = new MapEntity(RepositoryCollectionMetaData.INSTANCE);
-		repoCollectionEntity.set(RepositoryCollectionMetaData.ID, repoCollection.getName());
-		return repoCollectionEntity;
-	}
-
 	/**
 	 * Converts a tag to an entity
 	 * 
@@ -106,7 +77,7 @@ public class MetaUtils
 	 */
 	public static Entity toEntity(AttributeMetaData attr)
 	{
-		MapEntity entity = new MapEntity(AttributeMetaDataMetaData.INSTANCE);
+		MapEntity entity = new MapEntity(AttributeMetaDataMetaData.get());
 		entity.set(AttributeMetaDataMetaData.IDENTIFIER, attr.getIdentifier());
 		entity.set(AttributeMetaDataMetaData.NAME, attr.getName());
 		FieldType dataType = attr.getDataType();
@@ -172,7 +143,7 @@ public class MetaUtils
 	 */
 	public static Entity toEntity(EntityMetaData entityMeta)
 	{
-		MapEntity entity = new MapEntity(EntityMetaDataMetaData.INSTANCE);
+		MapEntity entity = new MapEntity(EntityMetaDataMetaData.get());
 		entity.set(EntityMetaDataMetaData.SIMPLE_NAME, entityMeta.getSimpleName());
 		entity.set(EntityMetaDataMetaData.BACKEND, entityMeta.getBackend());
 		entity.set(EntityMetaDataMetaData.FULL_NAME, entityMeta.getName());
@@ -241,36 +212,6 @@ public class MetaUtils
 		entity.set(PackageMetaData.TAGS,
 				stream(package_.getTags().spliterator(), false).map(MetaUtils::toEntity).collect(toList()));
 		return entity;
-	}
-
-	/**
-	 * Converts an entity to a repository
-	 * 
-	 * @param repoEntity
-	 * @return
-	 */
-	public static Repository toRepository(Entity repoEntity)
-	{
-		Entity repoCollectionEntity = repoEntity.getEntity(RepositoryMetaData.ENTITY_NAME);
-		String entityName = repoEntity.getString(RepositoryMetaData.ENTITY_NAME);
-		return toRepositoryCollection(repoCollectionEntity).getRepository(entityName);
-	}
-
-	/**
-	 * Converts an entity to a repository collection
-	 * 
-	 * @param repoCollectionEntity
-	 * @return
-	 */
-	public static RepositoryCollection toRepositoryCollection(Entity repoCollectionEntity)
-	{
-		// FIXME find better solution, use registry with repo collections?
-		ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-		Map<String, RepositoryCollection> repoCollectionBeans = ctx.getBeansOfType(RepositoryCollection.class);
-		String repoCollectionName = repoCollectionEntity.getString(RepositoryCollectionMetaData.ID);
-		return repoCollectionBeans.values().stream()
-				.filter(repoCollectionBean -> repoCollectionBean.getName().equals(repoCollectionName)).findFirst()
-				.orElse(null);
 	}
 
 	/**
@@ -351,10 +292,10 @@ public class MetaUtils
 		if (attrEntity.get(REF_ENTITY) != null)
 		{
 			final String refEntityName = attrEntity.getString(REF_ENTITY);
-			Entity refEntityEntity = entityMetaRepo.findOne(refEntityName);
-			EntityMetaData refEntity = entityMetas.get(refEntityEntity.getString(EntityMetaDataMetaData.FULL_NAME));
+			EntityMetaData refEntity = entityMetas.get(refEntityName);
 			if (refEntity == null)
 			{
+				Entity refEntityEntity = entityMetaRepo.findOne(refEntityName);
 				refEntity = toEntityMetaRec(refEntityEntity, entityMetaRepo, languageCodes, entityMetas);
 			}
 			attributeMetaData.setRefEntity(refEntity);

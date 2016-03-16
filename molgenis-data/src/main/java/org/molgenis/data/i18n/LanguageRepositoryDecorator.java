@@ -154,7 +154,7 @@ public class LanguageRepositoryDecorator implements Repository
 		decorated.delete(entity);
 
 		// Delete label-{languageCode} attr from AttributeMetaDataMetaData
-		AttributeMetaData attributeLabel = AttributeMetaDataMetaData.INSTANCE
+		AttributeMetaData attributeLabel = AttributeMetaDataMetaData.get()
 				.getAttribute(AttributeMetaDataMetaData.LABEL + '-' + languageCode);
 		if (attributeLabel != null)
 		{
@@ -163,7 +163,7 @@ public class LanguageRepositoryDecorator implements Repository
 		}
 
 		// Delete description-{languageCode} attr from AttributeMetaDataMetaData
-		AttributeMetaData attributeDescription = AttributeMetaDataMetaData.INSTANCE
+		AttributeMetaData attributeDescription = AttributeMetaDataMetaData.get()
 				.getAttribute(AttributeMetaDataMetaData.DESCRIPTION + '-' + languageCode);
 		if (attributeDescription != null)
 		{
@@ -172,7 +172,7 @@ public class LanguageRepositoryDecorator implements Repository
 		}
 
 		// Delete description-{languageCode} attr from EntityMetaDataMetaData
-		AttributeMetaData entityDescription = EntityMetaDataMetaData.INSTANCE
+		AttributeMetaData entityDescription = EntityMetaDataMetaData.get()
 				.getAttribute(EntityMetaDataMetaData.DESCRIPTION + '-' + languageCode);
 		if (entityDescription != null)
 		{
@@ -181,7 +181,7 @@ public class LanguageRepositoryDecorator implements Repository
 		}
 
 		// Delete label-{languageCode} attr from EntityMetaDataMetaData
-		AttributeMetaData entityLabel = EntityMetaDataMetaData.INSTANCE
+		AttributeMetaData entityLabel = EntityMetaDataMetaData.get()
 				.getAttribute(EntityMetaDataMetaData.LABEL + '-' + languageCode);
 		if (entityLabel != null)
 		{
@@ -236,25 +236,25 @@ public class LanguageRepositoryDecorator implements Repository
 		dataService.getMeta().getDefaultBackend().addAttribute(AttributeMetaDataMetaData.ENTITY_NAME, attrLabel);
 
 		// Update AttributeMetaDataMetaData
-		AttributeMetaDataMetaData.INSTANCE.addAttributeMetaData(attrLabel);
+		AttributeMetaDataMetaData.get().addAttributeMetaData(attrLabel);
 
 		// Attribute description
 		AttributeMetaData attrDescription = new DefaultAttributeMetaData(
 				AttributeMetaDataMetaData.DESCRIPTION + languageCode).setNillable(true);
 		dataService.getMeta().getDefaultBackend().addAttribute(AttributeMetaDataMetaData.ENTITY_NAME, attrDescription);
-		AttributeMetaDataMetaData.INSTANCE.addAttributeMetaData(attrDescription);
+		AttributeMetaDataMetaData.get().addAttributeMetaData(attrDescription);
 
 		// EntityMeta description
 		AttributeMetaData entityDescription = new DefaultAttributeMetaData(
 				EntityMetaDataMetaData.DESCRIPTION + languageCode).setNillable(true);
 		dataService.getMeta().getDefaultBackend().addAttribute(EntityMetaDataMetaData.ENTITY_NAME, entityDescription);
-		EntityMetaDataMetaData.INSTANCE.addAttributeMetaData(entityDescription);
+		EntityMetaDataMetaData.get().addAttributeMetaData(entityDescription);
 
 		// EntityMeta label
 		AttributeMetaData entityLabel = new DefaultAttributeMetaData(EntityMetaDataMetaData.LABEL + languageCode)
 				.setNillable(true);
 		dataService.getMeta().getDefaultBackend().addAttribute(EntityMetaDataMetaData.ENTITY_NAME, entityLabel);
-		EntityMetaDataMetaData.INSTANCE.addAttributeMetaData(entityLabel);
+		EntityMetaDataMetaData.get().addAttributeMetaData(entityLabel);
 
 		// I18nString
 		if (I18nStringMetaData.INSTANCE.addLanguage(languageCode))

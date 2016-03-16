@@ -4,9 +4,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
+import org.springframework.context.ApplicationContext;
 
 public class MyRepositoryCollection implements RepositoryCollection
 {
@@ -25,7 +27,7 @@ public class MyRepositoryCollection implements RepositoryCollection
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
 		Repository repo = new MyRepository(entityMeta);
 		repositories.put(entityMeta.getName(), repo);
@@ -55,6 +57,48 @@ public class MyRepositoryCollection implements RepositoryCollection
 			if (entityNames.next().equals(name)) return true;
 		}
 		return false;
+	}
+
+	@Override
+	public void initMetaDataRepositories(ApplicationContext ctx)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Repository getRepository(EntityMetaData entityMeta)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteEntityMeta(String entityName)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void addAttribute(String entityName, AttributeMetaData attribute)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteAttribute(String entityName, String attributeName)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void addAttributeSync(String entityName, AttributeMetaData attribute)
+	{
+		// TODO Auto-generated method stub
+
 	}
 
 }

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.molgenis.auth.MolgenisUser;
 import org.molgenis.auth.UserAuthority;
+import org.molgenis.auth.UserAuthorityMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.Repository;
@@ -126,8 +127,8 @@ public class MatchInputTermBatchService
 						+ entityName.toUpperCase();
 				userAuthority.setRole(role);
 				roles.add(new SimpleGrantedAuthority(role));
-				dataService.add(UserAuthority.ENTITY_NAME, userAuthority);
-				dataService.getRepository(UserAuthority.ENTITY_NAME).flush();
+				dataService.add(UserAuthorityMetaData.ENTITY_NAME, userAuthority);
+				dataService.getRepository(UserAuthorityMetaData.ENTITY_NAME).flush();
 			}
 			auth = new UsernamePasswordAuthenticationToken(auth.getPrincipal(), null, roles);
 			securityContext.setAuthentication(auth);

@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.elasticsearch.common.collect.Iterators;
 import org.molgenis.data.Entity;
+import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Fetch;
 import org.molgenis.data.MolgenisDataAccessException;
@@ -272,5 +273,17 @@ public class ElasticsearchRepositoryDecorator extends AbstractElasticsearchRepos
 			}
 		});
 		return capabilities;
+	}
+
+	@Override
+	public void addEntityListener(EntityListener entityListener)
+	{
+		decoratedRepo.addEntityListener(entityListener);
+	}
+
+	@Override
+	public void removeEntityListener(EntityListener entityListener)
+	{
+		decoratedRepo.removeEntityListener(entityListener);
 	}
 }

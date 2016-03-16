@@ -6,7 +6,9 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.support.SystemEntityMetaData;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TagMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "tags";

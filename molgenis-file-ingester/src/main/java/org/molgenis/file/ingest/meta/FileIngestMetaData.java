@@ -6,14 +6,15 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_LOOKUP;
 
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.meta.EntityMetaDataMetaData;
-import org.molgenis.data.support.DefaultEntityMetaData;
+import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
 
 @Component
-public class FileIngestMetaData extends DefaultEntityMetaData
+public class FileIngestMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "FileIngest";
 	public static final String ID = "id";
@@ -28,7 +29,8 @@ public class FileIngestMetaData extends DefaultEntityMetaData
 
 	public static final ImmutableList<String> LOADERS = ImmutableList.of("CSV");
 
-	public FileIngestMetaData()
+	@Autowired
+	public FileIngestMetaData(EntityMetaDataMetaData entityMetaDataMetaData)
 	{
 		super(ENTITY_NAME);
 		addAttribute(ID, ROLE_ID).setAuto(true).setNillable(false);
@@ -37,8 +39,8 @@ public class FileIngestMetaData extends DefaultEntityMetaData
 		addAttribute(URL).setLabel("Url").setDescription("Url of the file to download.").setNillable(false);
 		addAttribute(LOADER).setDataType(new EnumField()).setEnumOptions(LOADERS).setLabel("Loader type")
 				.setNillable(false);
-		addAttribute(ENTITY_META_DATA).setDataType(MolgenisFieldTypes.XREF)
-				.setRefEntity(EntityMetaDataMetaData.INSTANCE).setLabel("Target EntityMetaData").setNillable(false);
+		addAttribute(ENTITY_META_DATA).setDataType(MolgenisFieldTypes.XREF).setRefEntity(entityMetaDataMetaData)
+				.setLabel("Target EntityMetaData").setNillable(false);
 		addAttribute(CRONEXPRESSION).setLabel("Cronexpression").setNillable(false);
 		addAttribute(ACTIVE).setDataType(MolgenisFieldTypes.BOOL).setLabel("Active").setNillable(false);
 		addAttribute(FAILURE_EMAIL).setDataType(MolgenisFieldTypes.EMAIL).setLabel("Failure email")

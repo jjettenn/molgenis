@@ -1,7 +1,7 @@
 package org.molgenis.integrationtest.data.myqsl;
 
-import org.molgenis.data.ManageableRepositoryCollection;
-import org.molgenis.data.elasticsearch.IndexedManageableRepositoryCollectionDecorator;
+import org.molgenis.data.RepositoryCollection;
+import org.molgenis.data.elasticsearch.IndexedRepositoryCollectionDecorator;
 import org.molgenis.data.mysql.AsyncJdbcTemplate;
 import org.molgenis.data.mysql.MySqlEntityFactory;
 import org.molgenis.data.mysql.MysqlRepository;
@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public abstract class AbstractMySqlTestConfig extends AbstractDataApiTestConfig
 {
 	@Override
-	protected ManageableRepositoryCollection getBackend()
+	protected RepositoryCollection getBackend()
 	{
 		return mysqlRepositoryCollection();
 	}
@@ -40,9 +40,9 @@ public abstract class AbstractMySqlTestConfig extends AbstractDataApiTestConfig
 
 	@Bean(name =
 	{ "MysqlRepositoryCollection" })
-	public ManageableRepositoryCollection mysqlRepositoryCollection()
+	public RepositoryCollection mysqlRepositoryCollection()
 	{
-		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection(null) // FIXME
+		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection(null, null, null) // FIXME
 		{
 			@Override
 			protected MysqlRepository createMysqlRepository()
@@ -57,7 +57,7 @@ public abstract class AbstractMySqlTestConfig extends AbstractDataApiTestConfig
 			}
 		};
 
-		return new IndexedManageableRepositoryCollectionDecorator(searchService, mysqlRepositoryCollection);
+		return new IndexedRepositoryCollectionDecorator(searchService, mysqlRepositoryCollection);
 	}
 
 }

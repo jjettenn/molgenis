@@ -3,7 +3,9 @@ package org.molgenis.security.permission;
 import java.util.List;
 
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.auth.UserAuthority;
+import org.molgenis.auth.UserAuthorityMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.security.core.Permission;
@@ -38,7 +40,7 @@ public class PermissionSystemService
 		if (!auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
 				&& !auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SYSTEM")))
 		{
-			MolgenisUser user = dataService.findOne(MolgenisUser.ENTITY_NAME,
+			MolgenisUser user = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME,
 					new QueryImpl().eq(MolgenisUser.USERNAME, SecurityUtils.getUsername(auth)), MolgenisUser.class);
 
 			if (user != null)
@@ -60,7 +62,7 @@ public class PermissionSystemService
 
 							if (permission == Permission.WRITEMETA)
 							{
-								dataService.add(UserAuthority.ENTITY_NAME, userAuthority);
+								dataService.add(UserAuthorityMetaData.ENTITY_NAME, userAuthority);
 							}
 						}
 					}

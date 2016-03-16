@@ -1,16 +1,15 @@
 package org.molgenis.auth;
 
-import org.molgenis.data.AttributeMetaData;
-import org.molgenis.data.Entity;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import org.molgenis.data.AttributeMetaData;
+import org.molgenis.data.Entity;
 
 public class MolgenisUser extends org.molgenis.data.support.AbstractEntity implements org.molgenis.data.Entity
 {
 	private static final long serialVersionUID = 5975610105951567982L;
 
-	public static final String ENTITY_NAME = "molgenisUser";
 	public static final String USERNAME = "username";
 	public static final String SUPERUSER = "superuser";
 	public static final String PASSWORD_ = "password_";
@@ -62,7 +61,7 @@ public class MolgenisUser extends org.molgenis.data.support.AbstractEntity imple
 
 	public static String getEntityName()
 	{
-		return ENTITY_NAME;
+		return MolgenisUserMetaData.ENTITY_NAME;
 	}
 
 	public String getId()

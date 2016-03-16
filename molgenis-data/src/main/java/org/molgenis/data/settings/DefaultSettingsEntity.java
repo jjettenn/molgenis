@@ -9,6 +9,7 @@ import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.security.core.runas.RunAsSystemProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,6 +21,9 @@ public abstract class DefaultSettingsEntity implements Entity
 	private static final long serialVersionUID = 1L;
 
 	private final String entityName;
+
+	@Autowired
+	private SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
 
 	@Autowired
 	private DataService dataService;
@@ -34,9 +38,17 @@ public abstract class DefaultSettingsEntity implements Entity
 	@Override
 	public EntityMetaData getEntityMetaData()
 	{
-		return RunAsSystemProxy.runAsSystem(() -> {
-			return dataService.getEntityMetaData(entityName);
-		});
+		EntityMetaData systemEntity = systemEntityMetaDataRegistry.getSystemEntity(entityName);
+		if (systemEntity != null)
+		{
+			return systemEntity;
+		}
+		else
+		{
+			return RunAsSystemProxy.runAsSystem(() -> {
+				return dataService.getEntityMetaData(entityName);
+			});
+		}
 	}
 
 	@Override
@@ -225,22 +237,22 @@ public abstract class DefaultSettingsEntity implements Entity
 				Entity entity = dataService.findOne(entityName, id);
 
 				// refresh cache on settings update
-					dataService.addEntityListener(entityName, new EntityListener()
+				dataService.addEntityListener(entityName, new EntityListener()
+				{
+					@Override
+					public void postUpdate(Entity entity)
 					{
-						@Override
-						public void postUpdate(Entity entity)
-						{
-							cachedEntity = entity;
-						}
+						cachedEntity = entity;
+					}
 
-						@Override
-						public Object getEntityId()
-						{
-							return id;
-						}
-					});
-					return entity;
+					@Override
+					public Object getEntityId()
+					{
+						return id;
+					}
 				});
+				return entity;
+			});
 
 		}
 		return cachedEntity;
@@ -253,7 +265,7 @@ public abstract class DefaultSettingsEntity implements Entity
 			ResourceBundle.clearCache();
 
 			// cache refresh is handled via entity listener
-				return null;
-			});
+			return null;
+		});
 	}
 }

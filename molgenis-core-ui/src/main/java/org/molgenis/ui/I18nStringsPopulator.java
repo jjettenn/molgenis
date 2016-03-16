@@ -8,9 +8,9 @@ import java.io.InputStream;
 
 import org.molgenis.data.DatabaseAction;
 import org.molgenis.data.FileRepositoryCollectionFactory;
-import org.molgenis.data.Package;
 import org.molgenis.data.importer.ImportService;
 import org.molgenis.data.importer.ImportServiceFactory;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.support.FileRepositoryCollection;
 import org.molgenis.file.FileStore;
 import org.slf4j.Logger;
@@ -59,13 +59,13 @@ public class I18nStringsPopulator implements ApplicationListener<ContextRefreshe
 		{
 			File fileInTempDir = fileStore.store(is, i18nFileName);
 			LOG.info("Create temp file for {} : {}", i18nFileName, fileInTempDir);
-			
+
 			FileRepositoryCollection repoCollection = fileRepositoryCollectionFactory
 					.createFileRepositoryCollection(fileInTempDir);
 
 			ImportService importService = importServiceFactory.getImportService(fileInTempDir, repoCollection);
 			runAsSystem(() -> importService.doImport(repoCollection, DatabaseAction.ADD_IGNORE_EXISTING,
-					Package.DEFAULT_PACKAGE_NAME));
+					event.getApplicationContext().getBean(DefaultPackage.class).getName()));
 
 			if (fileInTempDir.exists())
 			{

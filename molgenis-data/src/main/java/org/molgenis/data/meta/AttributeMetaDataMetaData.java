@@ -12,7 +12,10 @@ import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.support.SystemEntityMetaData;
 import org.molgenis.fieldtypes.EnumField;
 import org.molgenis.fieldtypes.LongField;
+import org.molgenis.util.ApplicationContextProvider;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AttributeMetaDataMetaData extends SystemEntityMetaData
 {
 	public static final String ENTITY_NAME = "attrs";
@@ -38,7 +41,13 @@ public class AttributeMetaDataMetaData extends SystemEntityMetaData
 	public static final String VALIDATION_EXPRESSION = "validationExpression";
 	public static final String DEFAULT_VALUE = "defaultValue";
 
-	public static final AttributeMetaDataMetaData INSTANCE = new AttributeMetaDataMetaData();
+	@Deprecated
+	public static AttributeMetaDataMetaData get()
+	{
+		return ApplicationContextProvider.getApplicationContext().getBean(AttributeMetaDataMetaData.class);
+	}
+
+	// public static final AttributeMetaDataMetaData INSTANCE = new AttributeMetaDataMetaData();
 
 	private AttributeMetaDataMetaData()
 	{

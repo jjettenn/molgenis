@@ -6,13 +6,14 @@ import java.util.Map;
 
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
+import org.molgenis.data.RepositoryCollection;
+import org.springframework.context.ApplicationContext;
 
 /**
  * For testing purposis
  */
-public class InMemoryRepositoryCollection implements ManageableRepositoryCollection
+public class InMemoryRepositoryCollection implements RepositoryCollection
 {
 	private final Map<String, Repository> repos = new HashMap<>();
 	private String name = "Memory";
@@ -39,13 +40,19 @@ public class InMemoryRepositoryCollection implements ManageableRepositoryCollect
 	}
 
 	@Override
+	public Repository getRepository(EntityMetaData entityMeta)
+	{
+		return repos.get(entityMeta.getName());
+	}
+
+	@Override
 	public Iterator<Repository> iterator()
 	{
 		return repos.values().iterator();
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMetaData)
+	public Repository createRepository(EntityMetaData entityMetaData)
 	{
 		String name = entityMetaData.getName();
 		if (!repos.containsKey(name))
@@ -96,5 +103,11 @@ public class InMemoryRepositoryCollection implements ManageableRepositoryCollect
 			if (entityNames.next().equals(name)) return true;
 		}
 		return false;
+	}
+
+	@Override
+	public void initMetaDataRepositories(ApplicationContext ctx)
+	{
+		throw new UnsupportedOperationException();
 	}
 }

@@ -4,10 +4,13 @@ import static java.lang.String.format;
 
 import java.util.Iterator;
 
+import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.UnknownEntityException;
+import org.molgenis.data.support.DefaultEntityMetaData;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Adds indexing functionality to a RepositoryCollection
@@ -67,9 +70,9 @@ public class IndexedRepositoryCollectionDecorator implements RepositoryCollectio
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
-		Repository repo = delegate.addEntityMeta(entityMeta);
+		Repository repo = delegate.createRepository(entityMeta);
 		searchService.createMappings(entityMeta);
 
 		return new ElasticsearchRepositoryDecorator(repo, searchService);
@@ -88,6 +91,17 @@ public class IndexedRepositoryCollectionDecorator implements RepositoryCollectio
 		if (repo == null)
 		{
 			throw new UnknownEntityException(format("Unknown entity [%s]", name));
+		}
+		return new ElasticsearchRepositoryDecorator(repo, searchService);
+	}
+
+	@Override
+	public Repository getRepository(EntityMetaData entityMeta)
+	{
+		Repository repo = delegate.getRepository(entityMeta);
+		if (repo == null)
+		{
+			throw new UnknownEntityException(format("Unknown entity [%s]", entityMeta.getName()));
 		}
 		return new ElasticsearchRepositoryDecorator(repo, searchService);
 	}
@@ -111,13 +125,52 @@ public class IndexedRepositoryCollectionDecorator implements RepositoryCollectio
 	@Override
 	public boolean hasRepository(String name)
 	{
-		if (null == name) return false;
-		Iterator<String> entityNames = getEntityNames().iterator();
-		while (entityNames.hasNext())
-		{
-			if (entityNames.next().equals(name)) return true;
-		}
-		return false;
+		return delegate.hasRepository(name);
 	}
 
+	@Override
+	public void deleteEntityMeta(String entityName)
+	{
+		delegate.deleteEntityMeta(entityName);
+		getSearchService().delete(entityName);
+	}
+
+	@Override
+	public void addAttribute(String entityName, AttributeMetaData attribute)
+	{
+		delegate.addAttribute(entityName, attribute);
+		DefaultEntityMetaData meta = new DefaultEntityMetaData(delegate.getRepository(entityName).getEntityMetaData());
+		meta.addAttributeMetaData(attribute);
+		getSearchService().createMappings(meta);
+	}
+
+	@Override
+	public void deleteAttribute(String entityName, String attributeName)
+	{
+		delegate.deleteAttribute(entityName, attributeName);
+
+		DefaultEntityMetaData meta = new DefaultEntityMetaData(delegate.getRepository(entityName).getEntityMetaData());
+
+		AttributeMetaData attr = meta.getAttribute(attributeName);
+		if (attr != null)
+		{
+			meta.removeAttributeMetaData(attr);
+			getSearchService().createMappings(meta);
+		}
+	}
+
+	@Override
+	public void addAttributeSync(String entityName, AttributeMetaData attribute)
+	{
+		delegate.addAttributeSync(entityName, attribute);
+		DefaultEntityMetaData meta = new DefaultEntityMetaData(delegate.getRepository(entityName).getEntityMetaData());
+		meta.addAttributeMetaData(attribute);
+		getSearchService().createMappings(meta);
+	}
+
+	@Override
+	public void initMetaDataRepositories(ApplicationContext ctx)
+	{
+		delegate.initMetaDataRepositories(ctx);
+	}
 }

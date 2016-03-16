@@ -12,8 +12,11 @@ import java.util.stream.Stream;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.molgenis.auth.MolgenisGroupMember;
+import org.molgenis.auth.MolgenisGroupMemberMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.auth.UserAuthority;
+import org.molgenis.auth.UserAuthorityMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Query;
 import org.molgenis.data.support.QueryImpl;
@@ -43,9 +46,9 @@ public class MolgenisUserDetailsServiceTest
 		when(userUser.getUsername()).thenReturn("user");
 		when(userUser.getPassword()).thenReturn("password");
 		Query qAdmin = new QueryImpl().eq(MolgenisUser.USERNAME, "admin");
-		when(dataService.findOne(MolgenisUser.ENTITY_NAME, qAdmin, MolgenisUser.class)).thenReturn(adminUser);
+		when(dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, qAdmin, MolgenisUser.class)).thenReturn(adminUser);
 		Query qUser = new QueryImpl().eq(MolgenisUser.USERNAME, "user");
-		when(dataService.findOne(MolgenisUser.ENTITY_NAME, qUser, MolgenisUser.class)).thenReturn(userUser);
+		when(dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, qUser, MolgenisUser.class)).thenReturn(userUser);
 		GrantedAuthoritiesMapper authoritiesMapper = new GrantedAuthoritiesMapper()
 		{
 			@Override
@@ -55,25 +58,27 @@ public class MolgenisUserDetailsServiceTest
 				return authorities;
 			}
 		};
-		when(dataService.findAll(UserAuthority.ENTITY_NAME, new QueryImpl().eq(UserAuthority.MOLGENISUSER, userUser),
-				UserAuthority.class)).thenAnswer(new Answer<Stream<UserAuthority>>()
-				{
-					@Override
-					public Stream<UserAuthority> answer(InvocationOnMock invocation) throws Throwable
-					{
-						return Stream.empty();
-					}
-				});
-		when(dataService.findAll(UserAuthority.ENTITY_NAME, new QueryImpl().eq(UserAuthority.MOLGENISUSER, adminUser),
-				UserAuthority.class)).thenAnswer(new Answer<Stream<UserAuthority>>()
-				{
-					@Override
-					public Stream<UserAuthority> answer(InvocationOnMock invocation) throws Throwable
-					{
-						return Stream.empty();
-					}
-				});
-		when(dataService.findAll(MolgenisGroupMember.ENTITY_NAME,
+		when(dataService.findAll(UserAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().eq(UserAuthority.MOLGENISUSER, userUser), UserAuthority.class))
+						.thenAnswer(new Answer<Stream<UserAuthority>>()
+						{
+							@Override
+							public Stream<UserAuthority> answer(InvocationOnMock invocation) throws Throwable
+							{
+								return Stream.empty();
+							}
+						});
+		when(dataService.findAll(UserAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().eq(UserAuthority.MOLGENISUSER, adminUser), UserAuthority.class))
+						.thenAnswer(new Answer<Stream<UserAuthority>>()
+						{
+							@Override
+							public Stream<UserAuthority> answer(InvocationOnMock invocation) throws Throwable
+							{
+								return Stream.empty();
+							}
+						});
+		when(dataService.findAll(MolgenisGroupMemberMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, userUser), MolgenisGroupMember.class))
 						.thenAnswer(new Answer<Stream<MolgenisGroupMember>>()
 						{
@@ -83,7 +88,7 @@ public class MolgenisUserDetailsServiceTest
 								return Stream.empty();
 							}
 						});
-		when(dataService.findAll(MolgenisGroupMember.ENTITY_NAME,
+		when(dataService.findAll(MolgenisGroupMemberMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, adminUser), MolgenisGroupMember.class))
 						.thenAnswer(new Answer<Stream<MolgenisGroupMember>>()
 						{

@@ -180,6 +180,7 @@ public class MysqlRepository extends AbstractRepository
 		return "DROP TABLE IF EXISTS " + getTableName();
 	}
 
+	// TODO move to repository collection
 	@Override
 	public void create()
 	{
@@ -211,7 +212,7 @@ public class MysqlRepository extends AbstractRepository
 				else if (attr.getDataType() instanceof XrefField)
 				{
 					// String backend = dataService.getMeta().getBackend(attr.getRefEntity()).getName();
-					// if (backend.equalsIgnoreCase(MysqlRepositoryCollection.NAME))
+					// if (backend.equalsIgnoreCase(MysqlRepositoryCollection.NAME)) // FIXME
 					// {
 					jdbcTemplate.execute(getCreateFKeySql(attr));
 					// }
@@ -1038,7 +1039,12 @@ public class MysqlRepository extends AbstractRepository
 							throw new MolgenisDataException("cannot solve query rule:  " + r);
 					}
 					predicate.append(" ? ");
-					parameters.add(attr.getDataType().convert(r.getValue()));
+					Object convertedVal = attr.getDataType().convert(r.getValue());
+					if (convertedVal instanceof Entity)
+					{
+						convertedVal = ((Entity) convertedVal).getIdValue();
+					}
+					parameters.add(convertedVal);
 
 					if (result.length() > 0 && !result.toString().endsWith(" OR ")
 							&& !result.toString().endsWith(" AND "))

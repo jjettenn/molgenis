@@ -90,14 +90,14 @@ public class TransactionLogService implements MolgenisTransactionListener
 
 	private synchronized void finishTransaction(String transactionId, MolgenisTransactionLogMetaData.Status status)
 	{
-		RunAsSystemProxy.runAsSystem(() -> {
-			Entity log = dataService.findOne(MolgenisTransactionLogMetaData.ENTITY_NAME, transactionId);
-			log.set(MolgenisTransactionLogMetaData.END_TIME, new Date());
-			log.set(MolgenisTransactionLogMetaData.STATUS, status.name());
-
-			asyncTransactionLog.logTransactionFinished(log);
-
-			return null;
-		});
+		// RunAsSystemProxy.runAsSystem(() -> {
+		// Entity log = dataService.findOne(MolgenisTransactionLogMetaData.ENTITY_NAME, transactionId);
+		// log.set(MolgenisTransactionLogMetaData.END_TIME, new Date());
+		// log.set(MolgenisTransactionLogMetaData.STATUS, status.name());
+		//
+		// asyncTransactionLog.logTransactionFinished(log);
+		//
+		// return null;
+		// });
 	}
 }

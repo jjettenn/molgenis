@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.EditableEntityMetaData;
 import org.molgenis.data.Entity;
@@ -45,24 +46,24 @@ public abstract class AbstractI18nIT extends AbstractDataIntegrationIT
 		super.cleanUp();
 
 		List<AttributeMetaData> languageAttrs = new ArrayList<>();
-		for (AttributeMetaData attr : AttributeMetaDataMetaData.INSTANCE.getAttributes())
+		for (AttributeMetaData attr : AttributeMetaDataMetaData.get().getAttributes())
 		{
 			if (I18nUtils.isI18n(attr.getName()))
 			{
 				languageAttrs.add(attr);
 			}
 		}
-		languageAttrs.forEach(AttributeMetaDataMetaData.INSTANCE::removeAttributeMetaData);
+		languageAttrs.forEach(AttributeMetaDataMetaData.get()::removeAttributeMetaData);
 
 		languageAttrs.clear();
-		for (AttributeMetaData attr : EntityMetaDataMetaData.INSTANCE.getAttributes())
+		for (AttributeMetaData attr : EntityMetaDataMetaData.get().getAttributes())
 		{
 			if (I18nUtils.isI18n(attr.getName()))
 			{
 				languageAttrs.add(attr);
 			}
 		}
-		languageAttrs.forEach(EntityMetaDataMetaData.INSTANCE::removeAttributeMetaData);
+		languageAttrs.forEach(EntityMetaDataMetaData.get()::removeAttributeMetaData);
 	}
 
 	public void testLanguageService()
@@ -134,7 +135,7 @@ public abstract class AbstractI18nIT extends AbstractDataIntegrationIT
 		admin.setSuperuser(true);
 		admin.setChangePassword(false);
 		admin.setPassword("molgenis");
-		dataService.add(MolgenisUser.ENTITY_NAME, admin);
+		dataService.add(MolgenisUserMetaData.ENTITY_NAME, admin);
 	}
 
 	protected void createLanguages()

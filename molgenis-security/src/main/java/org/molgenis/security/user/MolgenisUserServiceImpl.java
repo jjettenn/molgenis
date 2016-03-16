@@ -7,7 +7,9 @@ import java.util.stream.Stream;
 
 import org.molgenis.auth.MolgenisGroup;
 import org.molgenis.auth.MolgenisGroupMember;
+import org.molgenis.auth.MolgenisGroupMemberMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.security.core.runas.RunAsSystem;
@@ -33,7 +35,7 @@ public class MolgenisUserServiceImpl implements MolgenisUserService
 	@RunAsSystem
 	public List<String> getSuEmailAddresses()
 	{
-		Stream<MolgenisUser> superUsers = dataService.findAll(MolgenisUser.ENTITY_NAME,
+		Stream<MolgenisUser> superUsers = dataService.findAll(MolgenisUserMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisUser.SUPERUSER, true), MolgenisUser.class);
 		return superUsers.map(MolgenisUser::getEmail).collect(toList());
 	}
@@ -42,15 +44,15 @@ public class MolgenisUserServiceImpl implements MolgenisUserService
 	@RunAsSystem
 	public MolgenisUser getUser(String username)
 	{
-		return dataService.findOne(MolgenisUser.ENTITY_NAME, new QueryImpl().eq(MolgenisUser.USERNAME, username),
-				MolgenisUser.class);
+		return dataService.findOne(MolgenisUserMetaData.ENTITY_NAME,
+				new QueryImpl().eq(MolgenisUser.USERNAME, username), MolgenisUser.class);
 	}
 
 	@Override
 	@RunAsSystem
 	public Iterable<MolgenisGroup> getUserGroups(String username)
 	{
-		Stream<MolgenisGroupMember> molgenisGroupMembers = dataService.findAll(MolgenisGroupMember.ENTITY_NAME,
+		Stream<MolgenisGroupMember> molgenisGroupMembers = dataService.findAll(MolgenisGroupMemberMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, getUser(username)), MolgenisGroupMember.class);
 		// N.B. Must collect the results in a list before yielding up the RunAsSystem privileges!
 		return molgenisGroupMembers.map(MolgenisGroupMember::getMolgenisGroup).collect(toList());
@@ -60,14 +62,14 @@ public class MolgenisUserServiceImpl implements MolgenisUserService
 	@RunAsSystem
 	public void update(MolgenisUser user)
 	{
-		dataService.update(MolgenisUser.ENTITY_NAME, user);
+		dataService.update(MolgenisUserMetaData.ENTITY_NAME, user);
 	}
 
 	@Override
 	@RunAsSystem
 	public MolgenisUser getUserByEmail(String email)
 	{
-		return dataService.findOne(MolgenisUser.ENTITY_NAME, new QueryImpl().eq(MolgenisUser.EMAIL, email),
+		return dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, new QueryImpl().eq(MolgenisUser.EMAIL, email),
 				MolgenisUser.class);
 	}
 }

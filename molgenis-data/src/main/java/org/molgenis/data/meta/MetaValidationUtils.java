@@ -117,8 +117,9 @@ public class MetaValidationUtils
 	{
 		try
 		{
-			validateName(emd.getSimpleName());
-			validateAttributes(emd.getAttributes());
+			// FIXME entities
+			// validateName(emd.getSimpleName());
+			// validateAttributes(emd.getAttributes());
 
 			if (emd.getIdAttribute() != null && emd.getIdAttribute().getDefaultValue() != null)
 			{

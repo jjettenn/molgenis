@@ -5,6 +5,7 @@ import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.jobs.JobMetaData;
@@ -58,12 +59,13 @@ public class FileIngesterLoggerImpl implements FileIngesterLogger
 		fileIngestJobMetaData.set(JobMetaData.STATUS, "RUNNING");
 		fileIngestJobMetaData.set(JobMetaData.TYPE, "FileIngesterJob");
 		fileIngestJobMetaData.set(JobMetaData.USER,
-				dataService.query(MolgenisUser.ENTITY_NAME).eq(MolgenisUser.USERNAME, "admin").findOne());// TODO system
-																											// user?
+				dataService.query(MolgenisUserMetaData.ENTITY_NAME).eq(MolgenisUser.USERNAME, "admin").findOne());// TODO
+																													// system
+		// user?
 		fileIngestJobMetaData.set(FileIngestJobMetaDataMetaData.FILE_INGEST, fileIngest);
 
 		dataService.add(fileIngestJobMetaDataMetaData.getName(), fileIngestJobMetaData);
-		
+
 		return fileIngestJobMetaData.getString(JobMetaData.IDENTIFIER);
 	}
 

@@ -19,23 +19,21 @@ import javax.sql.DataSource;
 import org.molgenis.data.DataService;
 import org.molgenis.data.EntityManager;
 import org.molgenis.data.EntityManagerImpl;
-import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.IdGenerator;
-import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.Repository;
+import org.molgenis.data.RepositoryCollection;
+import org.molgenis.data.RepositoryCollectionRegistry;
 import org.molgenis.data.RepositoryDecoratorFactory;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.convert.DateToStringConverter;
 import org.molgenis.data.convert.StringToDateConverter;
-import org.molgenis.data.elasticsearch.ElasticsearchEntityFactory;
 import org.molgenis.data.elasticsearch.SearchService;
 import org.molgenis.data.elasticsearch.factory.EmbeddedElasticSearchServiceFactory;
-import org.molgenis.data.elasticsearch.index.EntityToSourceConverter;
-import org.molgenis.data.elasticsearch.index.SourceToEntityConverter;
 import org.molgenis.data.i18n.LanguageService;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.EntityMetaDataMetaData;
 import org.molgenis.data.meta.MetaDataService;
 import org.molgenis.data.meta.MetaDataServiceImpl;
-import org.molgenis.data.mysql.MySqlEntityFactory;
 import org.molgenis.data.settings.AppSettings;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.data.transaction.TransactionLogService;
@@ -59,9 +57,7 @@ import org.molgenis.ui.menu.MenuReaderServiceImpl;
 import org.molgenis.ui.menumanager.MenuManagerService;
 import org.molgenis.ui.menumanager.MenuManagerServiceImpl;
 import org.molgenis.ui.security.MolgenisUiPermissionDecorator;
-import org.molgenis.ui.settings.AppDbSettings;
 import org.molgenis.util.ApplicationContextProvider;
-import org.molgenis.util.DependencyResolver;
 import org.molgenis.util.GsonHttpMessageConverter;
 import org.molgenis.util.ResourceFingerprintRegistry;
 import org.slf4j.Logger;
@@ -89,9 +85,7 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -102,9 +96,6 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 
 	@Autowired
 	private AppSettings appSettings;
-
-	@Autowired
-	private AppDbSettings appDbSettings;
 
 	@Autowired
 	private MolgenisPermissionService molgenisPermissionService;
@@ -142,6 +133,15 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 
 	@Autowired
 	public LanguageService languageService;
+
+	@Autowired
+	public SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
+
+	@Autowired
+	public RepositoryCollectionRegistry repoCollectionRegistry;
+
+	@Autowired
+	public DefaultPackage defaultPackage;
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry)
@@ -405,44 +405,7 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 		return new CorsInterceptor();
 	}
 
-	protected abstract ManageableRepositoryCollection getBackend();
-
-	protected abstract void addReposToReindex(DataServiceImpl localDataService,
-			MySqlEntityFactory localMySqlEntityFactory);
-
-	protected void reindex()
-	{
-		// Create local dataservice and metadataservice
-		DataServiceImpl localDataService = new DataServiceImpl();
-		EntityManager localEntityManager = new EntityManagerImpl(localDataService);
-		MySqlEntityFactory localMySqlEntityFactory = new MySqlEntityFactory(localEntityManager, localDataService);
-
-		MetaDataServiceImpl metaDataService = new MetaDataServiceImpl(localDataService);
-		metaDataService.setLanguageService(new LanguageService(localDataService, appDbSettings));
-		localDataService.setMeta(metaDataService);
-
-		addReposToReindex(localDataService, localMySqlEntityFactory);
-
-		SourceToEntityConverter sourceToEntityConverter = new SourceToEntityConverter(localDataService,
-				localEntityManager);
-		EntityToSourceConverter entityToSourceConverter = new EntityToSourceConverter();
-		SearchService localSearchService = embeddedElasticSearchServiceFactory.create(localDataService,
-				new ElasticsearchEntityFactory(localEntityManager, sourceToEntityConverter, entityToSourceConverter));
-
-		List<EntityMetaData> metas = DependencyResolver
-				.resolve(Sets.newHashSet(localDataService.getMeta().getEntityMetaDatas()));
-
-		// Sort repos to the same sequence as the resolves metas
-		List<Repository> repos = Lists.newArrayList(localDataService);
-		repos.sort((r1, r2) -> Integer.compare(metas.indexOf(r1.getEntityMetaData()),
-				metas.indexOf(r2.getEntityMetaData())));
-
-		repos.forEach(repo -> {
-			localSearchService.rebuildIndex(repo, repo.getEntityMetaData());
-		});
-
-		localSearchService.optimizeIndex();
-	}
+	protected abstract RepositoryCollection getBackend();
 
 	@PostConstruct
 	public void validateMolgenisServerProperties()
@@ -484,24 +447,27 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 			LOG.debug("Elasticsearch index exists, no need to reindex.");
 		}
 
-		runAsSystem(() -> metaDataService().setDefaultBackend(getBackend()));
+		runAsSystem(() -> repoCollectionRegistry.setDefaultRepoCollectionName(getBackend().getName()));
 	}
+
+	@Autowired
+	EntityMetaDataMetaData entityMetaDataMetaData;
 
 	private boolean indexExists()
 	{
-		return searchService.hasMapping(EntityMetaDataMetaData.INSTANCE);
+		return searchService.hasMapping(entityMetaDataMetaData);
 	}
 
 	@Bean
 	public DataService dataService()
 	{
-		return new DataServiceImpl(repositoryDecoratorFactory());
+		return new DataServiceImpl();
 	}
 
 	@Bean
 	public MetaDataService metaDataService()
 	{
-		return new MetaDataServiceImpl((DataServiceImpl) dataService());
+		return new MetaDataServiceImpl(repoCollectionRegistry, idGenerator, defaultPackage);
 	}
 
 	@Bean
@@ -527,7 +493,8 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 			{
 				return new MolgenisRepositoryDecoratorFactory(entityManager(), transactionLogService,
 						entityAttributesValidator, idGenerator, appSettings, dataService(), expressionValidator,
-						repositoryDecoratorRegistry()).createDecoratedRepository(repository);
+						repositoryDecoratorRegistry(), languageService, systemEntityMetaDataRegistry)
+								.createDecoratedRepository(repository);
 			}
 		};
 	}

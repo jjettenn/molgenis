@@ -1,44 +1,47 @@
 package org.molgenis.data.elasticsearch;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Iterator;
-import java.util.Map;
 
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.ManageableRepositoryCollection;
+import org.molgenis.data.Fetch;
 import org.molgenis.data.Repository;
+import org.molgenis.data.RepositoryCollection;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.UnknownAttributeException;
 import org.molgenis.data.UnknownEntityException;
+import org.molgenis.data.meta.EntityMetaDataMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-
 @Component("ElasticsearchRepositoryCollection")
-public class ElasticsearchRepositoryCollection implements ManageableRepositoryCollection
+public class ElasticsearchRepositoryCollection implements RepositoryCollection
 {
 	public static final String NAME = "ElasticSearch";
 	private final SearchService searchService;
 	private final DataService dataService;
-	private final Map<String, AbstractElasticsearchRepository> repositories = Maps.newLinkedHashMap();
+	private final SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
 
 	@Autowired
-	public ElasticsearchRepositoryCollection(SearchService searchService, DataService dataService)
+	public ElasticsearchRepositoryCollection(SearchService searchService, DataService dataService,
+			SystemEntityMetaDataRegistry systemEntityMetaDataRegistry)
 	{
-		this.searchService = searchService;
-		this.dataService = dataService;
+		this.searchService = requireNonNull(searchService);
+		this.dataService = requireNonNull(dataService);
+		this.systemEntityMetaDataRegistry = requireNonNull(systemEntityMetaDataRegistry);
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
 		ElasticsearchRepository repo = new ElasticsearchRepository(entityMeta, searchService);
 		if (!searchService.hasMapping(entityMeta)) repo.create();
-		repositories.put(entityMeta.getName(), repo);
+		// repositories.put(entityMeta.getName(), repo);
 
 		return repo;
 	}
@@ -52,39 +55,45 @@ public class ElasticsearchRepositoryCollection implements ManageableRepositoryCo
 	@Override
 	public Iterable<String> getEntityNames()
 	{
-		return repositories.keySet();
+		return new Iterable<String>()
+		{
+			@Override
+			public Iterator<String> iterator()
+			{
+				return dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME).query()
+						.eq(EntityMetaDataMetaData.BACKEND, NAME)
+						.fetch(new Fetch().field(EntityMetaDataMetaData.FULL_NAME)).findAll()
+						.map(entity -> entity.getString(EntityMetaDataMetaData.FULL_NAME)).iterator();
+			}
+		};
 	}
 
 	@Override
 	public Repository getRepository(String name)
 	{
-		return repositories.get(name);
+		return new ElasticsearchRepository(dataService.getMeta().getEntityMetaData(name), searchService);
+	}
+
+	@Override
+	public Repository getRepository(EntityMetaData entityMeta)
+	{
+		return new ElasticsearchRepository(entityMeta, searchService);
 	}
 
 	@Override
 	public Iterator<Repository> iterator()
 	{
-		return Iterators.transform(repositories.values().iterator(),
-				new Function<AbstractElasticsearchRepository, Repository>()
-				{
-					@Override
-					public Repository apply(AbstractElasticsearchRepository input)
-					{
-						return input;
-					}
-				});
+		// FIXME code duplication
+		return dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME).query()
+				.eq(EntityMetaDataMetaData.BACKEND, NAME).fetch(new Fetch().field(EntityMetaDataMetaData.FULL_NAME))
+				.findAll().map(entity -> entity.getString(EntityMetaDataMetaData.FULL_NAME)).map(this::getRepository)
+				.iterator();
 	}
 
 	@Override
 	public void deleteEntityMeta(String entityName)
 	{
-		// remove the repo
-		AbstractElasticsearchRepository r = repositories.get(entityName);
-		if (r != null)
-		{
-			r.drop();
-			repositories.remove(entityName);
-		}
+		throw new UnsupportedOperationException("TODO implement"); // FIXME
 	}
 
 	@Override
@@ -111,11 +120,11 @@ public class ElasticsearchRepositoryCollection implements ManageableRepositoryCo
 		EntityMetaData entityMetaData = dataService.getMeta().getEntityMetaData(entityName);
 		if (entityMetaData == null) throw new UnknownEntityException(String.format("Unknown entity '%s'", entityName));
 
-		DefaultEntityMetaData defaultEntityMetaData = new DefaultEntityMetaData(dataService.getMeta()
-				.getEntityMetaData(entityName));
+		DefaultEntityMetaData defaultEntityMetaData = new DefaultEntityMetaData(
+				dataService.getMeta().getEntityMetaData(entityName));
 		AttributeMetaData attr = entityMetaData.getAttribute(attributeName);
-		if (attr == null) throw new UnknownAttributeException(String.format("Unknown attribute '%s' of entity '%s'",
-				attributeName, entityName));
+		if (attr == null) throw new UnknownAttributeException(
+				String.format("Unknown attribute '%s' of entity '%s'", attributeName, entityName));
 
 		defaultEntityMetaData.removeAttributeMetaData(attr);
 		searchService.createMappings(entityMetaData);
@@ -130,13 +139,22 @@ public class ElasticsearchRepositoryCollection implements ManageableRepositoryCo
 	@Override
 	public boolean hasRepository(String name)
 	{
-		if (null == name) return false;
-		Iterator<String> entityNames = getEntityNames().iterator();
-		while (entityNames.hasNext())
+		EntityMetaData systemEntity = systemEntityMetaDataRegistry.getSystemEntity(name);
+		if (systemEntity != null)
 		{
-			if (entityNames.next().equals(name)) return true;
+			return systemEntity.getBackend().equals(NAME);
 		}
-		return false;
+		else
+		{
+			return dataService.getRepository(EntityMetaDataMetaData.ENTITY_NAME).query()
+					.eq(EntityMetaDataMetaData.FULL_NAME, name).and().eq(EntityMetaDataMetaData.BACKEND, NAME)
+					.count() > 0;
+		}
 	}
 
+	@Override
+	public void initMetaDataRepositories(ApplicationContext ctx)
+	{
+		throw new UnsupportedOperationException();
+	}
 }

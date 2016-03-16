@@ -10,7 +10,9 @@ import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.molgenis.auth.MolgenisToken;
+import org.molgenis.auth.MolgenisTokenMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.security.core.token.UnknownTokenException;
@@ -46,9 +48,8 @@ public class DataServiceTokenServiceTest
 		user.setUsername("admin");
 		molgenisToken.setMolgenisUser(user);
 
-		when(
-				dataService.findOne(MolgenisToken.ENTITY_NAME, new QueryImpl().eq(MolgenisToken.TOKEN, "token"),
-						MolgenisToken.class)).thenReturn(molgenisToken);
+		when(dataService.findOne(MolgenisTokenMetaData.ENTITY_NAME, new QueryImpl().eq(MolgenisToken.TOKEN, "token"),
+				MolgenisToken.class)).thenReturn(molgenisToken);
 
 		UserDetails userDetails = new User("admin", "admin", Arrays.asList(new SimpleGrantedAuthority("admin")));
 		when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
@@ -63,9 +64,8 @@ public class DataServiceTokenServiceTest
 		molgenisToken.setToken("token");
 		molgenisToken.setExpirationDate(DateUtils.addDays(new Date(), -1));
 
-		when(
-				dataService.findOne(MolgenisToken.ENTITY_NAME, new QueryImpl().eq(MolgenisToken.TOKEN, "token"),
-						MolgenisToken.class)).thenReturn(molgenisToken);
+		when(dataService.findOne(MolgenisTokenMetaData.ENTITY_NAME, new QueryImpl().eq(MolgenisToken.TOKEN, "token"),
+				MolgenisToken.class)).thenReturn(molgenisToken);
 
 		tokenService.findUserByToken("token");
 	}
@@ -75,16 +75,15 @@ public class DataServiceTokenServiceTest
 	{
 		MolgenisUser user = new MolgenisUser();
 
-		when(
-				dataService.findOne(MolgenisUser.ENTITY_NAME, new QueryImpl().eq(MolgenisUser.USERNAME, "admin"),
-						MolgenisUser.class)).thenReturn(user);
+		when(dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, new QueryImpl().eq(MolgenisUser.USERNAME, "admin"),
+				MolgenisUser.class)).thenReturn(user);
 
 		when(tokenGenerator.generateToken()).thenReturn("token");
 		assertEquals(tokenService.generateAndStoreToken("admin", "description"), "token");
 
 		MolgenisToken molgenisToken = new MolgenisToken();
 		molgenisToken.setToken("token");
-		verify(dataService).add(MolgenisToken.ENTITY_NAME, molgenisToken);
+		verify(dataService).add(MolgenisTokenMetaData.ENTITY_NAME, molgenisToken);
 	}
 
 	@Test
@@ -93,11 +92,10 @@ public class DataServiceTokenServiceTest
 		MolgenisToken molgenisToken = new MolgenisToken();
 		molgenisToken.setToken("token");
 
-		when(
-				dataService.findOne(MolgenisToken.ENTITY_NAME, new QueryImpl().eq(MolgenisToken.TOKEN, "token"),
-						MolgenisToken.class)).thenReturn(molgenisToken);
+		when(dataService.findOne(MolgenisTokenMetaData.ENTITY_NAME, new QueryImpl().eq(MolgenisToken.TOKEN, "token"),
+				MolgenisToken.class)).thenReturn(molgenisToken);
 
 		tokenService.removeToken("token");
-		verify(dataService).delete(MolgenisToken.ENTITY_NAME, molgenisToken);
+		verify(dataService).delete(MolgenisTokenMetaData.ENTITY_NAME, molgenisToken);
 	}
 }

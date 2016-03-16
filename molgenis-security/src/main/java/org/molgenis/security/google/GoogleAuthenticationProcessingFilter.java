@@ -23,7 +23,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.molgenis.auth.MolgenisGroup;
 import org.molgenis.auth.MolgenisGroupMember;
+import org.molgenis.auth.MolgenisGroupMemberMetaData;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.settings.AppSettings;
 import org.molgenis.security.core.token.UnknownTokenException;
@@ -140,16 +143,17 @@ public class GoogleAuthenticationProcessingFilter extends AbstractAuthentication
 		return runAsSystem(() -> {
 			MolgenisUser user;
 
-			user = dataService.findOne(MolgenisUser.ENTITY_NAME, EQ(GOOGLEACCOUNTID, principal), MolgenisUser.class);
+			user = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, EQ(GOOGLEACCOUNTID, principal),
+					MolgenisUser.class);
 			if (user == null)
 			{
 				// no user with google account
-				user = dataService.findOne(MolgenisUser.ENTITY_NAME, EQ(EMAIL, email), MolgenisUser.class);
+				user = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, EQ(EMAIL, email), MolgenisUser.class);
 				if (user != null)
 				{
 					// connect google account to user
 					user.setGoogleAccountId(principal);
-					dataService.update(MolgenisUser.ENTITY_NAME, user);
+					dataService.update(MolgenisUserMetaData.ENTITY_NAME, user);
 				}
 				else
 				{
@@ -162,7 +166,8 @@ public class GoogleAuthenticationProcessingFilter extends AbstractAuthentication
 					user = createMolgenisUser(username, email, givenName, familyName, principal);
 				}
 			}
-			if(!user.isActive()){
+			if (!user.isActive())
+			{
 				throw new DisabledException(MolgenisLoginController.ERROR_MESSAGE_DISABLED);
 			}
 			// create authentication
@@ -202,15 +207,15 @@ public class GoogleAuthenticationProcessingFilter extends AbstractAuthentication
 			user.setLastName(familyName);
 		}
 		user.setGoogleAccountId(googleAccountId);
-		dataService.add(MolgenisUser.ENTITY_NAME, user);
+		dataService.add(MolgenisUserMetaData.ENTITY_NAME, user);
 
 		// add user to all-users group
 		MolgenisGroupMember groupMember = new MolgenisGroupMember();
-		MolgenisGroup group = dataService.findOne(MolgenisGroup.ENTITY_NAME, EQ(NAME, ALL_USER_GROUP),
+		MolgenisGroup group = dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, EQ(NAME, ALL_USER_GROUP),
 				MolgenisGroup.class);
 		groupMember.setMolgenisGroup(group);
 		groupMember.setMolgenisUser(user);
-		dataService.add(MolgenisGroupMember.ENTITY_NAME, groupMember);
+		dataService.add(MolgenisGroupMemberMetaData.ENTITY_NAME, groupMember);
 
 		return user;
 	}

@@ -1,11 +1,39 @@
 package org.molgenis.data.importer;
 
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Stream;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.molgenis.auth.GroupAuthority;
+import org.molgenis.auth.GroupAuthorityMetaData;
 import org.molgenis.auth.MolgenisGroup;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.auth.MolgenisUser;
 import org.molgenis.data.DataService;
 import org.molgenis.data.FileRepositoryCollectionFactory;
@@ -41,31 +69,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Stream;
-
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
 
 /**
  * Created by charbonb on 17/03/15.
@@ -145,7 +148,8 @@ public class ImportWizardControllerTest extends AbstractTestNGSpringContextTests
 	}
 
 	@BeforeMethod
-	public void setUp() throws ParseException {
+	public void setUp() throws ParseException
+	{
 		reset(dataService);
 		UploadWizardPage uploadWizardPage = mock(UploadWizardPage.class);
 		OptionsWizardPage optionsWizardPage = mock(OptionsWizardPage.class);
@@ -204,25 +208,27 @@ public class ImportWizardControllerTest extends AbstractTestNGSpringContextTests
 
 		webRequest = mock(WebRequest.class);
 		when(webRequest.getParameter("entityIds")).thenReturn("entity1,entity2");
-		when(dataService.findOne(MolgenisGroup.ENTITY_NAME, "ID", MolgenisGroup.class)).thenReturn(group1);
-		when(dataService.findAll(GroupAuthority.ENTITY_NAME, new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, group1),
-				GroupAuthority.class)).thenAnswer(new Answer<Stream<GroupAuthority>>()
-				{
-					@Override
-					public Stream<GroupAuthority> answer(InvocationOnMock invocation) throws Throwable
-					{
-						return Stream.of(authority1, authority2, authority3, authority4);
-					}
-				});
-		when(dataService.findAll(GroupAuthority.ENTITY_NAME, new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, "ID"),
-				GroupAuthority.class)).thenAnswer(new Answer<Stream<GroupAuthority>>()
-				{
-					@Override
-					public Stream<GroupAuthority> answer(InvocationOnMock invocation) throws Throwable
-					{
-						return Stream.of(authority1, authority2, authority3, authority4);
-					}
-				});
+		when(dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, "ID", MolgenisGroup.class)).thenReturn(group1);
+		when(dataService.findAll(GroupAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, group1), GroupAuthority.class))
+						.thenAnswer(new Answer<Stream<GroupAuthority>>()
+						{
+							@Override
+							public Stream<GroupAuthority> answer(InvocationOnMock invocation) throws Throwable
+							{
+								return Stream.of(authority1, authority2, authority3, authority4);
+							}
+						});
+		when(dataService.findAll(GroupAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, "ID"), GroupAuthority.class))
+						.thenAnswer(new Answer<Stream<GroupAuthority>>()
+						{
+							@Override
+							public Stream<GroupAuthority> answer(InvocationOnMock invocation) throws Throwable
+							{
+								return Stream.of(authority1, authority2, authority3, authority4);
+							}
+						});
 		when(dataService.getEntityNames()).thenReturn(Stream.of("entity1", "entity2", "entity3", "entity4", "entity5"));
 
 		authentication = mock(Authentication.class);
@@ -278,13 +284,13 @@ public class ImportWizardControllerTest extends AbstractTestNGSpringContextTests
 				.thenReturn(org.molgenis.security.core.Permission.WRITE.toString());
 
 		GroupAuthority authority = new GroupAuthority();
-		authority.setMolgenisGroup(dataService.findOne(MolgenisGroup.ENTITY_NAME, "ID", MolgenisGroup.class));
+		authority.setMolgenisGroup(dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, "ID", MolgenisGroup.class));
 		authority.setRole(SecurityUtils.AUTHORITY_ENTITY_PREFIX
 				+ org.molgenis.security.core.Permission.COUNT.toString().toUpperCase() + "_" + "entity3".toUpperCase());
 
 		controller.addGroupEntityClassPermissions("ID", webRequest);
 
-		verify(dataService, times(2)).add(GroupAuthority.ENTITY_NAME, authority);
+		verify(dataService, times(2)).add(GroupAuthorityMetaData.ENTITY_NAME, authority);
 	}
 
 	@Test(expectedExceptions = MolgenisDataAccessException.class)
@@ -319,16 +325,15 @@ public class ImportWizardControllerTest extends AbstractTestNGSpringContextTests
 				.thenReturn(org.molgenis.security.core.Permission.WRITE.toString());
 
 		GroupAuthority authority = new GroupAuthority();
-		authority.setMolgenisGroup(dataService.findOne(MolgenisGroup.ENTITY_NAME, "ID", MolgenisGroup.class));
+		authority.setMolgenisGroup(dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, "ID", MolgenisGroup.class));
 		authority.setRole(SecurityUtils.AUTHORITY_ENTITY_PREFIX
 				+ org.molgenis.security.core.Permission.COUNT.toString().toUpperCase() + "_" + "entity3".toUpperCase());
 
 		controller.addGroupEntityClassPermissions("ID", webRequest);
 
-		verify(dataService, times(2)).add(GroupAuthority.ENTITY_NAME, authority);
+		verify(dataService, times(2)).add(GroupAuthorityMetaData.ENTITY_NAME, authority);
 
 	}
-
 
 	@Test
 	public void testImportFile() throws IOException

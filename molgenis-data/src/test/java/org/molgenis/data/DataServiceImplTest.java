@@ -26,7 +26,6 @@ import org.molgenis.data.meta.MetaDataService;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
-import org.molgenis.data.support.NonDecoratingRepositoryDecoratorFactory;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.springframework.security.core.Authentication;
@@ -62,7 +61,7 @@ public class DataServiceImplTest
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		dataService = new DataServiceImpl(new NonDecoratingRepositoryDecoratorFactory());
+		dataService = new DataServiceImpl();
 
 		repo1 = mock(Repository.class);
 		when(repo1.getName()).thenReturn("Entity1");

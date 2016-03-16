@@ -1,9 +1,13 @@
 package org.molgenis.security;
 
 import org.molgenis.auth.GroupAuthority;
+import org.molgenis.auth.GroupAuthorityMetaData;
 import org.molgenis.auth.MolgenisGroup;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.auth.UserAuthority;
+import org.molgenis.auth.UserAuthorityMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.i18n.LanguageMetaData;
 import org.molgenis.security.account.AccountService;
@@ -14,8 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MolgenisSecurityWebAppDatabasePopulatorServiceImpl implements
-		MolgenisSecurityWebAppDatabasePopulatorService
+public class MolgenisSecurityWebAppDatabasePopulatorServiceImpl
+		implements MolgenisSecurityWebAppDatabasePopulatorService
 {
 	private static final String USERNAME_ADMIN = "admin";
 
@@ -46,7 +50,7 @@ public class MolgenisSecurityWebAppDatabasePopulatorServiceImpl implements
 		userAdmin.setActive(true);
 		userAdmin.setSuperuser(true);
 		userAdmin.setChangePassword(false);
-		dataService.add(MolgenisUser.ENTITY_NAME, userAdmin);
+		dataService.add(MolgenisUserMetaData.ENTITY_NAME, userAdmin);
 
 		// create anonymous user
 		anonymousUser = new MolgenisUser();
@@ -56,40 +60,40 @@ public class MolgenisSecurityWebAppDatabasePopulatorServiceImpl implements
 		anonymousUser.setActive(true);
 		anonymousUser.setSuperuser(false);
 		anonymousUser.setChangePassword(false);
-		dataService.add(MolgenisUser.ENTITY_NAME, anonymousUser);
+		dataService.add(MolgenisUserMetaData.ENTITY_NAME, anonymousUser);
 
 		// set anonymous role for anonymous user
 		UserAuthority anonymousAuthority = new UserAuthority();
 		anonymousAuthority.setMolgenisUser(anonymousUser);
 		anonymousAuthority.setRole(SecurityUtils.AUTHORITY_ANONYMOUS);
-		dataService.add(UserAuthority.ENTITY_NAME, anonymousAuthority);
+		dataService.add(UserAuthorityMetaData.ENTITY_NAME, anonymousAuthority);
 
 		// create all users group
 		allUsersGroup = new MolgenisGroup();
 		allUsersGroup.setName(AccountService.ALL_USER_GROUP);
-		dataService.add(MolgenisGroup.ENTITY_NAME, allUsersGroup);
-		dataService.getRepository(MolgenisGroup.ENTITY_NAME).flush();
+		dataService.add(MolgenisGroupMetaData.ENTITY_NAME, allUsersGroup);
+		dataService.getRepository(MolgenisGroupMetaData.ENTITY_NAME).flush();
 
 		// allow all users to see the home plugin
 		GroupAuthority usersGroupHomeAuthority = new GroupAuthority();
 		usersGroupHomeAuthority.setMolgenisGroup(allUsersGroup);
 		usersGroupHomeAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_READ_PREFIX + homeControllerId.toUpperCase());
-		dataService.add(GroupAuthority.ENTITY_NAME, usersGroupHomeAuthority);
+		dataService.add(GroupAuthorityMetaData.ENTITY_NAME, usersGroupHomeAuthority);
 
 		// allow all users to update their profile
 		GroupAuthority usersGroupUserAccountAuthority = new GroupAuthority();
 		usersGroupUserAccountAuthority.setMolgenisGroup(allUsersGroup);
-		usersGroupUserAccountAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX
-				+ "useraccount".toUpperCase()); // FIXME do not
-												// hardcode
-		dataService.add(GroupAuthority.ENTITY_NAME, usersGroupUserAccountAuthority);
+		usersGroupUserAccountAuthority
+				.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + "useraccount".toUpperCase()); // FIXME do not
+																										// hardcode
+		dataService.add(GroupAuthorityMetaData.ENTITY_NAME, usersGroupUserAccountAuthority);
 
 		// allow all users to read the app languages
 		GroupAuthority usersGroupLanguagesAuthority = new GroupAuthority();
 		usersGroupLanguagesAuthority.setMolgenisGroup(allUsersGroup);
-		usersGroupLanguagesAuthority.setRole(SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX
-				+ LanguageMetaData.ENTITY_NAME.toUpperCase());
-		dataService.add(GroupAuthority.ENTITY_NAME, usersGroupLanguagesAuthority);
+		usersGroupLanguagesAuthority
+				.setRole(SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX + LanguageMetaData.ENTITY_NAME.toUpperCase());
+		dataService.add(GroupAuthorityMetaData.ENTITY_NAME, usersGroupLanguagesAuthority);
 	}
 
 	@Override

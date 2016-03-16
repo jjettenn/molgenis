@@ -3,8 +3,8 @@ package org.molgenis.data.mysql;
 import javax.sql.DataSource;
 
 import org.molgenis.data.DataService;
-import org.molgenis.data.ManageableRepositoryCollection;
-import org.molgenis.data.elasticsearch.IndexedManageableRepositoryCollectionDecorator;
+import org.molgenis.data.RepositoryCollection;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.elasticsearch.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +27,9 @@ public class MySqlConfiguration
 	@Autowired
 	private SearchService searchService;
 
+	@Autowired
+	private SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
+
 	@Bean
 	public AsyncJdbcTemplate asyncJdbcTemplate()
 	{
@@ -42,10 +45,10 @@ public class MySqlConfiguration
 
 	@Bean(name =
 	{ "MysqlRepositoryCollection" })
-	public ManageableRepositoryCollection mysqlRepositoryCollection()
+	public RepositoryCollection mysqlRepositoryCollection()
 	{
 		MysqlRepositoryCollection mysqlRepositoryCollection = new MysqlRepositoryCollection(dataSource,
-				mySqlEntityFactory)
+				mySqlEntityFactory, systemEntityMetaDataRegistry)
 		{
 			@Override
 			protected MysqlRepository createMysqlRepository()
@@ -53,13 +56,15 @@ public class MySqlConfiguration
 				return mysqlRepository();
 			}
 
-			@Override
-			public boolean hasRepository(String name)
-			{
-				throw new UnsupportedOperationException();
-			}
+			// @Override
+			// public boolean hasRepository(String name)
+			// {
+			// throw new UnsupportedOperationException();
+			// }
 		};
 
-		return new IndexedManageableRepositoryCollectionDecorator(searchService, mysqlRepositoryCollection);
+		// FIXME this does not belong here
+		return mysqlRepositoryCollection;
+		// return new IndexedRepositoryCollectionDecorator(searchService, mysqlRepositoryCollection);
 	}
 }

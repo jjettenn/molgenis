@@ -5,8 +5,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.molgenis.auth.GroupAuthority;
+import org.molgenis.auth.GroupAuthorityMetaData;
 import org.molgenis.auth.MolgenisGroup;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.data.DatabaseAction;
 import org.molgenis.framework.db.EntityImportReport;
 import org.molgenis.security.core.utils.SecurityUtils;
@@ -206,10 +207,10 @@ public class ImportWizard extends Wizard
 
 	public boolean getAllowPermissions()
 	{
-		allowPermissions = SecurityUtils.currentUserHasRole(SecurityUtils.AUTHORITY_ENTITY_WRITE_PREFIX
-				+ MolgenisGroup.ENTITY_NAME.toUpperCase())
-				&& SecurityUtils.currentUserHasRole(SecurityUtils.AUTHORITY_ENTITY_WRITE_PREFIX
-						+ GroupAuthority.ENTITY_NAME.toUpperCase());
+		allowPermissions = SecurityUtils.currentUserHasRole(
+				SecurityUtils.AUTHORITY_ENTITY_WRITE_PREFIX + MolgenisGroupMetaData.ENTITY_NAME.toUpperCase())
+				&& SecurityUtils.currentUserHasRole(
+						SecurityUtils.AUTHORITY_ENTITY_WRITE_PREFIX + GroupAuthorityMetaData.ENTITY_NAME.toUpperCase());
 		return allowPermissions || SecurityUtils.currentUserIsSu();
 	}
 }

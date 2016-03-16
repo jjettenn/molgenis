@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.molgenis.data.DataService;
 import org.molgenis.data.EntityManager;
 import org.molgenis.data.EntityManagerImpl;
+import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.elasticsearch.ElasticsearchEntityFactory;
 import org.molgenis.data.elasticsearch.ElasticsearchRepositoryCollection;
 import org.molgenis.data.elasticsearch.SearchService;
@@ -15,7 +16,6 @@ import org.molgenis.data.elasticsearch.index.SourceToEntityConverter;
 import org.molgenis.data.meta.MetaDataService;
 import org.molgenis.data.meta.MetaDataServiceImpl;
 import org.molgenis.data.support.DataServiceImpl;
-import org.molgenis.data.support.NonDecoratingRepositoryDecoratorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +32,9 @@ public class AppConfig
 	@Autowired
 	public EntityToSourceConverter entityToSourceConverter;
 
+	@Autowired
+	public SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
+
 	@Bean
 	public UserMetaData userMetaData()
 	{
@@ -41,7 +44,7 @@ public class AppConfig
 	@Bean
 	public ElasticsearchRepositoryCollection elasticsearchRepositoryCollection()
 	{
-		return new ElasticsearchRepositoryCollection(searchService(), dataService());
+		return new ElasticsearchRepositoryCollection(searchService(), dataService(), systemEntityMetaDataRegistry);
 	}
 
 	@Bean
@@ -72,7 +75,7 @@ public class AppConfig
 	@Bean
 	public DataService dataService()
 	{
-		return new DataServiceImpl(new NonDecoratingRepositoryDecoratorFactory());
+		return new DataServiceImpl();
 	}
 
 	@Bean
@@ -85,10 +88,10 @@ public class AppConfig
 	public MetaDataService metaDataService()
 	{
 		DataServiceImpl dataService = (DataServiceImpl) dataService();
-		MetaDataService metaDataService = new MetaDataServiceImpl(dataService);
+		MetaDataService metaDataService = new MetaDataServiceImpl(null, null, null); // FIXME
 		dataService.setMeta(metaDataService);
 
-		metaDataService.setDefaultBackend(elasticsearchRepositoryCollection());
+		// metaDataService.setDefaultBackend(elasticsearchRepositoryCollection());
 
 		return metaDataService;
 	}

@@ -6,7 +6,7 @@ import javax.sql.DataSource;
 import org.molgenis.data.EntityManager;
 import org.molgenis.data.EntityManagerImpl;
 import org.molgenis.data.IdGenerator;
-import org.molgenis.data.ManageableRepositoryCollection;
+import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.RepositoryDecoratorFactory;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
 import org.molgenis.data.elasticsearch.ElasticsearchEntityFactory;
@@ -76,21 +76,20 @@ public abstract class AbstractDataApiTestConfig
 	public void init()
 	{
 		dataService().setMeta(metaDataService());
-		metaDataService().setDefaultBackend(getBackend());
 	}
 
-	protected abstract ManageableRepositoryCollection getBackend();
+	protected abstract RepositoryCollection getBackend();
 
 	@Bean
 	public MetaDataService metaDataService()
 	{
-		return new MetaDataServiceImpl(dataService());
+		return new MetaDataServiceImpl(null, null, null);
 	}
 
 	@Bean
 	public LanguageService languageService()
 	{
-		return new LanguageService(dataService(), appSettings());
+		return new LanguageService(dataService(), appSettings(), null); // FIXME
 	}
 
 	@Bean
@@ -114,7 +113,7 @@ public abstract class AbstractDataApiTestConfig
 	@Bean
 	public DataServiceImpl dataService()
 	{
-		return new DataServiceImpl(repositoryDecoratorFactory());
+		return new DataServiceImpl();
 	}
 
 	@Bean

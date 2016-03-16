@@ -1,7 +1,9 @@
 package org.molgenis.migrate.version.v1_15;
 
 import org.molgenis.auth.GroupAuthority;
+import org.molgenis.auth.GroupAuthorityMetaData;
 import org.molgenis.auth.MolgenisGroup;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.i18n.LanguageMetaData;
 import org.molgenis.data.support.QueryImpl;
@@ -48,18 +50,18 @@ public class Step25LanguagesPermissions extends MolgenisUpgrade implements Appli
 		{
 			RunAsSystemProxy.runAsSystem(() -> {
 				// allow all users to read the app languages
-					MolgenisGroup allUsersGroup = dataService.findOne(MolgenisGroup.ENTITY_NAME,
-							QueryImpl.EQ(MolgenisGroup.NAME, AccountService.ALL_USER_GROUP), MolgenisGroup.class);
+				MolgenisGroup allUsersGroup = dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME,
+						QueryImpl.EQ(MolgenisGroup.NAME, AccountService.ALL_USER_GROUP), MolgenisGroup.class);
 
-					if (allUsersGroup != null)
-					{
-						GroupAuthority usersGroupLanguagesAuthority = new GroupAuthority();
-						usersGroupLanguagesAuthority.setMolgenisGroup(allUsersGroup);
-						usersGroupLanguagesAuthority.setRole(SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX
-								+ LanguageMetaData.ENTITY_NAME.toUpperCase());
-						dataService.add(GroupAuthority.ENTITY_NAME, usersGroupLanguagesAuthority);
-					}
-				});
+				if (allUsersGroup != null)
+				{
+					GroupAuthority usersGroupLanguagesAuthority = new GroupAuthority();
+					usersGroupLanguagesAuthority.setMolgenisGroup(allUsersGroup);
+					usersGroupLanguagesAuthority.setRole(
+							SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX + LanguageMetaData.ENTITY_NAME.toUpperCase());
+					dataService.add(GroupAuthorityMetaData.ENTITY_NAME, usersGroupLanguagesAuthority);
+				}
+			});
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package org.molgenis.data.i18n;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.molgenis.security.core.runas.RunAsSystemProxy.runAsSystem;
 
@@ -21,12 +22,19 @@ public class LanguageService
 	public static final String FALLBACK_LANGUAGE = "en";
 	private final DataService dataService;
 	private final AppSettings appSettings;
+	private final Language defaultLanguage;
 
 	@Autowired
-	public LanguageService(DataService dataService, AppSettings appSettings)
+	public LanguageService(DataService dataService, AppSettings appSettings, DefaultLanguage defaultLanguage)
 	{
-		this.dataService = dataService;
-		this.appSettings = appSettings;
+		this.dataService = requireNonNull(dataService);
+		this.appSettings = requireNonNull(appSettings);
+		this.defaultLanguage = requireNonNull(defaultLanguage);
+	}
+
+	public Language getDefaultLanguage()
+	{
+		return defaultLanguage;
 	}
 
 	/**

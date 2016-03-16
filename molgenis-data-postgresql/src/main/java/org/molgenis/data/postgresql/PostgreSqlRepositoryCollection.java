@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.ManageableRepositoryCollection;
+import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryAlreadyExistsException;
 import org.molgenis.data.meta.MetaDataService;
@@ -20,7 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PostgreSqlRepositoryCollection implements ManageableRepositoryCollection
+public class PostgreSqlRepositoryCollection implements RepositoryCollection
 {
 	static final String NAME = "PostgreSQL";
 

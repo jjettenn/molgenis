@@ -1,16 +1,15 @@
 package org.molgenis.auth;
 
-import org.molgenis.data.AttributeMetaData;
-import org.molgenis.data.Entity;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import org.molgenis.data.AttributeMetaData;
+import org.molgenis.data.Entity;
 
 public class GroupAuthority extends org.molgenis.data.support.AbstractEntity implements Authority
 {
 	private static final long serialVersionUID = -3440011188128914033L;
 
-	public static final String ENTITY_NAME = "GroupAuthority";
 	public static final String MOLGENISGROUP = "molgenisGroup";
 	public static final String ROLE = "role";
 	public static final String ID = "id";
@@ -39,11 +38,13 @@ public class GroupAuthority extends org.molgenis.data.support.AbstractEntity imp
 		this.molgenisGroup = molgenisGroup;
 	}
 
+	@Override
 	public String getRole()
 	{
 		return role;
 	}
 
+	@Override
 	public void setRole(String role)
 	{
 		this.role = role;

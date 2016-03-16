@@ -10,7 +10,10 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.molgenis.auth.MolgenisGroup;
 import org.molgenis.auth.MolgenisGroupMember;
+import org.molgenis.auth.MolgenisGroupMemberMetaData;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.settings.AppSettings;
@@ -85,11 +88,11 @@ public class AccountServiceImpl implements AccountService
 		// create user
 		molgenisUser.setActivationCode(activationCode);
 		molgenisUser.setActive(false);
-		dataService.add(MolgenisUser.ENTITY_NAME, molgenisUser);
+		dataService.add(MolgenisUserMetaData.ENTITY_NAME, molgenisUser);
 		LOG.debug("created user " + molgenisUser.getUsername());
 
 		// add user to group
-		MolgenisGroup group = dataService.findOne(MolgenisGroup.ENTITY_NAME,
+		MolgenisGroup group = dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisGroup.NAME, ALL_USER_GROUP), MolgenisGroup.class);
 		MolgenisGroupMember molgenisGroupMember = null;
 		if (group != null)
@@ -97,7 +100,7 @@ public class AccountServiceImpl implements AccountService
 			molgenisGroupMember = new MolgenisGroupMember();
 			molgenisGroupMember.setMolgenisGroup(group);
 			molgenisGroupMember.setMolgenisUser(molgenisUser);
-			dataService.add(MolgenisGroupMember.ENTITY_NAME, molgenisGroupMember);
+			dataService.add(MolgenisGroupMemberMetaData.ENTITY_NAME, molgenisGroupMember);
 		}
 
 		// send activation email
@@ -118,12 +121,12 @@ public class AccountServiceImpl implements AccountService
 
 			if (molgenisGroupMember != null)
 			{
-				dataService.delete(MolgenisGroupMember.ENTITY_NAME, molgenisGroupMember);
+				dataService.delete(MolgenisGroupMemberMetaData.ENTITY_NAME, molgenisGroupMember);
 			}
 
 			if (molgenisUser != null)
 			{
-				dataService.delete(MolgenisUser.ENTITY_NAME, molgenisUser);
+				dataService.delete(MolgenisUserMetaData.ENTITY_NAME, molgenisUser);
 			}
 
 			throw new MolgenisUserException(
@@ -138,14 +141,14 @@ public class AccountServiceImpl implements AccountService
 	@RunAsSystem
 	public void activateUser(String activationCode)
 	{
-		MolgenisUser molgenisUser = dataService.findOne(MolgenisUser.ENTITY_NAME,
+		MolgenisUser molgenisUser = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisUser.ACTIVE, false).and().eq(MolgenisUser.ACTIVATIONCODE, activationCode),
 				MolgenisUser.class);
 
 		if (molgenisUser != null)
 		{
 			molgenisUser.setActive(true);
-			dataService.update(MolgenisUser.ENTITY_NAME, molgenisUser);
+			dataService.update(MolgenisUserMetaData.ENTITY_NAME, molgenisUser);
 
 			// send activated email to user
 			SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -164,7 +167,7 @@ public class AccountServiceImpl implements AccountService
 	@RunAsSystem
 	public void changePassword(String username, String newPassword)
 	{
-		MolgenisUser molgenisUser = dataService.findOne(MolgenisUser.ENTITY_NAME,
+		MolgenisUser molgenisUser = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisUser.USERNAME, username), MolgenisUser.class);
 
 		if (molgenisUser == null)
@@ -174,7 +177,7 @@ public class AccountServiceImpl implements AccountService
 
 		molgenisUser.setPassword(newPassword);
 		molgenisUser.setChangePassword(false);
-		dataService.update(MolgenisUser.ENTITY_NAME, molgenisUser);
+		dataService.update(MolgenisUserMetaData.ENTITY_NAME, molgenisUser);
 
 		LOG.info("Changed password of user [" + username + "]");
 	}
@@ -183,7 +186,7 @@ public class AccountServiceImpl implements AccountService
 	@RunAsSystem
 	public void resetPassword(String userEmail)
 	{
-		MolgenisUser molgenisUser = dataService.findOne(MolgenisUser.ENTITY_NAME,
+		MolgenisUser molgenisUser = dataService.findOne(MolgenisUserMetaData.ENTITY_NAME,
 				new QueryImpl().eq(MolgenisUser.EMAIL, userEmail), MolgenisUser.class);
 
 		if (molgenisUser != null)
@@ -191,7 +194,7 @@ public class AccountServiceImpl implements AccountService
 			String newPassword = UUID.randomUUID().toString().substring(0, 8);
 			molgenisUser.setPassword(newPassword);
 			molgenisUser.setChangePassword(true);
-			dataService.update(MolgenisUser.ENTITY_NAME, molgenisUser);
+			dataService.update(MolgenisUserMetaData.ENTITY_NAME, molgenisUser);
 
 			// send password reseted email to user
 			SimpleMailMessage mailMessage = new SimpleMailMessage();

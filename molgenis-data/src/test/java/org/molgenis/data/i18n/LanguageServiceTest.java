@@ -29,7 +29,8 @@ public class LanguageServiceTest
 		when(dataServiceMock.query("MolgenisUser")).thenReturn(queryMock);
 		when(queryMock.eq(any(), any())).thenReturn(queryMock);
 		appSettingsMock = mock(AppSettings.class);
-		languageService = new LanguageService(dataServiceMock, appSettingsMock);
+		DefaultLanguage defaultLanguage = mock(DefaultLanguage.class);
+		languageService = new LanguageService(dataServiceMock, appSettingsMock, defaultLanguage);
 	}
 
 	@Test

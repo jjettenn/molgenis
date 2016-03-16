@@ -1,7 +1,16 @@
 package org.molgenis.data.importer;
 
-import com.google.common.collect.Lists;
+import static java.util.stream.Collectors.toList;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.molgenis.auth.MolgenisGroup;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.DatabaseAction;
 import org.molgenis.data.FileRepositoryCollectionFactory;
@@ -21,13 +30,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static java.util.stream.Collectors.toList;
+import com.google.common.collect.Lists;
 
 @Component
 public class ValidationResultWizardPage extends AbstractWizardPage
@@ -114,7 +117,7 @@ public class ValidationResultWizardPage extends AbstractWizardPage
 		}
 		else
 		{
-			groups = dataService.findAll(MolgenisGroup.ENTITY_NAME, MolgenisGroup.class).collect(toList());
+			groups = dataService.findAll(MolgenisGroupMetaData.ENTITY_NAME, MolgenisGroup.class).collect(toList());
 		}
 
 		((ImportWizard) wizard).setGroups(groups);

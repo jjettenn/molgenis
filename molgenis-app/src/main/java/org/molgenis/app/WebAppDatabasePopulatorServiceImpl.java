@@ -2,7 +2,9 @@ package org.molgenis.app;
 
 import org.molgenis.app.controller.HomeController;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.auth.UserAuthority;
+import org.molgenis.auth.UserAuthorityMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.support.QueryImpl;
 import org.molgenis.framework.db.WebAppDatabasePopulatorService;
@@ -43,7 +45,7 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 		UserAuthority anonymousHomeAuthority = new UserAuthority();
 		anonymousHomeAuthority.setMolgenisUser(anonymousUser);
 		anonymousHomeAuthority.setRole(SecurityUtils.AUTHORITY_PLUGIN_WRITE_PREFIX + HomeController.ID.toUpperCase());
-		dataService.add(UserAuthority.ENTITY_NAME, anonymousHomeAuthority);
+		dataService.add(UserAuthorityMetaData.ENTITY_NAME, anonymousHomeAuthority);
 	}
 
 	@Override
@@ -51,6 +53,6 @@ public class WebAppDatabasePopulatorServiceImpl implements WebAppDatabasePopulat
 	@RunAsSystem
 	public boolean isDatabasePopulated()
 	{
-		return dataService.count(MolgenisUser.ENTITY_NAME, new QueryImpl()) > 0;
+		return dataService.count(MolgenisUserMetaData.ENTITY_NAME, new QueryImpl()) > 0;
 	}
 }

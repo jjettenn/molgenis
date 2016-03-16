@@ -290,7 +290,7 @@ public class OntologyRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
 		throw new UnsupportedOperationException();
 	}

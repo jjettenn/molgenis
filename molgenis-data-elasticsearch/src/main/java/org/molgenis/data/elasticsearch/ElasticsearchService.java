@@ -7,6 +7,7 @@ import static org.molgenis.data.elasticsearch.util.ElasticsearchEntityUtils.toEl
 import static org.molgenis.data.elasticsearch.util.ElasticsearchEntityUtils.toElasticsearchIds;
 import static org.molgenis.data.elasticsearch.util.MapperTypeSanitizer.sanitizeMapperType;
 import static org.molgenis.data.transaction.MolgenisTransactionManager.TRANSACTION_ID_RESOURCE_NAME;
+import static org.molgenis.security.core.runas.RunAsSystemProxy.runAsSystem;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -516,7 +517,7 @@ public class ElasticsearchService implements SearchService, MolgenisTransactionL
 				// the commitTransaction method
 				if (updateIndex && (crudType == CrudType.UPDATE) && (transactionId == null))
 				{
-					updateReferences(entity, entityMetaData);
+					// updateReferences(entity, entityMetaData); // FIXME
 				}
 			}
 		}
@@ -1178,27 +1179,30 @@ public class ElasticsearchService implements SearchService, MolgenisTransactionL
 							String entityName = hit.type();
 							Map<String, Object> values = hit.getSource();
 							CrudType crudType = CrudType.valueOf((String) values.remove(CRUD_TYPE_FIELD_NAME));
-							EntityMetaData entityMeta = dataService.getEntityMetaData(entityName);
 
-							if ((crudType == CrudType.UPDATE) || (crudType == CrudType.ADD))
-							{
-								if (LOG.isDebugEnabled())
-								{
-									LOG.debug("Adding [{}] with id [{}] to index [{}] ...", entityName, hit.id(),
-											indexName);
-								}
-								bulkProcessor.add(new IndexRequest(indexName, entityName, hit.id()).source(values));
+							runAsSystem(() -> {
+								EntityMetaData entityMeta = dataService.getEntityMetaData(entityName);
 
-								if (crudType == CrudType.UPDATE)
+								if ((crudType == CrudType.UPDATE) || (crudType == CrudType.ADD))
 								{
-									updateReferences(elasticsearchEntityFactory.create(entityMeta, values, null),
-											entityMeta);
+									if (LOG.isDebugEnabled())
+									{
+										LOG.debug("Adding [{}] with id [{}] to index [{}] ...", entityName, hit.id(),
+												indexName);
+									}
+									bulkProcessor.add(new IndexRequest(indexName, entityName, hit.id()).source(values));
+
+									if (crudType == CrudType.UPDATE)
+									{
+										updateReferences(elasticsearchEntityFactory.create(entityMeta, values, null),
+												entityMeta);
+									}
 								}
-							}
-							else if (crudType == CrudType.DELETE)
-							{
-								deleteById(indexName, hit.id(), entityMeta);
-							}
+								else if (crudType == CrudType.DELETE)
+								{
+									deleteById(indexName, hit.id(), entityMeta);
+								}
+							});
 						}
 
 						searchResponse = client.prepareSearchScroll(searchResponse.getScrollId())

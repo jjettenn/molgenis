@@ -1,9 +1,38 @@
 package org.molgenis.data.importer;
 
+import static org.molgenis.data.importer.ImportWizardController.URI;
+import static org.molgenis.security.core.Permission.COUNT;
+import static org.molgenis.security.core.Permission.NONE;
+import static org.molgenis.security.core.Permission.READ;
+import static org.molgenis.security.core.Permission.WRITE;
+import static org.molgenis.security.core.Permission.WRITEMETA;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.io.FilenameUtils;
 import org.molgenis.auth.Authority;
 import org.molgenis.auth.GroupAuthority;
+import org.molgenis.auth.GroupAuthorityMetaData;
 import org.molgenis.auth.MolgenisGroup;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.DatabaseAction;
 import org.molgenis.data.FileRepositoryCollectionFactory;
@@ -43,33 +72,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.molgenis.data.importer.ImportWizardController.URI;
-import static org.molgenis.security.core.Permission.COUNT;
-import static org.molgenis.security.core.Permission.NONE;
-import static org.molgenis.security.core.Permission.READ;
-import static org.molgenis.security.core.Permission.WRITE;
-import static org.molgenis.security.core.Permission.WRITEMETA;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller
 @RequestMapping(URI)
@@ -186,7 +188,8 @@ public class ImportWizardController extends AbstractWizardController
 		String entitiesString = webRequest.getParameter("entityIds");
 		List<String> entities = Arrays.asList(entitiesString.split(","));
 
-		MolgenisGroup molgenisGroup = dataService.findOne(MolgenisGroup.ENTITY_NAME, groupId, MolgenisGroup.class);
+		MolgenisGroup molgenisGroup = dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, groupId,
+				MolgenisGroup.class);
 		if (molgenisGroup == null) throw new RuntimeException("unknown group id [" + groupId + "]");
 		List<Authority> groupPermissions = getGroupPermissions(molgenisGroup);
 		Permissions permissions = createPermissions(groupPermissions, entities);
@@ -211,19 +214,20 @@ public class ImportWizardController extends AbstractWizardController
 						|| value.equalsIgnoreCase(WRITE.toString()) || value.equalsIgnoreCase(WRITEMETA.toString()))
 				{
 					authority.setMolgenisGroup(
-							dataService.findOne(MolgenisGroup.ENTITY_NAME, groupId, MolgenisGroup.class));
+							dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, groupId, MolgenisGroup.class));
 					authority.setRole(SecurityUtils.AUTHORITY_ENTITY_PREFIX + value.toUpperCase() + "_"
 							+ entityClassId.toUpperCase());
 					if (authority.getId() == null)
 					{
 						authority.setId(UUID.randomUUID().toString());
-						dataService.add(GroupAuthority.ENTITY_NAME, authority);
+						dataService.add(GroupAuthorityMetaData.ENTITY_NAME, authority);
 					}
-					else dataService.update(GroupAuthority.ENTITY_NAME, authority);
+					else dataService.update(GroupAuthorityMetaData.ENTITY_NAME, authority);
 				}
 				else if (value.equalsIgnoreCase(NONE.toString()))
 				{
-					if (authority.getId() != null) dataService.delete(GroupAuthority.ENTITY_NAME, authority.getId());
+					if (authority.getId() != null)
+						dataService.delete(GroupAuthorityMetaData.ENTITY_NAME, authority.getId());
 				}
 				else
 				{
@@ -241,8 +245,9 @@ public class ImportWizardController extends AbstractWizardController
 
 	private List<Authority> getGroupPermissions(MolgenisGroup molgenisGroup)
 	{
-		return dataService.findAll(GroupAuthority.ENTITY_NAME,
-				new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, molgenisGroup), GroupAuthority.class)
+		return dataService
+				.findAll(GroupAuthorityMetaData.ENTITY_NAME,
+						new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, molgenisGroup), GroupAuthority.class)
 				.collect(Collectors.toList());
 	}
 
@@ -305,7 +310,7 @@ public class ImportWizardController extends AbstractWizardController
 	private GroupAuthority getGroupAuthority(String groupId, String entityClassId)
 	{
 		GroupAuthority authority = new GroupAuthority();
-		Stream<GroupAuthority> stream = dataService.findAll(GroupAuthority.ENTITY_NAME,
+		Stream<GroupAuthority> stream = dataService.findAll(GroupAuthorityMetaData.ENTITY_NAME,
 				new QueryImpl().eq(GroupAuthority.MOLGENISGROUP, groupId), GroupAuthority.class);
 		for (Iterator<GroupAuthority> it = stream.iterator(); it.hasNext();)
 		{
@@ -434,12 +439,10 @@ public class ImportWizardController extends AbstractWizardController
 		RepositoryCollection repositoryCollection = fileRepositoryCollectionFactory
 				.createFileRepositoryCollection(file);
 
-
-			importRun = importRunService.addImportRun(SecurityUtils.getCurrentUsername(), Boolean.TRUE.equals(notify));
-			asyncImportJobs.execute(new ImportJob(importService, SecurityContextHolder.getContext(),
-					repositoryCollection, databaseAction, importRun.getId(), importRunService, request.getSession(),
-					Package.DEFAULT_PACKAGE_NAME));
-
+		importRun = importRunService.addImportRun(SecurityUtils.getCurrentUsername(), Boolean.TRUE.equals(notify));
+		asyncImportJobs.execute(
+				new ImportJob(importService, SecurityContextHolder.getContext(), repositoryCollection, databaseAction,
+						importRun.getId(), importRunService, request.getSession(), Package.DEFAULT_PACKAGE_NAME));
 
 		return importRun;
 	}

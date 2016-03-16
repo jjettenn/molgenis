@@ -44,9 +44,8 @@ public class DependencyResolver
 			repoByName.put(repo.getEntityMetaData().getName(), repo);
 		}
 
-		return resolve(
-				repoByName.values().stream().map(repo -> repo.getEntityMetaData()).collect(Collectors.toSet())).stream()
-						.map(emd -> repoByName.get(emd.getName())).collect(Collectors.toList());
+		return resolve(repoByName.values().stream().map(repo -> repo.getEntityMetaData()).collect(Collectors.toSet()))
+				.stream().map(emd -> repoByName.get(emd.getName())).collect(Collectors.toList());
 	}
 
 	/**
@@ -55,7 +54,7 @@ public class DependencyResolver
 	 * @param coll
 	 * @return
 	 */
-	public static List<EntityMetaData> resolve(Collection<EntityMetaData> coll)
+	public static List<EntityMetaData> resolve(Collection<? extends EntityMetaData> coll)
 	{
 		// EntityMetaData by entityname
 		Map<String, EntityMetaData> metaDataByName = Maps.newHashMap();

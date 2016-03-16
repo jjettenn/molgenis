@@ -39,8 +39,8 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 		this(file, (CellProcessor[]) null);
 	}
 
-	public CsvRepositoryCollection(File file, CellProcessor... cellProcessors) throws MolgenisInvalidFormatException,
-			IOException
+	public CsvRepositoryCollection(File file, CellProcessor... cellProcessors)
+			throws MolgenisInvalidFormatException, IOException
 	{
 		super(GenericImporterExtensions.getCSV(), cellProcessors);
 		this.file = file;
@@ -117,7 +117,7 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
 		return getRepository(entityMeta.getName());
 	}
@@ -149,5 +149,4 @@ public class CsvRepositoryCollection extends FileRepositoryCollection
 	{
 		return entityNames.contains(name);
 	}
-
 }

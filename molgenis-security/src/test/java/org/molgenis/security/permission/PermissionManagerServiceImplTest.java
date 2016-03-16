@@ -15,10 +15,15 @@ import java.util.stream.Stream;
 
 import org.mockito.ArgumentCaptor;
 import org.molgenis.auth.GroupAuthority;
+import org.molgenis.auth.GroupAuthorityMetaData;
 import org.molgenis.auth.MolgenisGroup;
 import org.molgenis.auth.MolgenisGroupMember;
+import org.molgenis.auth.MolgenisGroupMemberMetaData;
+import org.molgenis.auth.MolgenisGroupMetaData;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.auth.UserAuthority;
+import org.molgenis.auth.UserAuthorityMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.support.QueryImpl;
@@ -45,7 +50,8 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		@Bean
 		public PermissionManagerServiceImpl pluginPermissionManagerServiceImpl()
 		{
-			return new PermissionManagerServiceImpl(dataService(), molgenisPluginRegistry(), grantedAuthoritiesMapper());
+			return new PermissionManagerServiceImpl(dataService(), molgenisPluginRegistry(),
+					grantedAuthoritiesMapper());
 		}
 
 		@Bean
@@ -92,8 +98,8 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		user1 = when(mock(MolgenisUser.class).getId()).thenReturn("1").getMock();
 		user2 = when(mock(MolgenisUser.class).getId()).thenReturn("2").getMock();
 		user3 = when(mock(MolgenisUser.class).getId()).thenReturn("3").getMock();
-		when(dataService.findAll(MolgenisUser.ENTITY_NAME, MolgenisUser.class)).thenReturn(
-				Stream.of(user1, user2, user3));
+		when(dataService.findAll(MolgenisUserMetaData.ENTITY_NAME, MolgenisUser.class))
+				.thenReturn(Stream.of(user1, user2, user3));
 
 		group1 = when(mock(MolgenisGroup.class).getId()).thenReturn(group1Id).getMock();
 		when(group1.getName()).thenReturn("group1");
@@ -101,15 +107,13 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		MolgenisGroupMember molgenisGroupMember1 = mock(MolgenisGroupMember.class);
 		when(molgenisGroupMember1.getMolgenisGroup()).thenReturn(group1);
 
-		when(
-				dataService.findAll(MolgenisGroupMember.ENTITY_NAME,
-						new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, user2), MolgenisGroupMember.class))
-				.thenReturn(Stream.of(molgenisGroupMember1));
+		when(dataService.findAll(MolgenisGroupMemberMetaData.ENTITY_NAME,
+				new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, user2), MolgenisGroupMember.class))
+						.thenReturn(Stream.of(molgenisGroupMember1));
 
-		when(
-				dataService.findAll(MolgenisGroupMember.ENTITY_NAME,
-						new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, user1), MolgenisGroupMember.class))
-				.thenReturn(Stream.of(molgenisGroupMember1));
+		when(dataService.findAll(MolgenisGroupMemberMetaData.ENTITY_NAME,
+				new QueryImpl().eq(MolgenisGroupMember.MOLGENISUSER, user1), MolgenisGroupMember.class))
+						.thenReturn(Stream.of(molgenisGroupMember1));
 
 		groupPlugin1Authority = mock(GroupAuthority.class);
 		when(groupPlugin1Authority.getRole()).thenReturn(SecurityUtils.AUTHORITY_PLUGIN_READ_PREFIX + "plugin1");
@@ -137,35 +141,33 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		when(userEntity3Authority.getRole()).thenReturn(SecurityUtils.AUTHORITY_ENTITY_READ_PREFIX + "entity3");
 		when(userEntity3Authority.getMolgenisUser()).thenReturn(user1);
 
-		when(dataService.findAll(MolgenisGroup.ENTITY_NAME, MolgenisGroup.class)).thenReturn(Stream.of(group1));
+		when(dataService.findAll(MolgenisGroupMetaData.ENTITY_NAME, MolgenisGroup.class)).thenReturn(Stream.of(group1));
 
-		when(dataService.findAll(MolgenisUser.ENTITY_NAME, MolgenisUser.class)).thenReturn(Stream.of(user1));
+		when(dataService.findAll(MolgenisUserMetaData.ENTITY_NAME, MolgenisUser.class)).thenReturn(Stream.of(user1));
 
-		when(dataService.findOne(MolgenisGroup.ENTITY_NAME, group1Id, MolgenisGroup.class)).thenReturn(group1);
-		when(dataService.findOne(MolgenisUser.ENTITY_NAME, user1Id, MolgenisUser.class)).thenReturn(user1);
-		when(dataService.findOne(MolgenisUser.ENTITY_NAME, user2Id, MolgenisUser.class)).thenReturn(user2);
-		when(dataService.findOne(MolgenisUser.ENTITY_NAME, user3Id, MolgenisUser.class)).thenReturn(user3);
+		when(dataService.findOne(MolgenisGroupMetaData.ENTITY_NAME, group1Id, MolgenisGroup.class)).thenReturn(group1);
+		when(dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, user1Id, MolgenisUser.class)).thenReturn(user1);
+		when(dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, user2Id, MolgenisUser.class)).thenReturn(user2);
+		when(dataService.findOne(MolgenisUserMetaData.ENTITY_NAME, user3Id, MolgenisUser.class)).thenReturn(user3);
 
-		when(
-				dataService.findAll(GroupAuthority.ENTITY_NAME,
-						new QueryImpl().in(GroupAuthority.MOLGENISGROUP, Arrays.<Entity> asList(group1)),
-						GroupAuthority.class)).thenReturn(
-				Stream.of(groupPlugin1Authority, groupPlugin2Authority, groupEntity1Authority, groupEntity2Authority));
+		when(dataService.findAll(GroupAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().in(GroupAuthority.MOLGENISGROUP, Arrays.<Entity> asList(group1)), GroupAuthority.class))
+						.thenReturn(Stream.of(groupPlugin1Authority, groupPlugin2Authority, groupEntity1Authority,
+								groupEntity2Authority));
 
-		when(
-				dataService.findAll(UserAuthority.ENTITY_NAME,
-						new QueryImpl().in(UserAuthority.MOLGENISUSER, Arrays.<Entity> asList(user1)),
-						UserAuthority.class)).thenReturn(
-				Stream.of(userPlugin2Authority, userPlugin3Authority, userEntity2Authority, userEntity3Authority));
+		when(dataService.findAll(UserAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().in(UserAuthority.MOLGENISUSER, Arrays.<Entity> asList(user1)), UserAuthority.class))
+						.thenReturn(Stream.of(userPlugin2Authority, userPlugin3Authority, userEntity2Authority,
+								userEntity3Authority));
 
-		when(
-				dataService.findAll(UserAuthority.ENTITY_NAME, new QueryImpl().eq(UserAuthority.MOLGENISUSER, user1),
-						UserAuthority.class)).thenReturn(
-				Stream.of(userPlugin2Authority, userPlugin3Authority, userEntity2Authority, userEntity3Authority));
-		when(
-				dataService.findAll(UserAuthority.ENTITY_NAME, new QueryImpl().eq(UserAuthority.MOLGENISUSER, user2),
-						UserAuthority.class)).thenReturn(
-				Stream.of(userPlugin2Authority, userPlugin3Authority, userEntity2Authority, userEntity3Authority));
+		when(dataService.findAll(UserAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().eq(UserAuthority.MOLGENISUSER, user1), UserAuthority.class))
+						.thenReturn(Stream.of(userPlugin2Authority, userPlugin3Authority, userEntity2Authority,
+								userEntity3Authority));
+		when(dataService.findAll(UserAuthorityMetaData.ENTITY_NAME,
+				new QueryImpl().eq(UserAuthority.MOLGENISUSER, user2), UserAuthority.class))
+						.thenReturn(Stream.of(userPlugin2Authority, userPlugin3Authority, userEntity2Authority,
+								userEntity3Authority));
 
 		plugin1 = when(mock(MolgenisPlugin.class).getId()).thenReturn("1").getMock();
 		when(plugin1.getName()).thenReturn("plugin1");
@@ -173,8 +175,8 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		when(plugin2.getName()).thenReturn("plugin2");
 		plugin3 = when(mock(MolgenisPlugin.class).getId()).thenReturn("3").getMock();
 		when(plugin3.getName()).thenReturn("plugin3n");
-		when(molgenisPluginRegistry.iterator()).thenReturn(
-				Arrays.<MolgenisPlugin> asList(plugin1, plugin2, plugin3).iterator());
+		when(molgenisPluginRegistry.iterator())
+				.thenReturn(Arrays.<MolgenisPlugin> asList(plugin1, plugin2, plugin3).iterator());
 
 		when(dataService.getEntityNames()).thenReturn(Stream.empty());
 	}
@@ -188,8 +190,8 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 	@Test
 	public void getUsers()
 	{
-		when(dataService.findAll(MolgenisUser.ENTITY_NAME, MolgenisUser.class)).thenReturn(
-				Stream.of(user1, user2, user3));
+		when(dataService.findAll(MolgenisUserMetaData.ENTITY_NAME, MolgenisUser.class))
+				.thenReturn(Stream.of(user1, user2, user3));
 		assertEquals(pluginPermissionManagerService.getUsers(), Arrays.asList(user1, user2, user3));
 	}
 
@@ -313,11 +315,11 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		pluginPermissionManagerService.replaceGroupEntityClassPermissions(authorities, "1");
 
 		ArgumentCaptor<Stream<Entity>> captor = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).delete(eq(GroupAuthority.ENTITY_NAME), captor.capture());
+		verify(dataService).delete(eq(GroupAuthorityMetaData.ENTITY_NAME), captor.capture());
 		assertEquals(captor.getValue().collect(toList()), Arrays.asList(groupEntity1Authority, groupEntity2Authority));
 
 		ArgumentCaptor<Stream<Entity>> captor2 = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).add(eq(GroupAuthority.ENTITY_NAME), captor2.capture());
+		verify(dataService).add(eq(GroupAuthorityMetaData.ENTITY_NAME), captor2.capture());
 		assertEquals(captor2.getValue().collect(toList()), authorities);
 	}
 
@@ -330,11 +332,11 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		pluginPermissionManagerService.replaceGroupPluginPermissions(authorities, "1");
 
 		ArgumentCaptor<Stream<Entity>> captor = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).delete(eq(GroupAuthority.ENTITY_NAME), captor.capture());
+		verify(dataService).delete(eq(GroupAuthorityMetaData.ENTITY_NAME), captor.capture());
 		assertEquals(captor.getValue().collect(toList()), Arrays.asList(groupPlugin1Authority, groupPlugin2Authority));
 
 		ArgumentCaptor<Stream<Entity>> captor2 = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).add(eq(GroupAuthority.ENTITY_NAME), captor.capture());
+		verify(dataService).add(eq(GroupAuthorityMetaData.ENTITY_NAME), captor.capture());
 		assertEquals(captor.getValue().collect(toList()), authorities);
 	}
 
@@ -347,11 +349,11 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		pluginPermissionManagerService.replaceUserEntityClassPermissions(authorities, "1");
 
 		ArgumentCaptor<Stream<UserAuthority>> captor1 = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).delete(eq(UserAuthority.ENTITY_NAME), captor1.capture());
+		verify(dataService).delete(eq(UserAuthorityMetaData.ENTITY_NAME), captor1.capture());
 		assertEquals(captor1.getValue().collect(toList()), Arrays.asList(userEntity2Authority, userEntity3Authority));
 
 		ArgumentCaptor<Stream<Entity>> captor = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).add(eq(UserAuthority.ENTITY_NAME), captor.capture());
+		verify(dataService).add(eq(UserAuthorityMetaData.ENTITY_NAME), captor.capture());
 		assertEquals(captor.getValue().collect(toList()), authorities);
 	}
 
@@ -364,10 +366,10 @@ public class PermissionManagerServiceImplTest extends AbstractTestNGSpringContex
 		pluginPermissionManagerService.replaceUserPluginPermissions(authorities, "1");
 
 		ArgumentCaptor<Stream<UserAuthority>> captor = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).delete(eq(UserAuthority.ENTITY_NAME), captor.capture());
+		verify(dataService).delete(eq(UserAuthorityMetaData.ENTITY_NAME), captor.capture());
 
 		ArgumentCaptor<Stream<Entity>> captor1 = ArgumentCaptor.forClass((Class) Stream.class);
-		verify(dataService).add(eq(UserAuthority.ENTITY_NAME), captor1.capture());
+		verify(dataService).add(eq(UserAuthorityMetaData.ENTITY_NAME), captor1.capture());
 
 		assertEquals(captor.getValue().collect(toList()), Arrays.asList(userPlugin2Authority, userPlugin3Authority));
 		assertEquals(captor1.getValue().collect(toList()), authorities);

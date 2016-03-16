@@ -8,26 +8,32 @@ import java.util.Map;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.EntityMetaData;
-import org.molgenis.data.ManageableRepositoryCollection;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
+import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.UnknownAttributeException;
 import org.molgenis.data.UnknownEntityException;
 import org.molgenis.data.idcard.model.IdCardBiobank;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Maps;
 
 @Component
-public class IdCardRepositoryCollection implements ManageableRepositoryCollection
+public class IdCardRepositoryCollection implements RepositoryCollection
 {
+	public void initMetaDataRepositories(ApplicationContext ctx)
+	{
+		throw new UnsupportedOperationException();
+	}
+
 	public static final String NAME = "ID-Card";
 
 	private final DataService dataService;
 	private final IdCardBiobankRepository idCardBiobankRepository;
-	private final Map<String, Repository> repositories;
+	private final Map<String, Repository> repositories; // FIXME remove
 
 	@Autowired
 	public IdCardRepositoryCollection(DataService dataService, IdCardBiobankRepository idCardBiobankRepository)
@@ -44,7 +50,7 @@ public class IdCardRepositoryCollection implements ManageableRepositoryCollectio
 	}
 
 	@Override
-	public Repository addEntityMeta(EntityMetaData entityMeta)
+	public Repository createRepository(EntityMetaData entityMeta)
 	{
 		String entityName = entityMeta.getName();
 		if (!entityName.equals(IdCardBiobank.ENTITY_NAME))
@@ -73,6 +79,12 @@ public class IdCardRepositoryCollection implements ManageableRepositoryCollectio
 	public Repository getRepository(String name)
 	{
 		return repositories.get(name);
+	}
+
+	@Override
+	public Repository getRepository(EntityMetaData entityMeta)
+	{
+		return repositories.get(entityMeta.getName());
 	}
 
 	@Override

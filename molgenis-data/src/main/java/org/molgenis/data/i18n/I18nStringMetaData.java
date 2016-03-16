@@ -5,7 +5,9 @@ import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 import org.molgenis.MolgenisFieldTypes;
 import org.molgenis.data.AttributeMetaData;
 import org.molgenis.data.support.SystemEntityMetaData;
+import org.springframework.stereotype.Component;
 
+@Component
 public class I18nStringMetaData extends SystemEntityMetaData
 {
 	public static final I18nStringMetaData INSTANCE = new I18nStringMetaData();

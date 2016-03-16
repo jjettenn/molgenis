@@ -17,6 +17,7 @@ import java.util.Collections;
 
 import org.mockito.ArgumentCaptor;
 import org.molgenis.auth.MolgenisUser;
+import org.molgenis.auth.MolgenisUserMetaData;
 import org.molgenis.data.DataService;
 import org.molgenis.data.Entity;
 import org.molgenis.data.settings.AppSettings;
@@ -272,7 +273,7 @@ public class AccountControllerTest extends AbstractTestNGSpringContextTests
 		{
 			DataService dataService = mock(DataService.class);
 			MolgenisUser molgenisUser = mock(MolgenisUser.class);
-			when(dataService.findAll(MolgenisUser.ENTITY_NAME,
+			when(dataService.findAll(MolgenisUserMetaData.ENTITY_NAME,
 					new QueryImpl().eq(MolgenisUser.EMAIL, "admin@molgenis.org")))
 							.thenReturn(Collections.<Entity> singletonList(molgenisUser).stream());
 

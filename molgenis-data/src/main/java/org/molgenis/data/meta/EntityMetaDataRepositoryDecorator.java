@@ -23,7 +23,7 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Fetch;
-import org.molgenis.data.ManageableRepositoryCollection;
+import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Query;
 import org.molgenis.data.Repository;
@@ -275,11 +275,15 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 		decoratedRepo.add(entityEntity);
 
 		// create entity table
-		EntityMetaData entityMeta = MetaUtils.toEntityMeta(entityEntity, this, languageService.getLanguageCodes());
-		if (!entityMeta.isAbstract())
+		if (!dataService.getMeta().isMetaRepository(entityEntity.getString(EntityMetaDataMetaData.FULL_NAME)))
 		{
-			Repository entityRepo = dataService.getMeta().getBackend(entityMeta.getBackend()).addEntityMeta(entityMeta);
-			((DataServiceImpl) dataService).addRepository(entityRepo); // FIXME remove cast
+			EntityMetaData entityMeta = MetaUtils.toEntityMeta(entityEntity, this, languageService.getLanguageCodes());
+			if (!entityMeta.isAbstract())
+			{
+				Repository entityRepo = dataService.getMeta().getBackend(entityMeta.getBackend())
+						.createRepository(entityMeta);
+				((DataServiceImpl) dataService).addRepository(entityRepo); // FIXME remove cast
+			}
 		}
 	}
 
@@ -305,7 +309,8 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 		Entity existingEntityEntity = findOne(entityEntity.getIdValue());
 		if (existingEntityEntity == null)
 		{
-			throw new UnknownEntityException(format("Unknown entity [%s] with id [%s]", getName(), entityEntity.getIdValue().toString()));
+			throw new UnknownEntityException(
+					format("Unknown entity [%s] with id [%s]", getName(), entityEntity.getIdValue().toString()));
 		}
 		updateEntityAttributes(entityEntity, existingEntityEntity);
 
@@ -354,11 +359,11 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 			String entityName = entity.getString(EntityMetaDataMetaData.FULL_NAME);
 			String backend = entity.getString(EntityMetaDataMetaData.BACKEND);
 			RepositoryCollection repoCollection = dataService.getMeta().getBackend(backend);
-			if (!(repoCollection instanceof ManageableRepositoryCollection))
+			if (!(repoCollection instanceof RepositoryCollection))
 			{
 				throw new MolgenisDataException(format("Modifying attributes not allowed for entity [%s]", entityName));
 			}
-			ManageableRepositoryCollection manageableRepoCollection = (ManageableRepositoryCollection) repoCollection;
+			RepositoryCollection manageableRepoCollection = (RepositoryCollection) repoCollection;
 
 			if (!deletedAttrNames.isEmpty())
 			{
@@ -449,7 +454,7 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	{
 		String entityName = entityEntity.getString(EntityMetaDataMetaData.FULL_NAME);
 		String backend = entityEntity.getString(EntityMetaDataMetaData.BACKEND);
-		((ManageableRepositoryCollection) dataService.getMeta().getBackend(backend)).deleteEntityMeta(entityName);
+		((RepositoryCollection) dataService.getMeta().getBackend(backend)).deleteEntityMeta(entityName);
 	}
 
 	private void deleteEntityPermissions(Entity entityEntity)

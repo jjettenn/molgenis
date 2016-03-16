@@ -3,7 +3,9 @@ package org.molgenis.data.i18n;
 import static org.molgenis.data.EntityMetaData.AttributeRole.ROLE_ID;
 
 import org.molgenis.data.support.SystemEntityMetaData;
+import org.springframework.stereotype.Component;
 
+@Component
 public class LanguageMetaData extends SystemEntityMetaData
 {
 	public static final LanguageMetaData INSTANCE = new LanguageMetaData();

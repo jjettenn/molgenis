@@ -1,19 +1,19 @@
 package org.molgenis.auth;
 
-import com.google.auto.value.AutoValue;
-import org.molgenis.data.AttributeMetaData;
-import org.molgenis.data.Entity;
-
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import org.molgenis.data.AttributeMetaData;
+import org.molgenis.data.Entity;
+
+import com.google.auto.value.AutoValue;
 
 @AutoValue
 public class MolgenisToken extends org.molgenis.data.support.AbstractEntity implements org.molgenis.data.Entity
 {
 	private static final long serialVersionUID = -2596871010814579374L;
 
-	public static final String ENTITY_NAME = "MolgenisToken";
 	public static final String TOKEN = "token";
 	public static final String ID = "id";
 	public static final String MOLGENIS_USER = "molgenisUser";

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SystemEntityMetaDataRegistry
 {
-	private final DataService dataService;
+	private final DataService dataService; // TODO remove dependency
 	private Map<String, EntityMetaData> systemEntityMap;
 	private Map<String, AttributeMetaData> systemAttributeIdentifiers;
 
