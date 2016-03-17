@@ -455,8 +455,8 @@ public class RepositoryValidationDecorator implements Repository
 
 				if (!isValid)
 				{
-					String message = format("The attribute '%s' of entity '%s' can not be null.",
-							nonNillableAttr.getName(), getName());
+					String message = format("The attribute '%s' of entity '%s' with id '%s' can not be null.",
+							nonNillableAttr.getName(), getName(), entity.getIdValue().toString());
 
 					ConstraintViolation constraintViolation = new ConstraintViolation(message, nonNillableAttr,
 							Long.valueOf(validationResource.getRow()));

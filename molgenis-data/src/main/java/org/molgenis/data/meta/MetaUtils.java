@@ -48,6 +48,7 @@ import org.molgenis.data.support.MapEntity;
 import org.molgenis.fieldtypes.FieldType;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 
 public class MetaUtils
 {
@@ -516,7 +517,8 @@ public class MetaUtils
 						.map(entity -> entity.getString(AttributeMetaDataMetaData.NAME)).collect(toList());
 		List<String> otherLookupAttrNames = stream(entityMeta.getOwnLookupAttributes().spliterator(), false)
 				.map(AttributeMetaData::getName).collect(toList());
-		if (!Objects.equal(thisLookupAttrNames, otherLookupAttrNames))
+		// FIXME postgres mref order broken, so put in set
+		if (!Objects.equal(Sets.newHashSet(thisLookupAttrNames), Sets.newHashSet(otherLookupAttrNames)))
 		{
 			return false;
 		}
@@ -565,7 +567,7 @@ public class MetaUtils
 						.map(entity -> entity.getString(AttributeMetaDataMetaData.NAME)).collect(toList());
 		List<String> otherAttrNames = stream(entityMeta.getOwnAttributes().spliterator(), false)
 				.map(AttributeMetaData::getName).collect(toList());
-		if (!Objects.equal(thisAttrNames, otherAttrNames))
+		if (!Objects.equal(Sets.newHashSet(thisAttrNames), Sets.newHashSet(otherAttrNames)))
 		{
 			return false;
 		}

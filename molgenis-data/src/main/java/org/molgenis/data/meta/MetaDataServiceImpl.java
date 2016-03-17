@@ -593,7 +593,8 @@ public class MetaDataServiceImpl implements MetaDataService
 
 	private boolean doAddEntityMeta(EntityMetaData entityMeta)
 	{
-		return !getDefaultBackend().hasRepository(entityMeta.getName());
+		return getEntityRepository().query().eq(EntityMetaDataMetaData.FULL_NAME, entityMeta.getName()).count() == 0;
+		// return !getDefaultBackend().hasRepository(entityMeta.getName());
 	}
 
 	@Override
