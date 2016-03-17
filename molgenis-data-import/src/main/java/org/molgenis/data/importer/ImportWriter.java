@@ -39,12 +39,14 @@ import org.molgenis.data.UnknownAttributeException;
 import org.molgenis.data.UnknownEntityException;
 import org.molgenis.data.i18n.I18nStringMetaData;
 import org.molgenis.data.i18n.LanguageMetaData;
+import org.molgenis.data.meta.DefaultPackage;
 import org.molgenis.data.meta.TagMetaData;
 import org.molgenis.data.semantic.LabeledResource;
 import org.molgenis.data.semantic.Tag;
 import org.molgenis.data.semanticsearch.service.TagService;
 import org.molgenis.data.support.ConvertingIterable;
 import org.molgenis.data.support.DefaultEntity;
+import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.EntityMetaDataUtils;
 import org.molgenis.data.support.LazyEntity;
 import org.molgenis.data.support.QueryImpl;
@@ -59,6 +61,7 @@ import org.molgenis.security.core.Permission;
 import org.molgenis.security.core.runas.RunAsSystem;
 import org.molgenis.security.core.utils.SecurityUtils;
 import org.molgenis.security.permission.PermissionSystemService;
+import org.molgenis.util.ApplicationContextProvider;
 import org.molgenis.util.DependencyResolver;
 import org.molgenis.util.HugeSet;
 import org.molgenis.util.MolgenisDateFormat;
@@ -304,6 +307,15 @@ public class ImportWriter
 				{
 					LOG.debug("trying to create: " + name);
 					metaDataChanges.addEntity(name);
+					if (entityMetaData.getBackend() == null)
+					{
+						((DefaultEntityMetaData) entityMetaData).setBackend("MySQL");
+					}
+					if (entityMetaData.getPackage() == null)
+					{
+						((DefaultEntityMetaData) entityMetaData).setPackage(
+								ApplicationContextProvider.getApplicationContext().getBean(DefaultPackage.class));
+					}
 					Repository repo = dataService.getMeta().addEntityMeta(entityMetaData);
 					if (repo != null)
 					{

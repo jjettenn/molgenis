@@ -46,6 +46,7 @@ import org.molgenis.data.support.DefaultAttributeMetaData;
 import org.molgenis.data.support.DefaultEntityMetaData;
 import org.molgenis.data.support.MapEntity;
 import org.molgenis.fieldtypes.FieldType;
+import org.molgenis.util.ApplicationContextProvider;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -146,7 +147,15 @@ public class MetaUtils
 	{
 		MapEntity entity = new MapEntity(EntityMetaDataMetaData.get());
 		entity.set(EntityMetaDataMetaData.SIMPLE_NAME, entityMeta.getSimpleName());
-		entity.set(EntityMetaDataMetaData.BACKEND, entityMeta.getBackend());
+		String backend = entityMeta.getBackend();
+		if (backend != null)
+		{
+			entity.set(EntityMetaDataMetaData.BACKEND, backend);
+		}
+		else
+		{
+			backend = "MySQL"; // FIXME remove hack
+		}
 		entity.set(EntityMetaDataMetaData.FULL_NAME, entityMeta.getName());
 		AttributeMetaData idAttr = entityMeta.getOwnIdAttribute();
 		if (idAttr != null)
@@ -184,6 +193,12 @@ public class MetaUtils
 		if (package_ != null)
 		{
 			entity.set(EntityMetaDataMetaData.PACKAGE, toEntity(package_));
+		}
+		else
+		{
+			// FIXME remove hack
+			entity.set(EntityMetaDataMetaData.PACKAGE,
+					toEntity(ApplicationContextProvider.getApplicationContext().getBean(DefaultPackage.class)));
 		}
 
 		entity.set(EntityMetaDataMetaData.TAGS,

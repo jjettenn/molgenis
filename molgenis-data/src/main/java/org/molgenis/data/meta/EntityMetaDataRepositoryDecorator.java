@@ -23,7 +23,6 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Fetch;
-import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Query;
 import org.molgenis.data.Repository;
@@ -35,6 +34,7 @@ import org.molgenis.data.i18n.LanguageService;
 import org.molgenis.data.support.DataServiceImpl;
 import org.molgenis.security.core.Permission;
 import org.molgenis.security.core.utils.SecurityUtils;
+import org.molgenis.util.ApplicationContextProvider;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Sets;
@@ -271,6 +271,16 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	{
 		validateAddAllowed(entityEntity);
 
+		if (entityEntity.getString("backend") == null)
+		{
+			entityEntity.set("backend", "MySQL"); // FIXME remove hack
+		}
+		if (entityEntity.getEntity("package") == null)
+		{
+			// FIXME remove hack
+			entityEntity.set("package", MetaUtils
+					.toEntity(ApplicationContextProvider.getApplicationContext().getBean(DefaultPackage.class)));
+		}
 		// add row to entities table
 		decoratedRepo.add(entityEntity);
 
@@ -363,7 +373,7 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 			{
 				throw new MolgenisDataException(format("Modifying attributes not allowed for entity [%s]", entityName));
 			}
-			RepositoryCollection manageableRepoCollection = (RepositoryCollection) repoCollection;
+			RepositoryCollection manageableRepoCollection = repoCollection;
 
 			if (!deletedAttrNames.isEmpty())
 			{
@@ -454,7 +464,7 @@ public class EntityMetaDataRepositoryDecorator implements Repository
 	{
 		String entityName = entityEntity.getString(EntityMetaDataMetaData.FULL_NAME);
 		String backend = entityEntity.getString(EntityMetaDataMetaData.BACKEND);
-		((RepositoryCollection) dataService.getMeta().getBackend(backend)).deleteEntityMeta(entityName);
+		dataService.getMeta().getBackend(backend).deleteEntityMeta(entityName);
 	}
 
 	private void deleteEntityPermissions(Entity entityEntity)
