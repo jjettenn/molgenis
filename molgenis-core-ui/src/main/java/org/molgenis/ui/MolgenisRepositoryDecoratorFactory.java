@@ -73,11 +73,6 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 	{
 		Repository decoratedRepository = repositoryDecoratorRegistry.decorate(repository);
 
-		if (decoratedRepository.getName().equals(MolgenisUserMetaData.ENTITY_NAME))
-		{
-			decoratedRepository = new MolgenisUserDecorator(decoratedRepository);
-		}
-
 		// 10. Custom decorators
 		decoratedRepository = applyCustomRepositoryDecorators(decoratedRepository);
 
