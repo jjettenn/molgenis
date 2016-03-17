@@ -25,6 +25,7 @@ import org.molgenis.data.RepositoryCollection;
 import org.molgenis.data.RepositoryCollectionRegistry;
 import org.molgenis.data.RepositoryDecoratorFactory;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
+import org.molgenis.data.cache.TransactionEntityCache;
 import org.molgenis.data.convert.DateToStringConverter;
 import org.molgenis.data.convert.StringToDateConverter;
 import org.molgenis.data.elasticsearch.SearchService;
@@ -142,6 +143,9 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 
 	@Autowired
 	public DefaultPackage defaultPackage;
+
+	@Autowired
+	public TransactionEntityCache transactionEntityCache;
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry)
@@ -493,8 +497,8 @@ public abstract class MolgenisWebAppConfig extends WebMvcConfigurerAdapter
 			{
 				return new MolgenisRepositoryDecoratorFactory(entityManager(), transactionLogService,
 						entityAttributesValidator, idGenerator, appSettings, dataService(), expressionValidator,
-						repositoryDecoratorRegistry(), languageService, systemEntityMetaDataRegistry)
-								.createDecoratedRepository(repository);
+						repositoryDecoratorRegistry(), languageService, systemEntityMetaDataRegistry,
+						transactionEntityCache).createDecoratedRepository(repository);
 			}
 		};
 	}

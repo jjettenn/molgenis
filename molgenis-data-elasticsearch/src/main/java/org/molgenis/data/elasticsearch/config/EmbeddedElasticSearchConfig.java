@@ -70,7 +70,7 @@ public class EmbeddedElasticSearchConfig
 	{
 		ElasticsearchService elasticSearchService = embeddedElasticSearchServiceFactory().create(dataService,
 				elasticsearchEntityFactory);
-		molgenisTransactionManager.addTransactionListener(elasticSearchService);
+		// molgenisTransactionManager.addTransactionListener(elasticSearchService); // FIXME
 
 		return elasticSearchService;
 	}

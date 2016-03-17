@@ -1,7 +1,9 @@
 package org.molgenis.data.transaction;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.sql.DataSource;
 
 import org.apache.commons.logging.LogFactory;
 import org.molgenis.data.IdGenerator;
@@ -12,8 +14,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.DefaultTransactionStatus;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-
-import javax.sql.DataSource;
 
 /**
  * TransactionManager used by Molgenis.
@@ -30,7 +30,7 @@ public class MolgenisTransactionManager extends DataSourceTransactionManager
 	public static final String TRANSACTION_ID_RESOURCE_NAME = "transactionId";
 	private static final Logger LOG = LoggerFactory.getLogger(MolgenisTransactionManager.class);
 	private final IdGenerator idGenerator;
-	private final List<MolgenisTransactionListener> transactionListeners = new ArrayList<>();
+	private final List<MolgenisTransactionListener> transactionListeners = new CopyOnWriteArrayList<>();
 
 	public MolgenisTransactionManager(IdGenerator idGenerator, DataSource dataSource)
 	{
@@ -90,9 +90,9 @@ public class MolgenisTransactionManager extends DataSourceTransactionManager
 			LOG.debug("Commit transaction [{}]", transaction.getId());
 		}
 
-		DefaultTransactionStatus jpaTransactionStatus = new DefaultTransactionStatus(transaction.getDataSourceTransaction(),
-				status.isNewTransaction(), status.isNewSynchronization(), status.isReadOnly(), status.isDebug(),
-				status.getSuspendedResources());
+		DefaultTransactionStatus jpaTransactionStatus = new DefaultTransactionStatus(
+				transaction.getDataSourceTransaction(), status.isNewTransaction(), status.isNewSynchronization(),
+				status.isReadOnly(), status.isDebug(), status.getSuspendedResources());
 
 		if (!status.isReadOnly())
 		{
@@ -111,9 +111,9 @@ public class MolgenisTransactionManager extends DataSourceTransactionManager
 			LOG.debug("Rollback transaction [{}]", transaction.getId());
 		}
 
-		DefaultTransactionStatus jpaTransactionStatus = new DefaultTransactionStatus(transaction.getDataSourceTransaction(),
-				status.isNewTransaction(), status.isNewSynchronization(), status.isReadOnly(), status.isDebug(),
-				status.getSuspendedResources());
+		DefaultTransactionStatus jpaTransactionStatus = new DefaultTransactionStatus(
+				transaction.getDataSourceTransaction(), status.isNewTransaction(), status.isNewSynchronization(),
+				status.isReadOnly(), status.isDebug(), status.getSuspendedResources());
 
 		if (!status.isReadOnly())
 		{
@@ -128,9 +128,9 @@ public class MolgenisTransactionManager extends DataSourceTransactionManager
 	{
 		MolgenisTransaction transaction = (MolgenisTransaction) status.getTransaction();
 
-		DefaultTransactionStatus jpaTransactionStatus = new DefaultTransactionStatus(transaction.getDataSourceTransaction(),
-				status.isNewTransaction(), status.isNewSynchronization(), status.isReadOnly(), status.isDebug(),
-				status.getSuspendedResources());
+		DefaultTransactionStatus jpaTransactionStatus = new DefaultTransactionStatus(
+				transaction.getDataSourceTransaction(), status.isNewTransaction(), status.isNewSynchronization(),
+				status.isReadOnly(), status.isDebug(), status.getSuspendedResources());
 
 		super.doSetRollbackOnly(jpaTransactionStatus);
 	}

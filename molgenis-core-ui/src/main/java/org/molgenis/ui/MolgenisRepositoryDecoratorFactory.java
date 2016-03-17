@@ -12,6 +12,8 @@ import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryDecoratorFactory;
 import org.molgenis.data.RepositorySecurityDecorator;
 import org.molgenis.data.SystemEntityMetaDataRegistry;
+import org.molgenis.data.cache.TransactionEntityCache;
+import org.molgenis.data.cache.TransactionEntityCacheDecorator;
 import org.molgenis.data.i18n.I18nStringDecorator;
 import org.molgenis.data.i18n.I18nStringMetaData;
 import org.molgenis.data.i18n.LanguageMetaData;
@@ -48,12 +50,13 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 	private final RepositoryDecoratorRegistry repositoryDecoratorRegistry;
 	private final LanguageService languageService;
 	private final SystemEntityMetaDataRegistry systemEntityMetaDataRegistry;
+	private final TransactionEntityCache transactionEntityCache;
 
 	public MolgenisRepositoryDecoratorFactory(EntityManager entityManager, TransactionLogService transactionLogService,
 			EntityAttributesValidator entityAttributesValidator, IdGenerator idGenerator, AppSettings appSettings,
 			DataService dataService, ExpressionValidator expressionValidator,
 			RepositoryDecoratorRegistry repositoryDecoratorRegistry, LanguageService languageService,
-			SystemEntityMetaDataRegistry systemEntityMetaDataRegistry)
+			SystemEntityMetaDataRegistry systemEntityMetaDataRegistry, TransactionEntityCache transactionEntityCache)
 	{
 		this.entityManager = entityManager;
 		this.transactionLogService = transactionLogService;
@@ -65,6 +68,7 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 		this.repositoryDecoratorRegistry = repositoryDecoratorRegistry;
 		this.languageService = languageService;
 		this.systemEntityMetaDataRegistry = systemEntityMetaDataRegistry;
+		this.transactionEntityCache = transactionEntityCache;
 	}
 
 	@Override
@@ -100,6 +104,7 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 			decoratedRepository = new MySqlRepositoryExceptionTranslatorDecorator(decoratedRepository);
 		}
 
+		// FIXME enable validation
 		// 3. validation decorator
 		// decoratedRepository = new RepositoryValidationDecorator(dataService, decoratedRepository,
 		// entityAttributesValidator, expressionValidator);
@@ -115,6 +120,10 @@ public class MolgenisRepositoryDecoratorFactory implements RepositoryDecoratorFa
 		{
 			decoratedRepository = new MetaDataRepositoryDecorator(decoratedRepository, dataService.getMeta());
 		}
+
+		// -1. transaction cache decorator
+		decoratedRepository = new TransactionEntityCacheDecorator(decoratedRepository, transactionEntityCache);
+
 		return decoratedRepository;
 	}
 
