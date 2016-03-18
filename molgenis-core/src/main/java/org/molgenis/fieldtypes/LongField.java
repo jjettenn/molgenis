@@ -108,6 +108,7 @@ public class LongField extends FieldType
 		if (value == null) return null;
 		if (value instanceof Long) return value;
 		if (value instanceof String) return Long.parseLong(value.toString());
+		if (value instanceof Integer) return Long.valueOf(((Integer) value).longValue());
 		throw new RuntimeException("LongField.convert(" + value + ") failed");
 	}
 

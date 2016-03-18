@@ -19,7 +19,6 @@ import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCollection;
-import org.molgenis.data.elasticsearch.ElasticsearchRepositoryCollection;
 import org.molgenis.data.importer.EntitiesValidationReportImpl;
 import org.molgenis.data.importer.ImportService;
 import org.molgenis.data.support.DefaultEntityMetaData;
@@ -41,7 +40,7 @@ public class VcfImporterService implements ImportService
 {
 	private static final Logger LOG = LoggerFactory.getLogger(VcfImporterService.class);
 	private static final int BATCH_SIZE = 10000;
-	private static final String BACKEND = ElasticsearchRepositoryCollection.NAME;
+	private static final String BACKEND = "MySQL";// MyElasticsearchRepositoryCollection.NAME;
 
 	private final DataService dataService;
 	private final PermissionSystemService permissionSystemService;

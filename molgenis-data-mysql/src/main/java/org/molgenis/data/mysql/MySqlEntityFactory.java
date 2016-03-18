@@ -1,6 +1,7 @@
 package org.molgenis.data.mysql;
 
 import static java.util.Objects.requireNonNull;
+import static org.molgenis.data.mysql.MysqlRepository.getColumnName;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -85,7 +86,7 @@ public class MySqlEntityFactory
 					if (att.getDataType() instanceof MrefField)
 					{
 						EntityMetaData refEntityMeta = att.getRefEntity();
-						String mrefIds = resultSet.getString(att.getName());
+						String mrefIds = resultSet.getString(getColumnName(att));
 						if (mrefIds != null)
 						{
 							Iterable<Entity> mrefEntities;
@@ -143,14 +144,14 @@ public class MySqlEntityFactory
 					{
 						EntityMetaData refEntityMeta = att.getRefEntity();
 						Object xrefId = refEntityMeta.getIdAttribute().getDataType()
-								.convert(resultSet.getObject(att.getName()));
+								.convert(resultSet.getObject(getColumnName(att)));
 
 						Entity xrefEntity = xrefId != null ? entityManager.getReference(refEntityMeta, xrefId) : null;
 						e.set(att.getName(), xrefEntity);
 					}
 					else
 					{
-						e.set(att.getName(), att.getDataType().convert(resultSet.getObject(att.getName())));
+						e.set(att.getName(), att.getDataType().convert(resultSet.getObject(getColumnName(att))));
 					}
 				}
 			}
@@ -167,8 +168,8 @@ public class MySqlEntityFactory
 
 		private String getMrefSelectSql(Entity e, AttributeMetaData att)
 		{
-			return String.format("SELECT %s FROM %s_%1$s WHERE %s = '%s' ORDER BY sequence_num", att.getName(),
-					tableName, entityMetaData.getIdAttribute().getName().toLowerCase(),
+			return String.format("SELECT %s FROM %s_%1$s WHERE %s = '%s' ORDER BY sequence_num", getColumnName(att),
+					tableName, getColumnName(entityMetaData.getIdAttribute()).toLowerCase(),
 					e.get(entityMetaData.getIdAttribute().getName()));
 		}
 	}
