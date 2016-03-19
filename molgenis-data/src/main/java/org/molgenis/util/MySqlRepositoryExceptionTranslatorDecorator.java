@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.molgenis.data.AggregateQuery;
@@ -14,9 +16,14 @@ import org.molgenis.data.Entity;
 import org.molgenis.data.EntityListener;
 import org.molgenis.data.EntityMetaData;
 import org.molgenis.data.Fetch;
+import org.molgenis.data.MolgenisDataAccessException;
+import org.molgenis.data.MolgenisDataException;
 import org.molgenis.data.Query;
 import org.molgenis.data.Repository;
 import org.molgenis.data.RepositoryCapability;
+import org.postgresql.util.PSQLException;
+import org.postgresql.util.ServerErrorMessage;
+import org.springframework.dao.DataAccessException;
 
 /**
  * Translate sql exceptions into user friendly messages
@@ -165,14 +172,55 @@ public class MySqlRepositoryExceptionTranslatorDecorator implements Repository
 	@Override
 	public Integer add(Stream<? extends Entity> entities)
 	{
-		AtomicInteger result = new AtomicInteger();
+		AtomicInteger entityIndex = new AtomicInteger();
 
-		SQLExceptionTranslatorTemplate.tryCatchSQLException(() -> {
-			Integer count = decoratedRepo.add(entities);
-			if (count != null) result.set(count);
-		});
+		try
+		{
+			// keep track of entity index in case of validation errors
+			entities = entities.filter(entity -> {
+				entityIndex.incrementAndGet();
+				return true;
+			});
+			return decoratedRepo.add(entities);
+		}
+		catch (DataAccessException e)
+		{
+			Throwable throwable = e.getCause();
+			if (throwable instanceof PSQLException)
+			{
+				PSQLException postgresException = (PSQLException) throwable;
+				switch (postgresException.getSQLState())
+				{
+					case "23503":
+						ServerErrorMessage serverErrorMessage = postgresException.getServerErrorMessage();
+						String detail = serverErrorMessage.getDetail();
+						Matcher m = Pattern.compile("\\((.*?)\\)").matcher(detail);
+						m.find();
+						String value = m.group(1);
+						m.find();
+						String colName = m.group(1); // TODO column name != necesarrily attr name, convert back to attr
+														// name
 
-		return result.get();
+						String message = String.format(
+								"Unknown xref value '%s' for attribute '%s' of entity '%s' on row %d.", value, colName,
+								getName(), entityIndex.get() + 1);
+						throw new MolgenisDataException(message); // FIXME use MolgenisValidationException
+					default:
+						throw new MolgenisDataAccessException("Unknown error occurred");
+				}
+			}
+			throw e;
+		}
+
+		// TODO how does the original code work? do we need to use the same method for this implementation?
+		// AtomicInteger result = new AtomicInteger();
+		//
+		// SQLExceptionTranslatorTemplate.tryCatchSQLException(() -> {
+		// Integer count = decoratedRepo.add(entities);
+		// if (count != null) result.set(count);
+		// });
+		//
+		// return result.get();
 	}
 
 	@Override
