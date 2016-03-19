@@ -1681,14 +1681,26 @@ public class MysqlRepository extends AbstractRepository
 
 	protected String getCountSql(Query q, List<Object> parameters)
 	{
-		String where = getWhereSql(q, parameters, 0);
-		String from = getFromSql(q);
 		String idAttribute = getColumnName(getEntityMetaData().getIdAttribute());
 
-		if (where.length() > 0) return new StringBuilder("SELECT COUNT(DISTINCT this.").append(idAttribute).append(')')
-				.append(from).append(" WHERE ").append(where).toString();
+		// both queries ignore offset/pageSize
+		List<QueryRule> queryRules = q.getRules();
+		if (queryRules == null || queryRules.isEmpty())
+		{
+			return new StringBuilder("SELECT COUNT(*) FROM ").append(getTableName()).toString();
+		}
+		else
+		{
+			String where = getWhereSql(q, parameters, 0);
+			String from = getFromSql(q);
 
-		return new StringBuilder("SELECT COUNT(DISTINCT this.").append(idAttribute).append(')').append(from).toString();
+			// TODO do not DISTINCT if no joining took place
+			if (where.length() > 0) return new StringBuilder("SELECT COUNT(DISTINCT this.").append(idAttribute)
+					.append(')').append(from).append(" WHERE ").append(where).toString();
+
+			return new StringBuilder("SELECT COUNT(DISTINCT this.").append(idAttribute).append(')').append(from)
+					.toString();
+		}
 	}
 
 }
