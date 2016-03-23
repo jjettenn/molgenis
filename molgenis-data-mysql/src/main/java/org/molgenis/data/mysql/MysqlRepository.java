@@ -1607,7 +1607,7 @@ public class MysqlRepository extends AbstractRepository
 	{
 		if (LOG.isDebugEnabled())
 		{
-			LOG.debug("Fetching MySQL [{}] data for query [{}]", getName(), q);
+			LOG.debug("Counting MySQL [{}] rows for query [{}]", getName(), q);
 		}
 
 		List<Object> parameters = Lists.newArrayList();
