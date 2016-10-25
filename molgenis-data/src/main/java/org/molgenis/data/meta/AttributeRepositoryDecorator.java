@@ -20,6 +20,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.molgenis.AttributeType.*;
+import static org.molgenis.data.meta.model.EntityTypeMetadata.ENTITY_TYPE_META_DATA;
+import static org.molgenis.data.meta.model.EntityTypeMetadata.EXTENDS;
 import static org.molgenis.data.support.EntityTypeUtils.isSingleReferenceType;
 import static org.molgenis.security.core.Permission.COUNT;
 import static org.molgenis.security.core.Permission.READ;
@@ -310,11 +312,21 @@ public class AttributeRepositoryDecorator implements Repository<Attribute>
 	public void add(Attribute attr)
 	{
 		validateAdd(attr);
-		EntityType owningEntity = attr.getEntity();
-
-		// FIXME What to do when the entity is abstract?
-		dataService.getMeta().getBackend(owningEntity.getBackend()).addAttribute(owningEntity, attr);
+		addAttributeInBackend(attr, attr.getEntity());
 		decoratedRepo.add(attr);
+	}
+
+	private void addAttributeInBackend(Attribute attr, EntityType owningEntity)
+	{
+		if (owningEntity.isAbstract())
+		{
+			dataService.query(ENTITY_TYPE_META_DATA, EntityType.class).eq(EXTENDS, owningEntity).findAll()
+					.forEach(extendingEntity -> addAttributeInBackend(attr, extendingEntity));
+		}
+		else
+		{
+			dataService.getMeta().getBackend(owningEntity.getBackend()).addAttribute(owningEntity, attr);
+		}
 	}
 
 	@Override
