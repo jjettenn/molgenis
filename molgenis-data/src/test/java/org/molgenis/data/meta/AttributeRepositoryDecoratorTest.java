@@ -1,6 +1,8 @@
 package org.molgenis.data.meta;
 
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.molgenis.data.*;
 import org.molgenis.data.QueryRule.Operator;
 import org.molgenis.data.meta.model.Attribute;
@@ -30,8 +32,7 @@ import static org.molgenis.data.QueryRule.Operator.EQUALS;
 import static org.molgenis.data.RepositoryCapability.WRITABLE;
 import static org.molgenis.data.meta.model.AttributeMetadata.ATTRIBUTE_META_DATA;
 import static org.molgenis.data.meta.model.AttributeMetadata.CHILDREN;
-import static org.molgenis.data.meta.model.EntityTypeMetadata.ATTRIBUTES;
-import static org.molgenis.data.meta.model.EntityTypeMetadata.ENTITY_TYPE_META_DATA;
+import static org.molgenis.data.meta.model.EntityTypeMetadata.*;
 import static org.molgenis.security.core.Permission.COUNT;
 import static org.molgenis.security.core.Permission.READ;
 import static org.molgenis.security.core.runas.SystemSecurityToken.ROLE_SYSTEM;
@@ -43,20 +44,77 @@ import static org.testng.Assert.assertNull;
 public class AttributeRepositoryDecoratorTest
 {
 	private AttributeRepositoryDecorator repo;
+	@Mock
 	private Repository<Attribute> decoratedRepo;
+	@Mock
 	private DataService dataService;
+	@Mock
 	private SystemEntityTypeRegistry systemEntityTypeRegistry;
+	@Mock
 	private MolgenisPermissionService permissionService;
+	@Mock
+	private Attribute attribute;
+	@Mock
+	private MetaDataService metadataService;
+	@Mock
+	EntityType abstractEntity1;
+	@Mock
+	EntityType abstractEntity2;
+	@Mock
+	EntityType concreteEntity1;
+	@Mock
+	EntityType concreteEntity2;
+	@Mock
+	RepositoryCollection backend1;
+	@Mock
+	RepositoryCollection backend2;
+	@Mock
+	Query<EntityType> query;
+	@Mock
+	Query<EntityType> queryExtends1;
+	@Mock
+	Query<EntityType> queryExtends2;
 
 	@BeforeMethod
 	public void setUpBeforeMethod()
 	{
-		decoratedRepo = mock(Repository.class);
-		dataService = mock(DataService.class);
-		systemEntityTypeRegistry = mock(SystemEntityTypeRegistry.class);
-		permissionService = mock(MolgenisPermissionService.class);
+		MockitoAnnotations.initMocks(this);
+		when(dataService.getMeta()).thenReturn(metadataService);
+		when(abstractEntity1.isAbstract()).thenReturn(true);
+		when(abstractEntity2.isAbstract()).thenReturn(true);
+		when(concreteEntity1.isAbstract()).thenReturn(false);
+		when(concreteEntity1.getBackend()).thenReturn("backend1");
+		when(metadataService.getBackend("backend1")).thenReturn(backend1);
+		when(concreteEntity2.isAbstract()).thenReturn(false);
+		when(concreteEntity2.getBackend()).thenReturn("backend2");
+		when(metadataService.getBackend("backend2")).thenReturn(backend2);
 		repo = new AttributeRepositoryDecorator(decoratedRepo, systemEntityTypeRegistry, dataService,
 				permissionService);
+	}
+
+	@Test
+	public void addAttributeToConcreteEntity()
+	{
+		when(attribute.getEntity()).thenReturn(concreteEntity1);
+		repo.add(attribute);
+		verify(decoratedRepo).add(attribute);
+		verify(backend1).addAttribute(concreteEntity1, attribute);
+	}
+
+	@Test
+	public void addAttributeToAbstractEntityTree()
+	{
+		when(attribute.getEntity()).thenReturn(abstractEntity1);
+		when(dataService.query(ENTITY_TYPE_META_DATA, EntityType.class)).thenReturn(query);
+		when(query.eq(EXTENDS, abstractEntity1)).thenReturn(queryExtends1);
+		when(queryExtends1.findAll()).thenReturn(Stream.of(abstractEntity2, concreteEntity1));
+		when(query.eq(EXTENDS, abstractEntity2)).thenReturn(queryExtends2);
+		when(queryExtends2.findAll()).thenReturn(Stream.of(concreteEntity2));
+
+		repo.add(attribute);
+		verify(decoratedRepo).add(attribute);
+		verify(backend1).addAttribute(concreteEntity1, attribute);
+		verify(backend2).addAttribute(concreteEntity2, attribute);
 	}
 
 	@Test
